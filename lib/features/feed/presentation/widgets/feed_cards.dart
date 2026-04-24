@@ -34,13 +34,14 @@ class ArticleFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final readMinutes = item.parsedContent['readMinutes']! as int;
+    final readMinutes = item.parsedContent['readMinutes'] as int?;
+    final metaLabel = readMinutes == null ? strings.articleType : '${strings.articleType} - ${strings.minutesRead(readMinutes)}';
     return FeedCardFrame(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          CardMeta(icon: Icons.article_rounded, label: '${strings.articleType} - ${strings.minutesRead(readMinutes)}'),
+          CardMeta(icon: Icons.article_rounded, label: metaLabel),
           const SizedBox(height: 14),
           Text(item.title, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 10),

@@ -99,10 +99,21 @@ class ArticleDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final author = item.parsedContent['author'] as String?;
+    final siteName = item.parsedContent['siteName'] as String?;
+    final readMinutes = item.parsedContent['readMinutes'] as int?;
+    final body = (item.parsedContent['body'] as String?) ?? item.searchableSummary;
+    final meta = <String>[
+      if (author != null) author,
+      if (siteName != null) siteName,
+      if (readMinutes != null) strings.minutesRead(readMinutes),
+    ].join(' - ');
+
     return _DetailCard(children: <Widget>[
+      if (item.thumbnailUrl != null) _HeroImage(url: item.thumbnailUrl),
       _Title(item.title),
-      _Muted('${item.parsedContent['author']} - ${strings.minutesRead(item.parsedContent['readMinutes']! as int)}'),
-      Text(item.parsedContent['body']! as String, style: Theme.of(context).textTheme.bodyMedium),
+      if (meta.isNotEmpty) _Muted(meta),
+      Text(body, style: Theme.of(context).textTheme.bodyMedium),
       _SourceLink(label: strings.sourceLink),
     ]);
   }

@@ -66,6 +66,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added raw-content retention schema fields with migration `202604240002_raw_content_retention.sql`.
 - Implemented and deployed `process-item` Edge Function v1 for link metadata fetching without OpenAI.
 - Connected link item creation to invoke `process-item` after Supabase insert.
+- Fixed article/link preview cards and details to tolerate missing full-article fields from metadata-only processing.
 - Added `legal/TERMS_PRIVACY_NOTES.md` as the non-legal source-of-truth for future Terms, Privacy Policy, AI processing disclosure, retention, and subprocessors.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
