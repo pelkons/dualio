@@ -15,43 +15,41 @@ class FeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsState = ref.watch(visibleSemanticItemsProvider);
+    final fallbackItems = ref.watch(semanticItemsProvider);
 
     return FeedShell(
       child: itemsState.when(
-        data: (items) => RefreshIndicator(
-          onRefresh: () async => ref.invalidate(visibleSemanticItemsProvider),
-          child: CustomScrollView(
-            slivers: <Widget>[
-              const SliverToBoxAdapter(child: DualioSearchBar()),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 6, DualioTheme.mobileMargin, 108),
-                sliver: SliverList.builder(
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return _DismissibleFeedCard(item: item);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => CustomScrollView(
-          slivers: <Widget>[
-            const SliverToBoxAdapter(child: DualioSearchBar()),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 6, DualioTheme.mobileMargin, 108),
-              sliver: SliverList.builder(
-                itemCount: ref.watch(semanticItemsProvider).length,
-                itemBuilder: (context, index) {
-                  final item = ref.watch(semanticItemsProvider)[index];
-                  return _DismissibleFeedCard(item: item);
-                },
-              ),
+        data: (items) => _FeedList(items: items),
+        loading: () => _FeedList(items: fallbackItems),
+        error: (_, _) => _FeedList(items: fallbackItems),
+      ),
+    );
+  }
+}
+
+class _FeedList extends ConsumerWidget {
+  const _FeedList({required this.items});
+
+  final List<SemanticItem> items;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return RefreshIndicator(
+      onRefresh: () async => ref.invalidate(visibleSemanticItemsProvider),
+      child: CustomScrollView(
+        slivers: <Widget>[
+          const SliverToBoxAdapter(child: DualioSearchBar()),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 6, DualioTheme.mobileMargin, 108),
+            sliver: SliverList.builder(
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _DismissibleFeedCard(item: item);
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

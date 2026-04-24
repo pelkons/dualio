@@ -7,24 +7,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final semanticItemsProvider = NotifierProvider<SemanticItemsController, List<SemanticItem>>(SemanticItemsController.new);
 
+final removedItemIdsProvider = NotifierProvider<RemovedItemIdsController, Set<String>>(RemovedItemIdsController.new);
+
 final visibleSemanticItemsProvider = FutureProvider<List<SemanticItem>>((ref) async {
   final localItems = ref.watch(semanticItemsProvider);
+  final removedIds = ref.watch(removedItemIdsProvider);
   final repository = ref.watch(itemsRepositoryProvider);
   if (repository == null || !repository.hasSignedInUser) {
-    return localItems;
+    return localItems.where((item) => !removedIds.contains(item.id)).toList(growable: false);
   }
 
   final remoteItems = await repository.fetchLatestItems();
   if (remoteItems.isEmpty) {
-    return localItems;
+    return localItems.where((item) => !removedIds.contains(item.id)).toList(growable: false);
   }
 
   final localOnlyItems = localItems.where((item) {
     return item.id.startsWith('local-') && !remoteItems.any((remote) => remote.title == item.title && remote.searchableSummary == item.searchableSummary);
   });
 
-  return <SemanticItem>[...localOnlyItems, ...remoteItems];
+  return <SemanticItem>[...localOnlyItems, ...remoteItems].where((item) => !removedIds.contains(item.id)).toList(growable: false);
 });
+
+class RemovedItemIdsController extends Notifier<Set<String>> {
+  @override
+  Set<String> build() {
+    return <String>{};
+  }
+
+  void add(String itemId) {
+    state = <String>{...state, itemId};
+  }
+}
 
 class SemanticItemsController extends Notifier<List<SemanticItem>> {
   @override
@@ -64,6 +78,7 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
   }
 
   void removeItem(SemanticItem item) {
+    ref.read(removedItemIdsProvider.notifier).add(item.id);
     state = state.where((candidate) => candidate.id != item.id).toList(growable: false);
     unawaited(_deleteRemoteItem(item.id));
   }
@@ -76,7 +91,6 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
 
     try {
       await repository.deleteItem(itemId);
-      ref.invalidate(visibleSemanticItemsProvider);
     } on Object {
       // Deleting should keep the feed responsive even if remote sync fails.
     }
