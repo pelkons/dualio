@@ -284,4 +284,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get deleteItemConfirm => 'Удалить';
+
+  @override
+  String get signedInTitle => 'Вы вошли';
+
+  @override
+  String get signedInBody =>
+      'Dualio синхронизирует сохраненные элементы для этого аккаунта.';
+
+  @override
+  String signedInAs(String email) {
+    return 'Вход выполнен как $email';
+  }
+
+  @override
+  String get signOut => 'Выйти';
+
+  @override
+  String get unknownAccount => 'Аккаунт в системе';
 }

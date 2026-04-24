@@ -284,4 +284,22 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get deleteItemConfirm => 'Elimina';
+
+  @override
+  String get signedInTitle => 'Accesso effettuato';
+
+  @override
+  String get signedInBody =>
+      'Dualio sincronizza gli elementi salvati per questo account.';
+
+  @override
+  String signedInAs(String email) {
+    return 'Accesso come $email';
+  }
+
+  @override
+  String get signOut => 'Esci';
+
+  @override
+  String get unknownAccount => 'Account connesso';
 }

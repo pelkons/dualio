@@ -87,5 +87,10 @@
     "deleteItemTitle":  "Dieses Element loschen?",
     "deleteItemBody":  "Es wird aus deiner Inbox entfernt.",
     "deleteItemCancel":  "Abbrechen",
-    "deleteItemConfirm":  "Loschen"
+    "deleteItemConfirm":  "Loschen",
+    "signedInTitle":  "Angemeldet",
+    "signedInBody":  "Dualio synchronisiert gespeicherte Elemente fur dieses Konto.",
+    "signedInAs":  "Angemeldet als {email}",
+    "signOut":  "Abmelden",
+    "unknownAccount":  "Angemeldetes Konto"
 }

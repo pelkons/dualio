@@ -282,4 +282,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteItemConfirm => 'Delete';
+
+  @override
+  String get signedInTitle => 'Signed in';
+
+  @override
+  String get signedInBody => 'Dualio is syncing saved items for this account.';
+
+  @override
+  String signedInAs(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get unknownAccount => 'Signed-in account';
 }

@@ -87,5 +87,10 @@
     "deleteItemTitle":  "Eliminare questo elemento?",
     "deleteItemBody":  "Verra rimosso dalla tua inbox.",
     "deleteItemCancel":  "Annulla",
-    "deleteItemConfirm":  "Elimina"
+    "deleteItemConfirm":  "Elimina",
+    "signedInTitle":  "Accesso effettuato",
+    "signedInBody":  "Dualio sincronizza gli elementi salvati per questo account.",
+    "signedInAs":  "Accesso come {email}",
+    "signOut":  "Esci",
+    "unknownAccount":  "Account connesso"
 }

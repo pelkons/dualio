@@ -635,6 +635,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get deleteItemConfirm;
+
+  /// No description provided for @signedInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get signedInTitle;
+
+  /// No description provided for @signedInBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Dualio is syncing saved items for this account.'**
+  String get signedInBody;
+
+  /// No description provided for @signedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String signedInAs(String email);
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @unknownAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed-in account'**
+  String get unknownAccount;
 }
 
 class _AppLocalizationsDelegate

@@ -87,5 +87,10 @@
     "deleteItemTitle":  "Supprimer cet element ?",
     "deleteItemBody":  "Il sera retire de votre inbox.",
     "deleteItemCancel":  "Annuler",
-    "deleteItemConfirm":  "Supprimer"
+    "deleteItemConfirm":  "Supprimer",
+    "signedInTitle":  "Connecte",
+    "signedInBody":  "Dualio synchronise les elements sauvegardes pour ce compte.",
+    "signedInAs":  "Connecte avec {email}",
+    "signOut":  "Se deconnecter",
+    "unknownAccount":  "Compte connecte"
 }

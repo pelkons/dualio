@@ -5,6 +5,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 final authControllerProvider = AsyncNotifierProvider<AuthController, void>(AuthController.new);
 
+final authSessionProvider = StreamProvider<Session?>((ref) {
+  final client = SupabaseBootstrap.client;
+  if (client == null) {
+    return Stream<Session?>.value(null);
+  }
+
+  return client.auth.onAuthStateChange.map((state) => state.session).distinct().startWith(client.auth.currentSession);
+});
+
 class AuthController extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
@@ -66,6 +75,24 @@ class AuthController extends AsyncNotifier<void> {
       }
     });
     state.requireValue;
+  }
+
+  Future<void> signOut() async {
+    final client = SupabaseBootstrap.client;
+    if (client == null) {
+      throw const AuthConfigurationException('Supabase is not configured yet.');
+    }
+
+    state = const AsyncLoading<void>();
+    state = await AsyncValue.guard(client.auth.signOut);
+    state.requireValue;
+  }
+}
+
+extension _StreamStartWith<T> on Stream<T> {
+  Stream<T> startWith(T value) async* {
+    yield value;
+    yield* this;
   }
 }
 

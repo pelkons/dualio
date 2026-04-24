@@ -87,5 +87,10 @@
     "deleteItemTitle":  "למחוק את הפריט?",
     "deleteItemBody":  "הפריט יוסר מהתיבה שלך.",
     "deleteItemCancel":  "ביטול",
-    "deleteItemConfirm":  "מחיקה"
+    "deleteItemConfirm":  "מחיקה",
+    "signedInTitle":  "מחובר",
+    "signedInBody":  "Dualio מסנכרן פריטים שמורים עבור החשבון הזה.",
+    "signedInAs":  "מחובר בתור {email}",
+    "signOut":  "יציאה",
+    "unknownAccount":  "חשבון מחובר"
 }

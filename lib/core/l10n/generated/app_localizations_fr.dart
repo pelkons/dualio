@@ -286,4 +286,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get deleteItemConfirm => 'Supprimer';
+
+  @override
+  String get signedInTitle => 'Connecte';
+
+  @override
+  String get signedInBody =>
+      'Dualio synchronise les elements sauvegardes pour ce compte.';
+
+  @override
+  String signedInAs(String email) {
+    return 'Connecte avec $email';
+  }
+
+  @override
+  String get signOut => 'Se deconnecter';
+
+  @override
+  String get unknownAccount => 'Compte connecte';
 }

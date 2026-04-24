@@ -87,5 +87,10 @@
     "deleteItemTitle":  "Eliminar este elemento?",
     "deleteItemBody":  "Se quitara de tu bandeja.",
     "deleteItemCancel":  "Cancelar",
-    "deleteItemConfirm":  "Eliminar"
+    "deleteItemConfirm":  "Eliminar",
+    "signedInTitle":  "Sesion iniciada",
+    "signedInBody":  "Dualio sincroniza los elementos guardados para esta cuenta.",
+    "signedInAs":  "Sesion iniciada como {email}",
+    "signOut":  "Cerrar sesion",
+    "unknownAccount":  "Cuenta conectada"
 }

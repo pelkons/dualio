@@ -280,4 +280,21 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get deleteItemConfirm => 'מחיקה';
+
+  @override
+  String get signedInTitle => 'מחובר';
+
+  @override
+  String get signedInBody => 'Dualio מסנכרן פריטים שמורים עבור החשבון הזה.';
+
+  @override
+  String signedInAs(String email) {
+    return 'מחובר בתור $email';
+  }
+
+  @override
+  String get signOut => 'יציאה';
+
+  @override
+  String get unknownAccount => 'חשבון מחובר';
 }

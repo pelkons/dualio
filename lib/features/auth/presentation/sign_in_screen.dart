@@ -27,7 +27,42 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final authState = ref.watch(authControllerProvider);
+    final session = ref.watch(authSessionProvider).valueOrNull;
     final palette = Theme.of(context).extension<DualioPalette>()!;
+    final email = session?.user.email;
+
+    if (session != null) {
+      return FeedShell(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 24, DualioTheme.mobileMargin, 128),
+          children: <Widget>[
+            Icon(Icons.verified_user_rounded, size: 30, color: palette.muted),
+            const SizedBox(height: 16),
+            Text(strings.signedInTitle, style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 8),
+            Text(strings.signedInBody, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: palette.muted, fontSize: 14)),
+            const SizedBox(height: 22),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: palette.card,
+                borderRadius: BorderRadius.circular(DualioTheme.cardRadius),
+                border: Border.all(color: palette.outline.withValues(alpha: 0.45)),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.person_rounded),
+                title: Text(email == null ? strings.unknownAccount : strings.signedInAs(email)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: authState.isLoading ? null : _signOut,
+              icon: const Icon(Icons.logout_rounded),
+              label: Text(strings.signOut),
+            ),
+          ],
+        ),
+      );
+    }
 
     return FeedShell(
       child: ListView(
@@ -145,6 +180,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       }
       final message = error is AuthConfigurationException ? strings.supabaseNotConfigured : strings.appleSignInFailed;
       setState(() => _message = message);
+    }
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await ref.read(authControllerProvider.notifier).signOut();
+    } on Object {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _message = AppLocalizations.of(context).supabaseNotConfigured);
     }
   }
 }

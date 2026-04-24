@@ -285,4 +285,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteItemConfirm => 'Eliminar';
+
+  @override
+  String get signedInTitle => 'Sesion iniciada';
+
+  @override
+  String get signedInBody =>
+      'Dualio sincroniza los elementos guardados para esta cuenta.';
+
+  @override
+  String signedInAs(String email) {
+    return 'Sesion iniciada como $email';
+  }
+
+  @override
+  String get signOut => 'Cerrar sesion';
+
+  @override
+  String get unknownAccount => 'Cuenta conectada';
 }

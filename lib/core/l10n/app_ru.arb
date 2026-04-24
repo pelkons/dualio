@@ -87,5 +87,10 @@
     "deleteItemTitle":  "Удалить этот элемент?",
     "deleteItemBody":  "Он будет удален из входящих.",
     "deleteItemCancel":  "Отмена",
-    "deleteItemConfirm":  "Удалить"
+    "deleteItemConfirm":  "Удалить",
+    "signedInTitle":  "Вы вошли",
+    "signedInBody":  "Dualio синхронизирует сохраненные элементы для этого аккаунта.",
+    "signedInAs":  "Вход выполнен как {email}",
+    "signOut":  "Выйти",
+    "unknownAccount":  "Аккаунт в системе"
 }

@@ -101,5 +101,17 @@
     "deleteItemTitle":  "Delete this item?",
     "deleteItemBody":  "This removes it from your inbox.",
     "deleteItemCancel":  "Cancel",
-    "deleteItemConfirm":  "Delete"
+    "deleteItemConfirm":  "Delete",
+    "signedInTitle":  "Signed in",
+    "signedInBody":  "Dualio is syncing saved items for this account.",
+    "signedInAs":  "Signed in as {email}",
+    "@signedInAs":  {
+        "placeholders":  {
+            "email":  {
+                "type":  "String"
+            }
+        }
+    },
+    "signOut":  "Sign out",
+    "unknownAccount":  "Signed-in account"
 }

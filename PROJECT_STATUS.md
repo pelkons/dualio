@@ -54,6 +54,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Fixed Android magic-link deep link routing for `dualio://auth/callback?...` so GoRouter redirects callbacks to the feed instead of Page Not Found.
 - Made Add capture return to the feed immediately after local save while Supabase sync runs in the background.
 - Added swipe-left deletion from the feed with confirmation dialog and best-effort Supabase remote delete.
+- Added visible signed-in account state: Account now shows the current email and a sign-out action instead of always showing magic-link sign-in.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
 - Added Claude project context in `CLAUDE.md`.

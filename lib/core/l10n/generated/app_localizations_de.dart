@@ -284,4 +284,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteItemConfirm => 'Loschen';
+
+  @override
+  String get signedInTitle => 'Angemeldet';
+
+  @override
+  String get signedInBody =>
+      'Dualio synchronisiert gespeicherte Elemente fur dieses Konto.';
+
+  @override
+  String signedInAs(String email) {
+    return 'Angemeldet als $email';
+  }
+
+  @override
+  String get signOut => 'Abmelden';
+
+  @override
+  String get unknownAccount => 'Angemeldetes Konto';
 }

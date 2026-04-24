@@ -1,6 +1,7 @@
 import 'package:dualio/core/l10n/generated/app_localizations.dart';
 import 'package:dualio/core/settings/app_settings_controller.dart';
 import 'package:dualio/core/theme/dualio_theme.dart';
+import 'package:dualio/features/auth/application/auth_controller.dart';
 import 'package:dualio/features/feed/presentation/widgets/feed_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final strings = AppLocalizations.of(context);
     final settings = ref.watch(appSettingsProvider);
+    final session = ref.watch(authSessionProvider).valueOrNull;
     final palette = Theme.of(context).extension<DualioPalette>()!;
 
     return FeedShell(
@@ -38,7 +40,7 @@ class SettingsScreen extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.person_rounded,
             title: strings.accountSetting,
-            subtitle: strings.accountSettingBody,
+            subtitle: session?.user.email == null ? strings.accountSettingBody : strings.signedInAs(session!.user.email!),
             onTap: () => context.go('/sign-in'),
           ),
           _SettingsTile(icon: Icons.workspace_premium_rounded, title: strings.subscriptionSetting, subtitle: strings.subscriptionSettingBody),
