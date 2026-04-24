@@ -17,16 +17,17 @@ final visibleSemanticItemsProvider = FutureProvider<List<SemanticItem>>((ref) as
     return localItems.where((item) => !removedIds.contains(item.id)).toList(growable: false);
   }
 
+  final localOnlyItems = localItems.where((item) => item.id.startsWith('local-'));
   final remoteItems = await repository.fetchLatestItems();
   if (remoteItems.isEmpty) {
-    return localItems.where((item) => !removedIds.contains(item.id)).toList(growable: false);
+    return localOnlyItems.where((item) => !removedIds.contains(item.id)).toList(growable: false);
   }
 
-  final localOnlyItems = localItems.where((item) {
+  final optimisticItems = localOnlyItems.where((item) {
     return item.id.startsWith('local-') && !remoteItems.any((remote) => remote.title == item.title && remote.searchableSummary == item.searchableSummary);
   });
 
-  return <SemanticItem>[...localOnlyItems, ...remoteItems].where((item) => !removedIds.contains(item.id)).toList(growable: false);
+  return <SemanticItem>[...optimisticItems, ...remoteItems].where((item) => !removedIds.contains(item.id)).toList(growable: false);
 });
 
 class RemovedItemIdsController extends Notifier<Set<String>> {

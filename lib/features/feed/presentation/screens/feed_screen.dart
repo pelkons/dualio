@@ -15,7 +15,10 @@ class FeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsState = ref.watch(visibleSemanticItemsProvider);
-    final previousItems = itemsState.valueOrNull ?? const <SemanticItem>[];
+    final removedIds = ref.watch(removedItemIdsProvider);
+    final previousItems = (itemsState.valueOrNull ?? const <SemanticItem>[])
+        .where((item) => !removedIds.contains(item.id))
+        .toList(growable: false);
 
     return FeedShell(
       child: itemsState.when(
