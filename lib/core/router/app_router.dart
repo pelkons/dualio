@@ -10,8 +10,18 @@ import 'package:go_router/go_router.dart';
 GoRouter createRouter() {
   return GoRouter(
     initialLocation: '/',
+    redirect: (context, state) {
+      final uri = state.uri;
+      final isCustomSchemeCallback = uri.scheme == 'dualio' && uri.host == 'auth' && uri.path.startsWith('/callback');
+      final isPathCallback = uri.path.startsWith('/auth/callback');
+      if (isCustomSchemeCallback || isPathCallback) {
+        return '/';
+      }
+      return null;
+    },
     routes: <RouteBase>[
       GoRoute(path: '/', builder: (context, state) => const FeedScreen()),
+      GoRoute(path: '/auth/callback', builder: (context, state) => const FeedScreen()),
       GoRoute(path: '/sign-in', builder: (context, state) => const SignInScreen()),
       GoRoute(path: '/add', builder: (context, state) => const AddItemScreen()),
       GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),

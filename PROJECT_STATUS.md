@@ -51,6 +51,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added `ItemsRepository` for Supabase `items` reads and pending item inserts.
 - Connected feed/detail/search to remote Supabase items when a signed-in user exists, with mock/local fallback.
 - Connected Add and Android share intake to insert pending items into Supabase after local optimistic insertion.
+- Fixed Android magic-link deep link routing for `dualio://auth/callback?...` so GoRouter redirects callbacks to the feed instead of Page Not Found.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
 - Added Claude project context in `CLAUDE.md`.
@@ -82,6 +83,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 
 - Image/screenshot share intake has not yet been tested on the physical phone.
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
+- Email magic-link callback reached the app on Android, but the end-to-end signed-in state needs to be re-tested after the routing fix.
 - Google sign-in has not yet been tested with real Supabase credentials.
 - Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
 - Add/feed remote item flow has been built but not yet verified with a signed-in Supabase user.
