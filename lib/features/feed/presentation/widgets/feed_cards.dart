@@ -232,14 +232,16 @@ class UnknownFeedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final palette = Theme.of(context).extension<DualioPalette>()!;
-    final label = item.processingStatus == ProcessingStatus.pending ? strings.processingType : strings.needsClarificationType;
+    final isProcessing = item.processingStatus == ProcessingStatus.pending || item.processingStatus == ProcessingStatus.processing;
+    final label = isProcessing ? strings.processingType : strings.needsClarificationType;
+    final icon = isProcessing ? Icons.sync_rounded : Icons.info_outline_rounded;
     final body = item.clarificationQuestion ?? item.searchableSummary;
     return FeedCardFrame(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          CardMeta(icon: Icons.help_outline_rounded, label: label),
+          CardMeta(icon: icon, label: label),
           const SizedBox(height: 12),
           Text(item.title, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 10),

@@ -67,6 +67,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Implemented and deployed `process-item` Edge Function v1 for link metadata fetching without OpenAI.
 - Connected link item creation to invoke `process-item` after Supabase insert.
 - Fixed article/link preview cards and details to tolerate missing full-article fields from metadata-only processing.
+- Replaced the question-mark icon on processing cards with a neutral sync icon to avoid confusing RTL-mirrored help icons.
 - Added `legal/TERMS_PRIVACY_NOTES.md` as the non-legal source-of-truth for future Terms, Privacy Policy, AI processing disclosure, retention, and subprocessors.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
