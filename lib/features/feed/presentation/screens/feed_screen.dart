@@ -79,8 +79,13 @@ class _DismissibleFeedCard extends ConsumerWidget {
     return Dismissible(
       key: ValueKey<String>('feed-item-${item.id}'),
       direction: DismissDirection.endToStart,
-      confirmDismiss: (_) => _confirmDelete(context),
-      onDismissed: (_) => ref.read(semanticItemsProvider.notifier).removeItem(item),
+      confirmDismiss: (_) async {
+        final confirmed = await _confirmDelete(context);
+        if (confirmed) {
+          ref.read(semanticItemsProvider.notifier).removeItem(item);
+        }
+        return confirmed;
+      },
       background: Padding(
         padding: const EdgeInsets.only(bottom: 14),
         child: DecoratedBox(
