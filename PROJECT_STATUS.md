@@ -43,6 +43,8 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added Android share-sheet support for shared links/text and images through `ACTION_SEND` and `ACTION_SEND_MULTIPLE`.
 - Added Flutter share intake listener using `receive_sharing_intent`; incoming shares create local pending semantic items.
 - Verified on physical Samsung phone that sharing from another Android app into Dualio works.
+- Added `design/icon.png` as the app launcher icon source and generated Android/iOS launcher icons.
+- Built and installed the debug APK with the new launcher icon on the connected Samsung Android phone.
 - Added Supabase migration for profiles, items, item_chunks, item_entities, search_events, RLS, indexes, pgvector, and hybrid search RPC.
 - Added Edge Function contracts for `process-item` and `search`.
 - Created `roadmap.md`.
@@ -61,11 +63,16 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added a Flutter smoke test and ran `flutter test` successfully.
 - Built Android debug APK successfully at `build\app\outputs\flutter-apk\app-debug.apk`.
 
+## Verified
+
+- The app has launched on a physical Samsung Android phone.
+- Android share-sheet link/text intake into Dualio works on the physical phone.
+
 ## Not Yet Verified
 
-- Android app has not been launched.
-- The app has launched on a physical Samsung Android phone.
-- The newest auth/settings changes have not yet been re-run on the physical phone.
+- Image/screenshot share intake has not yet been tested on the physical phone.
+- The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
+- Google sign-in has not yet been tested with real Supabase credentials.
 - Google sign-in requires Supabase credentials via `--dart-define`, Google provider configuration in Supabase, and `dualio://auth/callback` in the Supabase redirect allow-list.
 
 ## Current Blockers
@@ -79,7 +86,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 2. Smoke-test sharing an image/screenshot into Dualio.
 3. Smoke-test feed, capture, search, settings, and sign-in-not-configured state.
 4. Tune non-design UX issues discovered on device.
-5. Commit the current Flutter/Dualio scaffold and push it to GitHub.
+5. Commit and push the launcher icon update.
 
 ## Files New Agents Should Read First
 
