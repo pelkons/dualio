@@ -605,6 +605,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not start Apple sign-in. Try again.'**
   String get appleSignInFailed;
+
+  /// No description provided for @deleteItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteItem;
+
+  /// No description provided for @deleteItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this item?'**
+  String get deleteItemTitle;
+
+  /// No description provided for @deleteItemBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes it from your inbox.'**
+  String get deleteItemBody;
+
+  /// No description provided for @deleteItemCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get deleteItemCancel;
+
+  /// No description provided for @deleteItemConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteItemConfirm;
 }
 
 class _AppLocalizationsDelegate

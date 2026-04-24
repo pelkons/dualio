@@ -96,5 +96,10 @@
     "googleSignInStarted":  "Continue in the Google sign-in window.",
     "googleSignInFailed":  "Could not start Google sign-in. Try again.",
     "appleSignInStarted":  "Continue in the Apple sign-in window.",
-    "appleSignInFailed":  "Could not start Apple sign-in. Try again."
+    "appleSignInFailed":  "Could not start Apple sign-in. Try again.",
+    "deleteItem":  "Delete",
+    "deleteItemTitle":  "Delete this item?",
+    "deleteItemBody":  "This removes it from your inbox.",
+    "deleteItemCancel":  "Cancel",
+    "deleteItemConfirm":  "Delete"
 }

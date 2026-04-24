@@ -82,5 +82,10 @@
     "googleSignInStarted":  "Continue in the Google sign-in window.",
     "googleSignInFailed":  "Impossible de lancer la connexion Google. Reessayez.",
     "appleSignInStarted":  "Continuez dans la fenetre de connexion Apple.",
-    "appleSignInFailed":  "Impossible de lancer la connexion Apple. Reessayez."
+    "appleSignInFailed":  "Impossible de lancer la connexion Apple. Reessayez.",
+    "deleteItem":  "Supprimer",
+    "deleteItemTitle":  "Supprimer cet element ?",
+    "deleteItemBody":  "Il sera retire de votre inbox.",
+    "deleteItemCancel":  "Annuler",
+    "deleteItemConfirm":  "Supprimer"
 }

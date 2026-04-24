@@ -59,6 +59,25 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
     unawaited(_syncPendingInput(normalized, sourceType));
   }
 
+  void removeItem(SemanticItem item) {
+    state = state.where((candidate) => candidate.id != item.id).toList(growable: false);
+    unawaited(_deleteRemoteItem(item.id));
+  }
+
+  Future<void> _deleteRemoteItem(String itemId) async {
+    final repository = ref.read(itemsRepositoryProvider);
+    if (repository == null || !repository.hasSignedInUser) {
+      return;
+    }
+
+    try {
+      await repository.deleteItem(itemId);
+      ref.invalidate(visibleSemanticItemsProvider);
+    } on Object {
+      // Deleting should keep the feed responsive even if remote sync fails.
+    }
+  }
+
   Future<void> _syncPendingInput(String normalized, SourceType sourceType) async {
     final repository = ref.read(itemsRepositoryProvider);
     if (repository == null || !repository.hasSignedInUser) {

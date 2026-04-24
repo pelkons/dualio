@@ -82,5 +82,10 @@
     "googleSignInStarted":  "Continue in the Google sign-in window.",
     "googleSignInFailed":  "No se pudo iniciar sesion con Google. Intentalo de nuevo.",
     "appleSignInStarted":  "Continua en la ventana de inicio de sesion de Apple.",
-    "appleSignInFailed":  "No se pudo iniciar sesion con Apple. Intentalo de nuevo."
+    "appleSignInFailed":  "No se pudo iniciar sesion con Apple. Intentalo de nuevo.",
+    "deleteItem":  "Eliminar",
+    "deleteItemTitle":  "Eliminar este elemento?",
+    "deleteItemBody":  "Se quitara de tu bandeja.",
+    "deleteItemCancel":  "Cancelar",
+    "deleteItemConfirm":  "Eliminar"
 }

@@ -82,5 +82,10 @@
     "googleSignInStarted":  "Continue in the Google sign-in window.",
     "googleSignInFailed":  "לא ניתן להתחיל כניסה עם Google. נסו שוב.",
     "appleSignInStarted":  "המשיכו בחלון הכניסה של Apple.",
-    "appleSignInFailed":  "לא ניתן להתחיל כניסה עם Apple. נסו שוב."
+    "appleSignInFailed":  "לא ניתן להתחיל כניסה עם Apple. נסו שוב.",
+    "deleteItem":  "מחיקה",
+    "deleteItemTitle":  "למחוק את הפריט?",
+    "deleteItemBody":  "הפריט יוסר מהתיבה שלך.",
+    "deleteItemCancel":  "ביטול",
+    "deleteItemConfirm":  "מחיקה"
 }

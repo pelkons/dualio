@@ -82,5 +82,10 @@
     "googleSignInStarted":  "Continue in the Google sign-in window.",
     "googleSignInFailed":  "Impossibile avviare l'accesso con Google. Riprova.",
     "appleSignInStarted":  "Continua nella finestra di accesso Apple.",
-    "appleSignInFailed":  "Impossibile avviare l'accesso con Apple. Riprova."
+    "appleSignInFailed":  "Impossibile avviare l'accesso con Apple. Riprova.",
+    "deleteItem":  "Elimina",
+    "deleteItemTitle":  "Eliminare questo elemento?",
+    "deleteItemBody":  "Verra rimosso dalla tua inbox.",
+    "deleteItemCancel":  "Annulla",
+    "deleteItemConfirm":  "Elimina"
 }

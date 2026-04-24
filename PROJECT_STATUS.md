@@ -53,6 +53,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Connected Add and Android share intake to insert pending items into Supabase after local optimistic insertion.
 - Fixed Android magic-link deep link routing for `dualio://auth/callback?...` so GoRouter redirects callbacks to the feed instead of Page Not Found.
 - Made Add capture return to the feed immediately after local save while Supabase sync runs in the background.
+- Added swipe-left deletion from the feed with confirmation dialog and best-effort Supabase remote delete.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
 - Added Claude project context in `CLAUDE.md`.

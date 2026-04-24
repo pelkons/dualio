@@ -270,4 +270,19 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get appleSignInFailed =>
       'No se pudo iniciar sesion con Apple. Intentalo de nuevo.';
+
+  @override
+  String get deleteItem => 'Eliminar';
+
+  @override
+  String get deleteItemTitle => 'Eliminar este elemento?';
+
+  @override
+  String get deleteItemBody => 'Se quitara de tu bandeja.';
+
+  @override
+  String get deleteItemCancel => 'Cancelar';
+
+  @override
+  String get deleteItemConfirm => 'Eliminar';
 }

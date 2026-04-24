@@ -269,4 +269,19 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get appleSignInFailed =>
       'Impossibile avviare l\'accesso con Apple. Riprova.';
+
+  @override
+  String get deleteItem => 'Elimina';
+
+  @override
+  String get deleteItemTitle => 'Eliminare questo elemento?';
+
+  @override
+  String get deleteItemBody => 'Verra rimosso dalla tua inbox.';
+
+  @override
+  String get deleteItemCancel => 'Annulla';
+
+  @override
+  String get deleteItemConfirm => 'Elimina';
 }

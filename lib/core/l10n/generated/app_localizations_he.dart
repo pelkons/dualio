@@ -265,4 +265,19 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get appleSignInFailed => 'לא ניתן להתחיל כניסה עם Apple. נסו שוב.';
+
+  @override
+  String get deleteItem => 'מחיקה';
+
+  @override
+  String get deleteItemTitle => 'למחוק את הפריט?';
+
+  @override
+  String get deleteItemBody => 'הפריט יוסר מהתיבה שלך.';
+
+  @override
+  String get deleteItemCancel => 'ביטול';
+
+  @override
+  String get deleteItemConfirm => 'מחיקה';
 }

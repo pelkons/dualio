@@ -269,4 +269,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get appleSignInFailed =>
       'Apple-Anmeldung konnte nicht gestartet werden. Versuche es erneut.';
+
+  @override
+  String get deleteItem => 'Loschen';
+
+  @override
+  String get deleteItemTitle => 'Dieses Element loschen?';
+
+  @override
+  String get deleteItemBody => 'Es wird aus deiner Inbox entfernt.';
+
+  @override
+  String get deleteItemCancel => 'Abbrechen';
+
+  @override
+  String get deleteItemConfirm => 'Loschen';
 }

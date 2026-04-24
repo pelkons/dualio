@@ -77,6 +77,15 @@ class ItemsRepository {
     return _itemFromRow(row);
   }
 
+  Future<void> deleteItem(String itemId) async {
+    final user = _client.auth.currentUser;
+    if (user == null || itemId.startsWith('local-')) {
+      return;
+    }
+
+    await _client.from('items').delete().eq('id', itemId).eq('user_id', user.id);
+  }
+
   SemanticItem _itemFromRow(Map<String, Object?> row) {
     return SemanticItem(
       id: row['id']! as String,

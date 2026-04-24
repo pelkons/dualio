@@ -82,5 +82,10 @@
     "googleSignInStarted":  "Continue in the Google sign-in window.",
     "googleSignInFailed":  "Google-Anmeldung konnte nicht gestartet werden. Versuche es erneut.",
     "appleSignInStarted":  "Fahre im Apple-Anmeldefenster fort.",
-    "appleSignInFailed":  "Apple-Anmeldung konnte nicht gestartet werden. Versuche es erneut."
+    "appleSignInFailed":  "Apple-Anmeldung konnte nicht gestartet werden. Versuche es erneut.",
+    "deleteItem":  "Loschen",
+    "deleteItemTitle":  "Dieses Element loschen?",
+    "deleteItemBody":  "Es wird aus deiner Inbox entfernt.",
+    "deleteItemCancel":  "Abbrechen",
+    "deleteItemConfirm":  "Loschen"
 }

@@ -82,5 +82,10 @@
     "googleSignInStarted":  "Continue in the Google sign-in window.",
     "googleSignInFailed":  "Не удалось начать вход через Google. Попробуйте снова.",
     "appleSignInStarted":  "Продолжите вход в окне Apple.",
-    "appleSignInFailed":  "Не удалось начать вход через Apple. Попробуйте снова."
+    "appleSignInFailed":  "Не удалось начать вход через Apple. Попробуйте снова.",
+    "deleteItem":  "Удалить",
+    "deleteItemTitle":  "Удалить этот элемент?",
+    "deleteItemBody":  "Он будет удален из входящих.",
+    "deleteItemCancel":  "Отмена",
+    "deleteItemConfirm":  "Удалить"
 }

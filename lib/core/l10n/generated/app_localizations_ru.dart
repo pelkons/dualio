@@ -269,4 +269,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appleSignInFailed =>
       'Не удалось начать вход через Apple. Попробуйте снова.';
+
+  @override
+  String get deleteItem => 'Удалить';
+
+  @override
+  String get deleteItemTitle => 'Удалить этот элемент?';
+
+  @override
+  String get deleteItemBody => 'Он будет удален из входящих.';
+
+  @override
+  String get deleteItemCancel => 'Отмена';
+
+  @override
+  String get deleteItemConfirm => 'Удалить';
 }
