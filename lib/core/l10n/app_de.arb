@@ -8,7 +8,7 @@
     "settingsTab":  "Einstellungen",
     "addItem":  "Hinzufugen",
     "signInTitle":  "Anmelden",
-    "signInBody":  "Nutze deine E-Mail, um einen Magic Link zu erhalten.",
+    "signInBody":  "Melde dich mit Apple, Google oder E-Mail an.",
     "addTitle":  "Erfassen",
     "addBody":  "Fuge einen Link ein, wahle ein Foto, nutze die Kamera oder speichere Text.",
     "searchTitle":  "Semantische Suche",
@@ -76,8 +76,11 @@
     "categoriesTab":  "Categories",
     "categoriesTitle":  "Categories",
     "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
-    "continueWithGoogle":  "Continue with Google",
+    "continueWithGoogle":  "Mit Google fortfahren",
+    "continueWithApple":  "Mit Apple fortfahren",
     "orSignInWithEmail":  "or use email",
     "googleSignInStarted":  "Continue in the Google sign-in window.",
-    "googleSignInFailed":  "Could not start Google sign-in. Try again."
+    "googleSignInFailed":  "Google-Anmeldung konnte nicht gestartet werden. Versuche es erneut.",
+    "appleSignInStarted":  "Fahre im Apple-Anmeldefenster fort.",
+    "appleSignInFailed":  "Apple-Anmeldung konnte nicht gestartet werden. Versuche es erneut."
 }

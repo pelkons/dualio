@@ -38,6 +38,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added optional Supabase bootstrap that keeps the app runnable without backend credentials.
 - Replaced the sign-in placeholder with an email magic-link screen wired to Supabase when configured.
 - Added Google OAuth sign-in button using Supabase Auth and Android deep link callback `dualio://auth/callback`.
+- Added iOS-only Apple OAuth sign-in scaffold using Supabase Auth, iOS Sign in with Apple entitlement, and iOS `dualio://auth/callback` URL scheme.
 - Replaced the settings placeholder with theme controls plus account/subscription sections.
 - Moved app language selection out of in-app Settings and into Android per-app language settings via `android:localeConfig`.
 - Added Android share-sheet support for shared links/text and images through `ACTION_SEND` and `ACTION_SEND_MULTIPLE`.
@@ -73,7 +74,9 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Image/screenshot share intake has not yet been tested on the physical phone.
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
 - Google sign-in has not yet been tested with real Supabase credentials.
+- Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
 - Google sign-in requires Supabase credentials via `--dart-define`, Google provider configuration in Supabase, and `dualio://auth/callback` in the Supabase redirect allow-list.
+- Apple sign-in requires Apple provider configuration in Supabase, Apple Developer capability/signing setup, and `dualio://auth/callback` in the Supabase redirect allow-list.
 
 ## Current Blockers
 
@@ -86,7 +89,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 2. Smoke-test sharing an image/screenshot into Dualio.
 3. Smoke-test feed, capture, search, settings, and sign-in-not-configured state.
 4. Tune non-design UX issues discovered on device.
-5. Commit and push the launcher icon update.
+5. Configure a real Supabase project and test Google/Apple auth callbacks.
 
 ## Files New Agents Should Read First
 

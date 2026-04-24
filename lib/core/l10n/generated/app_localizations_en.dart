@@ -33,7 +33,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInTitle => 'Sign in';
 
   @override
-  String get signInBody => 'Use your email to receive a magic link.';
+  String get signInBody => 'Use Apple, Google, or email to sign in.';
 
   @override
   String get addTitle => 'Capture';
@@ -251,6 +251,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueWithGoogle => 'Continue with Google';
 
   @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
   String get orSignInWithEmail => 'or use email';
 
   @override
@@ -258,4 +261,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleSignInFailed => 'Could not start Google sign-in. Try again.';
+
+  @override
+  String get appleSignInStarted => 'Continue in the Apple sign-in window.';
+
+  @override
+  String get appleSignInFailed => 'Could not start Apple sign-in. Try again.';
 }

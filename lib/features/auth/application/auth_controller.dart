@@ -48,6 +48,25 @@ class AuthController extends AsyncNotifier<void> {
     });
     state.requireValue;
   }
+
+  Future<void> signInWithApple() async {
+    final client = SupabaseBootstrap.client;
+    if (client == null) {
+      throw const AuthConfigurationException('Supabase is not configured yet.');
+    }
+
+    state = const AsyncLoading<void>();
+    state = await AsyncValue.guard(() async {
+      final launched = await client.auth.signInWithOAuth(
+        OAuthProvider.apple,
+        redirectTo: AppConfig.authRedirectUri,
+      );
+      if (!launched) {
+        throw const AuthConfigurationException('Could not open Apple sign-in.');
+      }
+    });
+    state.requireValue;
+  }
 }
 
 class AuthConfigurationException implements Exception {

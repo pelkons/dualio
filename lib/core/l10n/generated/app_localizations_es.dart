@@ -33,7 +33,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get signInTitle => 'Iniciar sesion';
 
   @override
-  String get signInBody => 'Usa tu email para recibir un enlace magico.';
+  String get signInBody => 'Inicia sesion con Apple, Google o email.';
 
   @override
   String get addTitle => 'Capturar';
@@ -248,7 +248,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
 
   @override
-  String get continueWithGoogle => 'Continue with Google';
+  String get continueWithGoogle => 'Continuar con Google';
+
+  @override
+  String get continueWithApple => 'Continuar con Apple';
 
   @override
   String get orSignInWithEmail => 'or use email';
@@ -257,5 +260,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get googleSignInStarted => 'Continue in the Google sign-in window.';
 
   @override
-  String get googleSignInFailed => 'Could not start Google sign-in. Try again.';
+  String get googleSignInFailed =>
+      'No se pudo iniciar sesion con Google. Intentalo de nuevo.';
+
+  @override
+  String get appleSignInStarted =>
+      'Continua en la ventana de inicio de sesion de Apple.';
+
+  @override
+  String get appleSignInFailed =>
+      'No se pudo iniciar sesion con Apple. Intentalo de nuevo.';
 }

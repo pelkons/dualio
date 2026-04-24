@@ -33,7 +33,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get signInTitle => 'כניסה';
 
   @override
-  String get signInBody => 'השתמשו באימייל כדי לקבל קישור קסם.';
+  String get signInBody => 'היכנסו עם Apple, Google או אימייל.';
 
   @override
   String get addTitle => 'שמירה';
@@ -246,7 +246,10 @@ class AppLocalizationsHe extends AppLocalizations {
       'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
 
   @override
-  String get continueWithGoogle => 'Continue with Google';
+  String get continueWithGoogle => 'המשך עם Google';
+
+  @override
+  String get continueWithApple => 'המשך עם Apple';
 
   @override
   String get orSignInWithEmail => 'or use email';
@@ -255,5 +258,11 @@ class AppLocalizationsHe extends AppLocalizations {
   String get googleSignInStarted => 'Continue in the Google sign-in window.';
 
   @override
-  String get googleSignInFailed => 'Could not start Google sign-in. Try again.';
+  String get googleSignInFailed => 'לא ניתן להתחיל כניסה עם Google. נסו שוב.';
+
+  @override
+  String get appleSignInStarted => 'המשיכו בחלון הכניסה של Apple.';
+
+  @override
+  String get appleSignInFailed => 'לא ניתן להתחיל כניסה עם Apple. נסו שוב.';
 }

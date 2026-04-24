@@ -8,7 +8,7 @@
     "settingsTab":  "Reglages",
     "addItem":  "Ajouter",
     "signInTitle":  "Connexion",
-    "signInBody":  "Utilisez votre email pour recevoir un lien magique.",
+    "signInBody":  "Connectez-vous avec Apple, Google ou email.",
     "addTitle":  "Capture",
     "addBody":  "Collez un lien, ajoutez une photo, utilisez l appareil photo ou sauvegardez du texte.",
     "searchTitle":  "Recherche semantique",
@@ -76,8 +76,11 @@
     "categoriesTab":  "Categories",
     "categoriesTitle":  "Categories",
     "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
-    "continueWithGoogle":  "Continue with Google",
+    "continueWithGoogle":  "Continuer avec Google",
+    "continueWithApple":  "Continuer avec Apple",
     "orSignInWithEmail":  "or use email",
     "googleSignInStarted":  "Continue in the Google sign-in window.",
-    "googleSignInFailed":  "Could not start Google sign-in. Try again."
+    "googleSignInFailed":  "Impossible de lancer la connexion Google. Reessayez.",
+    "appleSignInStarted":  "Continuez dans la fenetre de connexion Apple.",
+    "appleSignInFailed":  "Impossible de lancer la connexion Apple. Reessayez."
 }

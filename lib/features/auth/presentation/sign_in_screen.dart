@@ -2,6 +2,7 @@ import 'package:dualio/core/l10n/generated/app_localizations.dart';
 import 'package:dualio/core/theme/dualio_theme.dart';
 import 'package:dualio/features/auth/application/auth_controller.dart';
 import 'package:dualio/features/feed/presentation/widgets/feed_shell.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,6 +39,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           const SizedBox(height: 8),
           Text(strings.signInBody, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: palette.muted, fontSize: 14)),
           const SizedBox(height: 22),
+          if (defaultTargetPlatform == TargetPlatform.iOS) ...<Widget>[
+            OutlinedButton.icon(
+              onPressed: authState.isLoading ? null : _signInWithApple,
+              icon: const Icon(Icons.apple),
+              label: Text(strings.continueWithApple),
+            ),
+            const SizedBox(height: 12),
+          ],
           OutlinedButton.icon(
             onPressed: authState.isLoading ? null : _signInWithGoogle,
             icon: const Icon(Icons.account_circle_rounded),
@@ -118,6 +127,23 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         return;
       }
       final message = error is AuthConfigurationException ? strings.supabaseNotConfigured : strings.googleSignInFailed;
+      setState(() => _message = message);
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    final strings = AppLocalizations.of(context);
+    try {
+      await ref.read(authControllerProvider.notifier).signInWithApple();
+      if (!mounted) {
+        return;
+      }
+      setState(() => _message = strings.appleSignInStarted);
+    } on Object catch (error) {
+      if (!mounted) {
+        return;
+      }
+      final message = error is AuthConfigurationException ? strings.supabaseNotConfigured : strings.appleSignInFailed;
       setState(() => _message = message);
     }
   }

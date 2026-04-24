@@ -8,7 +8,7 @@
     "settingsTab":  "Настройки",
     "addItem":  "Добавить",
     "signInTitle":  "Войти",
-    "signInBody":  "Введите email, чтобы получить magic link.",
+    "signInBody":  "Войдите через Apple, Google или email.",
     "addTitle":  "Сохранить",
     "addBody":  "Вставьте ссылку, добавьте фото, откройте камеру или сохраните текст.",
     "searchTitle":  "Семантический поиск",
@@ -76,8 +76,11 @@
     "categoriesTab":  "Categories",
     "categoriesTitle":  "Categories",
     "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
-    "continueWithGoogle":  "Continue with Google",
+    "continueWithGoogle":  "Продолжить с Google",
+    "continueWithApple":  "Продолжить с Apple",
     "orSignInWithEmail":  "or use email",
     "googleSignInStarted":  "Continue in the Google sign-in window.",
-    "googleSignInFailed":  "Could not start Google sign-in. Try again."
+    "googleSignInFailed":  "Не удалось начать вход через Google. Попробуйте снова.",
+    "appleSignInStarted":  "Продолжите вход в окне Apple.",
+    "appleSignInFailed":  "Не удалось начать вход через Apple. Попробуйте снова."
 }

@@ -33,7 +33,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signInTitle => 'Войти';
 
   @override
-  String get signInBody => 'Введите email, чтобы получить magic link.';
+  String get signInBody => 'Войдите через Apple, Google или email.';
 
   @override
   String get addTitle => 'Сохранить';
@@ -248,7 +248,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
 
   @override
-  String get continueWithGoogle => 'Continue with Google';
+  String get continueWithGoogle => 'Продолжить с Google';
+
+  @override
+  String get continueWithApple => 'Продолжить с Apple';
 
   @override
   String get orSignInWithEmail => 'or use email';
@@ -257,5 +260,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get googleSignInStarted => 'Continue in the Google sign-in window.';
 
   @override
-  String get googleSignInFailed => 'Could not start Google sign-in. Try again.';
+  String get googleSignInFailed =>
+      'Не удалось начать вход через Google. Попробуйте снова.';
+
+  @override
+  String get appleSignInStarted => 'Продолжите вход в окне Apple.';
+
+  @override
+  String get appleSignInFailed =>
+      'Не удалось начать вход через Apple. Попробуйте снова.';
 }

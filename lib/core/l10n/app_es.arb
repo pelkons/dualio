@@ -8,7 +8,7 @@
     "settingsTab":  "Ajustes",
     "addItem":  "Anadir",
     "signInTitle":  "Iniciar sesion",
-    "signInBody":  "Usa tu email para recibir un enlace magico.",
+    "signInBody":  "Inicia sesion con Apple, Google o email.",
     "addTitle":  "Capturar",
     "addBody":  "Pega un enlace, agrega una foto, usa la camara o guarda texto.",
     "searchTitle":  "Busqueda semantica",
@@ -76,8 +76,11 @@
     "categoriesTab":  "Categories",
     "categoriesTitle":  "Categories",
     "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
-    "continueWithGoogle":  "Continue with Google",
+    "continueWithGoogle":  "Continuar con Google",
+    "continueWithApple":  "Continuar con Apple",
     "orSignInWithEmail":  "or use email",
     "googleSignInStarted":  "Continue in the Google sign-in window.",
-    "googleSignInFailed":  "Could not start Google sign-in. Try again."
+    "googleSignInFailed":  "No se pudo iniciar sesion con Google. Intentalo de nuevo.",
+    "appleSignInStarted":  "Continua en la ventana de inicio de sesion de Apple.",
+    "appleSignInFailed":  "No se pudo iniciar sesion con Apple. Intentalo de nuevo."
 }

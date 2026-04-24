@@ -159,7 +159,7 @@ abstract class AppLocalizations {
   /// No description provided for @signInBody.
   ///
   /// In en, this message translates to:
-  /// **'Use your email to receive a magic link.'**
+  /// **'Use Apple, Google, or email to sign in.'**
   String get signInBody;
 
   /// No description provided for @addTitle.
@@ -570,6 +570,12 @@ abstract class AppLocalizations {
   /// **'Continue with Google'**
   String get continueWithGoogle;
 
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
   /// No description provided for @orSignInWithEmail.
   ///
   /// In en, this message translates to:
@@ -587,6 +593,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not start Google sign-in. Try again.'**
   String get googleSignInFailed;
+
+  /// No description provided for @appleSignInStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue in the Apple sign-in window.'**
+  String get appleSignInStarted;
+
+  /// No description provided for @appleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start Apple sign-in. Try again.'**
+  String get appleSignInFailed;
 }
 
 class _AppLocalizationsDelegate

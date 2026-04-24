@@ -8,7 +8,7 @@
     "settingsTab":  "הגדרות",
     "addItem":  "הוספה",
     "signInTitle":  "כניסה",
-    "signInBody":  "השתמשו באימייל כדי לקבל קישור קסם.",
+    "signInBody":  "היכנסו עם Apple, Google או אימייל.",
     "addTitle":  "שמירה",
     "addBody":  "הדביקו קישור, הוסיפו תמונה, פתחו מצלמה או שמרו טקסט.",
     "searchTitle":  "חיפוש סמנטי",
@@ -76,8 +76,11 @@
     "categoriesTab":  "Categories",
     "categoriesTitle":  "Categories",
     "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
-    "continueWithGoogle":  "Continue with Google",
+    "continueWithGoogle":  "המשך עם Google",
+    "continueWithApple":  "המשך עם Apple",
     "orSignInWithEmail":  "or use email",
     "googleSignInStarted":  "Continue in the Google sign-in window.",
-    "googleSignInFailed":  "Could not start Google sign-in. Try again."
+    "googleSignInFailed":  "לא ניתן להתחיל כניסה עם Google. נסו שוב.",
+    "appleSignInStarted":  "המשיכו בחלון הכניסה של Apple.",
+    "appleSignInFailed":  "לא ניתן להתחיל כניסה עם Apple. נסו שוב."
 }

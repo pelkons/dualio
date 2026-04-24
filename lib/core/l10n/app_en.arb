@@ -8,7 +8,7 @@
     "settingsTab":  "Settings",
     "addItem":  "Add item",
     "signInTitle":  "Sign in",
-    "signInBody":  "Use your email to receive a magic link.",
+    "signInBody":  "Use Apple, Google, or email to sign in.",
     "addTitle":  "Capture",
     "addBody":  "Paste a link, add a photo, use the camera, or save raw text.",
     "searchTitle":  "Semantic search",
@@ -91,7 +91,10 @@
     "categoriesTitle":  "Categories",
     "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
     "continueWithGoogle":  "Continue with Google",
+    "continueWithApple":  "Continue with Apple",
     "orSignInWithEmail":  "or use email",
     "googleSignInStarted":  "Continue in the Google sign-in window.",
-    "googleSignInFailed":  "Could not start Google sign-in. Try again."
+    "googleSignInFailed":  "Could not start Google sign-in. Try again.",
+    "appleSignInStarted":  "Continue in the Apple sign-in window.",
+    "appleSignInFailed":  "Could not start Apple sign-in. Try again."
 }

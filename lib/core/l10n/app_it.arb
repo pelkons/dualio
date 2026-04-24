@@ -8,7 +8,7 @@
     "settingsTab":  "Impostazioni",
     "addItem":  "Aggiungi",
     "signInTitle":  "Accedi",
-    "signInBody":  "Usa la tua email per ricevere un magic link.",
+    "signInBody":  "Accedi con Apple, Google o email.",
     "addTitle":  "Acquisisci",
     "addBody":  "Incolla un link, aggiungi una foto, usa la fotocamera o salva testo.",
     "searchTitle":  "Ricerca semantica",
@@ -76,8 +76,11 @@
     "categoriesTab":  "Categories",
     "categoriesTitle":  "Categories",
     "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
-    "continueWithGoogle":  "Continue with Google",
+    "continueWithGoogle":  "Continua con Google",
+    "continueWithApple":  "Continua con Apple",
     "orSignInWithEmail":  "or use email",
     "googleSignInStarted":  "Continue in the Google sign-in window.",
-    "googleSignInFailed":  "Could not start Google sign-in. Try again."
+    "googleSignInFailed":  "Impossibile avviare l'accesso con Google. Riprova.",
+    "appleSignInStarted":  "Continua nella finestra di accesso Apple.",
+    "appleSignInFailed":  "Impossibile avviare l'accesso con Apple. Riprova."
 }
