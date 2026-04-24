@@ -1,0 +1,4 @@
+interface:
+  display_name: "Premium Flutter UI"
+  short_description: "Editorial Flutter UI implementation"
+  default_prompt: "Use $premium-flutter-ui to build a polished Dualio screen from the design system."

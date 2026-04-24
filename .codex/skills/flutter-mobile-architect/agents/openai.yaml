@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flutter Mobile Architect"
+  short_description: "Flutter architecture for Dualio mobile"
+  default_prompt: "Use $flutter-mobile-architect to plan and implement a Flutter mobile feature."

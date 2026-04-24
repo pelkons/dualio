@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dualio - Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Noto+Serif:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#e6e2df",
+                        "surface-container-low": "#f7f3f2",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#ebe7e6",
+                        "on-surface": "#1c1b1b",
+                        "primary": "#000000",
+                        "surface-container-highest": "#e5e2e1",
+                        "on-primary-fixed": "#1c1b1b",
+                        "outline": "#747878",
+                        "on-primary-container": "#858383",
+                        "on-surface-variant": "#444748",
+                        "on-tertiary-container": "#868382",
+                        "on-secondary-container": "#626263",
+                        "on-secondary-fixed-variant": "#464747",
+                        "tertiary": "#000000",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#fdf8f8",
+                        "on-secondary": "#ffffff",
+                        "surface": "#fdf8f8",
+                        "secondary-container": "#e1dfdf",
+                        "on-background": "#1c1b1b",
+                        "secondary-fixed": "#e4e2e2",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-variant": "#e5e2e1",
+                        "surface-tint": "#5f5e5e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "on-secondary-fixed": "#1b1c1c",
+                        "on-tertiary-fixed": "#1c1b1a",
+                        "surface-container": "#f1edec",
+                        "surface-dim": "#ddd9d8",
+                        "secondary-fixed-dim": "#c7c6c6",
+                        "on-primary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#484645",
+                        "primary-fixed": "#e5e2e1",
+                        "tertiary-container": "#1c1b1a",
+                        "primary-container": "#1c1b1b",
+                        "outline-variant": "#c4c7c7",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#313030",
+                        "tertiary-fixed-dim": "#cac6c4",
+                        "inverse-on-surface": "#f4f0ef",
+                        "inverse-primary": "#c8c6c5",
+                        "error-container": "#ffdad6",
+                        "secondary": "#5e5e5e",
+                        "background": "#fdf8f8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "stack-md": "24px",
+                        "stack-lg": "40px",
+                        "unit": "4px",
+                        "margin-mobile": "24px",
+                        "stack-sm": "12px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Noto Serif"],
+                        "body-md": ["Manrope"],
+                        "metadata-sm": ["Manrope"],
+                        "headline-md": ["Noto Serif"],
+                        "label-xs": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["36px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "metadata-sm": ["12px", { "lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "500" }],
+                        "label-xs": ["11px", { "lineHeight": "1.2", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Hide scrollbar for clean masonry look */
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased selection:bg-surface-variant selection:text-on-surface">
+<!-- TopAppBar from JSON -->
+<header class="sticky top-0 z-40 bg-white dark:bg-[#1A1A1A] border-b border-neutral-100 dark:border-neutral-800 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex justify-between items-center w-full px-6 py-4">
+<button class="text-neutral-900 dark:text-neutral-50 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors p-2 -ml-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">search</span>
+</button>
+<h1 class="font-serif text-xl font-bold tracking-tighter text-neutral-900 dark:text-neutral-50">Dualio</h1>
+<button class="text-neutral-900 dark:text-neutral-50 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors p-1 -mr-1 rounded-full flex items-center justify-center">
+<div class="w-8 h-8 rounded-full bg-surface-dim overflow-hidden">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a young woman with natural makeup in soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC1SKBHZlgmGmQYvI7gUN3JvPqcR1OVwD1VjY_FCJTRYaagv9RgZVQJMrNBtOqYtSRg0LW5XWA-A8DiZORBYi4svDHPBBjhaa9d5dn0FUWlbjBBo8u9f8tcH8DUagg7UDM5HEMgdeVckT-m2LxAC7ETnPoZInquqaE9UxHT2nR0SiYDvsIDjpxGjXENuZqQpYNScYC0M7ObiQ9uwv2yIU85iVvspvI9xz6iW_6bDZr2tmxT9DLxGF3C6oevRFaswHGcGz2FfbfDq1u"/>
+</div>
+</button>
+</header>
+<!-- Search / Filter Area -->
+<section class="px-margin-mobile pt-stack-md pb-stack-sm">
+<div class="bg-surface-container-highest rounded-full flex items-center px-4 py-3 border border-outline-variant/30 focus-within:border-outline focus-within:bg-surface-container-lowest transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 p-0 w-full font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/70" placeholder="Find anything you saved..." type="text"/>
+</div>
+</section>
+<!-- Masonry Feed Canvas -->
+<main class="px-margin-mobile pb-[120px] pt-stack-sm columns-1 md:columns-2 lg:columns-3 gap-gutter space-y-gutter">
+<!-- Article Card -->
+<article class="break-inside-avoid bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-shadow cursor-pointer">
+<div class="flex items-center space-x-2 mb-3">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">article</span>
+<span class="font-metadata-sm text-metadata-sm text-on-surface-variant uppercase">Article • 4 min read</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-3">The Quiet Revolution of Slow Architecture</h2>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">In an era obsessed with speed and immediate gratification, a new movement is taking root. Architects are increasingly turning to locally sourced materials and ancient building techniques to create spaces that breathe.</p>
+<div class="mt-4 flex items-center justify-between text-on-surface-variant">
+<span class="font-label-xs text-label-xs">Added 2 hours ago</span>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+</article>
+<!-- Recipe Card -->
+<article class="break-inside-avoid bg-surface-container-lowest rounded-xl border border-outline-variant/50 overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-shadow cursor-pointer">
+<div class="w-full h-48 bg-surface-dim relative">
+<img alt="Recipe thumbnail" class="w-full h-full object-cover" data-alt="Close-up of artisan sourdough bread crust with deep scoring on dark slate backdrop" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUD_RcvQbsXmJFIWEMlCmgWYIkklF41StxtXi_JHGdjt8R5k3JBdYpcrAlihnCy3DM7EU_mHHwfJAY3Vvyq51_PVEzUbzxLfG8tLXyxJ8zT2EIHz_K3TouTT3p_Tk5ipTMPR1K4OBFloy7MqlebAkR-w4WOLxtIPoi8zAxA5xNXbZnvCaeWNAmSvy5AnDo2aQJID3XgM-E1-dHDfMGB-_rZZMkJSUHUAcwk7CeFkX9vhrDSIL3Bp_Gf5XIEYao0ebIEIKyxJZSYbC8"/>
+<div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center space-x-1 shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-primary">restaurant</span>
+<span class="font-metadata-sm text-metadata-sm text-primary uppercase text-[10px]">Recipe</span>
+</div>
+</div>
+<div class="p-5">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">No-Knead Olive Sourdough</h2>
+<div class="flex items-center space-x-4 mb-3 font-label-xs text-label-xs text-on-surface-variant">
+<span class="flex items-center"><span class="material-symbols-outlined text-[14px] mr-1">schedule</span> 18h prep</span>
+<span class="flex items-center"><span class="material-symbols-outlined text-[14px] mr-1">local_fire_department</span> High</span>
+</div>
+<div class="mt-4 flex items-center justify-between text-on-surface-variant border-t border-outline-variant/30 pt-3">
+<span class="font-label-xs text-label-xs">Yesterday</span>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+</div>
+</article>
+<!-- Quote/Text Card -->
+<article class="break-inside-avoid bg-surface-container-low rounded-xl border border-outline-variant/30 p-6 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-shadow cursor-pointer">
+<div class="flex items-center space-x-2 mb-4">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">format_quote</span>
+<span class="font-metadata-sm text-metadata-sm text-on-surface-variant uppercase">Highlight</span>
+</div>
+<blockquote class="font-display-lg text-display-lg text-on-surface tracking-tight mb-4 text-[28px] leading-tight">
+                "Simplicity is the ultimate sophistication."
+            </blockquote>
+<cite class="font-body-md text-body-md text-on-surface-variant not-italic">— Leonardo da Vinci</cite>
+<div class="mt-6 flex items-center justify-between text-on-surface-variant">
+<span class="font-label-xs text-label-xs">Oct 24</span>
+</div>
+</article>
+<!-- Movie Card -->
+<article class="break-inside-avoid bg-surface-container-lowest rounded-xl border border-outline-variant/50 overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-shadow cursor-pointer">
+<div class="w-full aspect-[2/3] bg-surface-dim relative group">
+<img alt="Movie poster" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Moody cinematic clapperboard on dark textured background with dramatic spotlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTxH2WYKNoipdR9iem0HA0y7oddnSMsdF9mq4vHvJ2ZdRwiacPYTy5S8Ppz9jfvx5HoASyp6JryMcFgfhCPx-OFp-xm6a3PGAHaXNsABifqff-o1ORGLtKRfKR8c4YKCLKLKl9_x-zr3frfDERs7GJylxt818u7sRfM_hDCQfS6wrIkgjBR2ICaSWgOfg9h8youuBvejdmVLhoPm4u6a1gHSrdDdQJK00RIP9v6uc_46FL91rZwNLEn3lBnREVVVESf6pk1JGTKSgV"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+<div class="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md flex items-center space-x-1">
+<span class="material-symbols-outlined text-[14px] text-white">movie</span>
+<span class="font-metadata-sm text-metadata-sm text-white uppercase text-[10px]">Film</span>
+</div>
+<div class="absolute bottom-4 left-4 right-4 text-white">
+<h2 class="font-headline-md text-headline-md mb-1 text-white shadow-sm">Past Lives</h2>
+<div class="flex items-center space-x-1 text-yellow-400">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star_half</span>
+<span class="font-metadata-sm text-white/90 ml-2">4.5</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Article Card 2 -->
+<article class="break-inside-avoid bg-surface-container-lowest rounded-xl border border-outline-variant/50 p-5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-shadow cursor-pointer">
+<div class="flex items-center space-x-2 mb-3">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">article</span>
+<span class="font-metadata-sm text-metadata-sm text-on-surface-variant uppercase">Essay • 12 min read</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-3">Understanding the Typography of Spaces</h2>
+<div class="mt-4 flex items-center justify-between text-on-surface-variant border-t border-outline-variant/30 pt-3">
+<span class="font-label-xs text-label-xs">Oct 20</span>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">more_horiz</span></button>
+</div>
+</article>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-[104px] right-margin-mobile w-[56px] h-[56px] bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:scale-105 transition-transform duration-200 z-40">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'wght' 300;">add</span>
+</button>
+<!-- BottomNavBar from JSON -->
+<nav class="bg-white/80 dark:bg-[#1A1A1A]/80 backdrop-blur-md fixed bottom-0 w-full rounded-t-lg border-t border-neutral-100 dark:border-neutral-800 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4">
+<button class="flex flex-col items-center justify-center w-16 text-neutral-300 dark:text-neutral-700 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
+<span class="material-symbols-outlined text-[24px]">all_inbox</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 text-neutral-300 dark:text-neutral-700 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
+<span class="material-symbols-outlined text-[24px]">search</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 text-neutral-900 dark:text-neutral-50 scale-110 transition-transform duration-150">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+</button>
+<button class="flex flex-col items-center justify-center w-16 text-neutral-300 dark:text-neutral-700 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
+<span class="material-symbols-outlined text-[24px]">person</span>
+</button>
+</nav>
+</body></html>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mobile Release QA"
+  short_description: "Android and iOS release readiness"
+  default_prompt: "Use $mobile-release-qa to prepare Dualio for mobile testing and release."

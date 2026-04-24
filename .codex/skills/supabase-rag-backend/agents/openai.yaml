@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supabase RAG Backend"
+  short_description: "Supabase RLS, pgvector, and RPCs"
+  default_prompt: "Use $supabase-rag-backend to design or update Dualio backend schema and policies."

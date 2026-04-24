@@ -1,0 +1,4 @@
+interface:
+  display_name: "i18n RTL A11y"
+  short_description: "Localization, RTL, and accessibility"
+  default_prompt: "Use $i18n-rtl-a11y to audit Dualio localization, RTL, and accessibility."

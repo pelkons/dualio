@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Processing Pipeline"
+  short_description: "AI extraction, OCR, chunks, embeddings"
+  default_prompt: "Use $ai-processing-pipeline to implement an idempotent Dualio item processing flow."
