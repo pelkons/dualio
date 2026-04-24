@@ -31,4 +31,12 @@ Run the app with Supabase enabled:
 
 Do not commit Supabase anon, service role, OpenAI, Cloudflare, or OAuth secrets.
 
+Apply remote database migrations:
+
+```powershell
+npx supabase login
+npx supabase link --project-ref uogaveubabnsskfwftui
+npx supabase db push
+```
+
 The feed is intentionally backed by mock semantic items until the card system visually matches the design.
