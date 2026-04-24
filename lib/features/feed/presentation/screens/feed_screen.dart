@@ -15,13 +15,13 @@ class FeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsState = ref.watch(visibleSemanticItemsProvider);
-    final fallbackItems = ref.watch(semanticItemsProvider);
+    final previousItems = itemsState.valueOrNull ?? const <SemanticItem>[];
 
     return FeedShell(
       child: itemsState.when(
         data: (items) => _FeedList(items: items),
-        loading: () => _FeedList(items: fallbackItems),
-        error: (_, _) => _FeedList(items: fallbackItems),
+        loading: () => _FeedList(items: previousItems),
+        error: (_, _) => _FeedList(items: previousItems),
       ),
     );
   }

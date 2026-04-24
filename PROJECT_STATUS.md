@@ -57,6 +57,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added visible signed-in account state: Account now shows the current email and a sign-out action instead of always showing magic-link sign-in.
 - Fixed signed-in feed visibility after capture by merging local optimistic pending items above remote items.
 - Smoothed feed deletion by hiding removed items locally and avoiding full-screen reload during remote delete.
+- Removed demo-feed fallback during signed-in feed loading/error states to avoid flashing mock cards after deletion.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
 - Added Claude project context in `CLAUDE.md`.
