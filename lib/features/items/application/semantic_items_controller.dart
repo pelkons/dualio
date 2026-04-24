@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dualio/features/items/data/items_repository.dart';
 import 'package:dualio/features/items/domain/semantic_item.dart';
-import 'package:dualio/mock/mock_semantic_items.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final semanticItemsProvider = NotifierProvider<SemanticItemsController, List<SemanticItem>>(SemanticItemsController.new);
@@ -44,7 +43,7 @@ class RemovedItemIdsController extends Notifier<Set<String>> {
 class SemanticItemsController extends Notifier<List<SemanticItem>> {
   @override
   List<SemanticItem> build() {
-    return mockSemanticItems;
+    return <SemanticItem>[];
   }
 
   void addPendingText({

@@ -61,6 +61,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Fixed deletion edge case where signed-in feed could briefly re-render mock demo items or a dismissed card during refresh.
 - Scoped the floating add button to the home feed only; secondary screens no longer show it.
 - Fixed swipe-delete confirmation so the item is marked removed immediately on first confirmation instead of waiting for a second attempt.
+- Removed mock demo items from the runtime feed provider; demo fixtures remain in `lib/mock/` but are no longer shown in the app.
 - Added `legal/TERMS_PRIVACY_NOTES.md` as the non-legal source-of-truth for future Terms, Privacy Policy, AI processing disclosure, retention, and subprocessors.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
