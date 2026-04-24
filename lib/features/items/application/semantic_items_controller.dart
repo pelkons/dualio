@@ -19,7 +19,11 @@ final visibleSemanticItemsProvider = FutureProvider<List<SemanticItem>>((ref) as
     return localItems;
   }
 
-  return remoteItems;
+  final localOnlyItems = localItems.where((item) {
+    return item.id.startsWith('local-') && !remoteItems.any((remote) => remote.title == item.title && remote.searchableSummary == item.searchableSummary);
+  });
+
+  return <SemanticItem>[...localOnlyItems, ...remoteItems];
 });
 
 class SemanticItemsController extends Notifier<List<SemanticItem>> {
