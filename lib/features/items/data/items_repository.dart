@@ -74,7 +74,22 @@ class ItemsRepository {
         .select()
         .single();
 
+    if (sourceType == SourceType.link) {
+      await _invokeProcessItem(row['id']! as String);
+    }
+
     return _itemFromRow(row);
+  }
+
+  Future<void> _invokeProcessItem(String itemId) async {
+    try {
+      await _client.functions.invoke(
+        'process-item',
+        body: <String, Object?>{'item_id': itemId},
+      );
+    } on Object {
+      // Capture is allowed to succeed even if processing is temporarily unavailable.
+    }
   }
 
   Future<void> deleteItem(String itemId) async {

@@ -63,6 +63,9 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Fixed swipe-delete confirmation so the item is marked removed immediately on first confirmation instead of waiting for a second attempt.
 - Removed mock demo items from the runtime feed provider; demo fixtures remain in `lib/mock/` but are no longer shown in the app.
 - Deleted the mock demo item fixture file entirely from `lib/mock/`.
+- Added raw-content retention schema fields with migration `202604240002_raw_content_retention.sql`.
+- Implemented and deployed `process-item` Edge Function v1 for link metadata fetching without OpenAI.
+- Connected link item creation to invoke `process-item` after Supabase insert.
 - Added `legal/TERMS_PRIVACY_NOTES.md` as the non-legal source-of-truth for future Terms, Privacy Policy, AI processing disclosure, retention, and subprocessors.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
@@ -97,6 +100,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Image/screenshot share intake has not yet been tested on the physical phone.
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
 - End-to-end signed-in state and remote item insert still need to be verified after the successful callback.
+- End-to-end link processing needs to be tested from the Android app after sign-in: save link -> pending item -> Edge Function metadata -> ready card.
 - Google sign-in has not yet been tested with real Supabase credentials.
 - Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
 - Add/feed remote item flow has been built but not yet verified with a signed-in Supabase user.
