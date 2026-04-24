@@ -101,20 +101,17 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
     );
   }
 
-  Future<void> _saveTypedInput() async {
+  void _saveTypedInput() {
     final value = _controller.text.trim();
     if (value.isEmpty) {
       setState(() => _showEmptyError = true);
       return;
     }
 
-    await ref.read(semanticItemsProvider.notifier).addPendingText(
+    ref.read(semanticItemsProvider.notifier).addPendingText(
           content: value,
           sourceType: _sourceType,
         );
-    if (!mounted) {
-      return;
-    }
     _notifySuccess();
     context.go('/');
   }
@@ -125,7 +122,7 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
       return;
     }
 
-    await ref.read(semanticItemsProvider.notifier).addPendingText(
+    ref.read(semanticItemsProvider.notifier).addPendingText(
           content: image.name,
           sourceType: SourceType.photo,
         );

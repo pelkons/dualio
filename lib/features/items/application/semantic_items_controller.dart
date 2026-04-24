@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dualio/features/items/data/items_repository.dart';
 import 'package:dualio/features/items/domain/semantic_item.dart';
 import 'package:dualio/mock/mock_semantic_items.dart';
@@ -26,10 +28,10 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
     return mockSemanticItems;
   }
 
-  Future<void> addPendingText({
+  void addPendingText({
     required String content,
     required SourceType sourceType,
-  }) async {
+  }) {
     final normalized = content.trim();
     if (normalized.isEmpty) {
       return;
@@ -54,13 +56,21 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
 
     state = <SemanticItem>[item, ...state];
 
+    unawaited(_syncPendingInput(normalized, sourceType));
+  }
+
+  Future<void> _syncPendingInput(String normalized, SourceType sourceType) async {
     final repository = ref.read(itemsRepositoryProvider);
     if (repository == null || !repository.hasSignedInUser) {
       return;
     }
 
-    await repository.createPendingInput(content: normalized, sourceType: sourceType);
-    ref.invalidate(visibleSemanticItemsProvider);
+    try {
+      await repository.createPendingInput(content: normalized, sourceType: sourceType);
+      ref.invalidate(visibleSemanticItemsProvider);
+    } on Object {
+      // Local capture should stay responsive even if remote sync fails.
+    }
   }
 
   ItemType _inferLocalType(String content) {

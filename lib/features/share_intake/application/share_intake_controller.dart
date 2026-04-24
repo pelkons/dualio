@@ -35,12 +35,10 @@ class ShareIntakeController {
         continue;
       }
 
-      unawaited(
-        _ref.read(semanticItemsProvider.notifier).addPendingText(
-              content: content,
-              sourceType: _sourceTypeFor(file),
-            ),
-      );
+      _ref.read(semanticItemsProvider.notifier).addPendingText(
+            content: content,
+            sourceType: _sourceTypeFor(file),
+          );
     }
   }
 
