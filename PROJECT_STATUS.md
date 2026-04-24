@@ -60,6 +60,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Removed demo-feed fallback during signed-in feed loading/error states to avoid flashing mock cards after deletion.
 - Fixed deletion edge case where signed-in feed could briefly re-render mock demo items or a dismissed card during refresh.
 - Scoped the floating add button to the home feed only; secondary screens no longer show it.
+- Added `legal/TERMS_PRIVACY_NOTES.md` as the non-legal source-of-truth for future Terms, Privacy Policy, AI processing disclosure, retention, and subprocessors.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
 - Added Claude project context in `CLAUDE.md`.
@@ -123,3 +124,4 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 5. `design/DESIGN.md`
 6. `design/code.html`
 7. `design/screen.png`
+8. `legal/TERMS_PRIVACY_NOTES.md`
