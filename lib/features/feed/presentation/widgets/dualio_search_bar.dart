@@ -15,7 +15,7 @@ class DualioSearchBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 22, DualioTheme.mobileMargin, 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
-        onTap: () => context.go('/search'),
+        onTap: () => context.push('/search'),
         child: Container(
           height: 44,
           padding: const EdgeInsets.symmetric(horizontal: 16),

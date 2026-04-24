@@ -6,41 +6,21 @@ type ProcessItemRequest = {
 type PipelineStage =
   | "fetch_item"
   | "normalize_source"
-  | "extract_text"
-  | "detect_type"
+  | "resolve_link"
+  | "enrich_link"
   | "extract_fields"
-  | "summarize"
-  | "extract_entities"
-  | "generate_aliases"
-  | "chunk"
-  | "embed_item"
-  | "embed_chunks"
-  | "store_assets"
   | "mark_ready";
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const stages: PipelineStage[] = [
-  "fetch_item",
-  "normalize_source",
-  "extract_text",
-  "detect_type",
-  "extract_fields",
-  "summarize",
-  "extract_entities",
-  "generate_aliases",
-  "chunk",
-  "embed_item",
-  "embed_chunks",
-  "store_assets",
-  "mark_ready",
-];
+import { enrichLinkUnofficial, mergeResolvedLinkWithEnrichment } from "../_shared/link_enrichment.ts";
+import { type LinkPlatform, type LinkResolverResult, normalizeLinkUrl, resolveLink } from "../_shared/link_resolver.ts";
 
 type ItemRow = {
   id: string;
   user_id: string;
   source_url: string | null;
   source_type: "link" | "screenshot" | "photo" | "text";
+  processing_status: "pending" | "processing" | "ready" | "needs_clarification" | "failed";
   raw_content: Record<string, unknown>;
   title: string;
 };
@@ -74,7 +54,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
   logStage(body.item_id, "fetch_item", "started");
   const { data: item, error: fetchError } = await supabase
     .from("items")
-    .select("id,user_id,source_url,source_type,raw_content,title")
+    .select("id,user_id,source_url,source_type,processing_status,raw_content,title")
     .eq("id", body.item_id)
     .single<ItemRow>();
 
@@ -84,13 +64,17 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
   logStage(body.item_id, "fetch_item", "completed");
 
+  if (item.processing_status === "ready" && !body.retry) {
+    return Response.json({ item_id: item.id, status: "ready", processed: false, idempotent: true });
+  }
+
   if (item.source_type !== "link" || !item.source_url) {
     await markReadyWithoutProcessing(supabase, item);
     return Response.json({ item_id: item.id, status: "ready", processed: false });
   }
 
   logStage(item.id, "normalize_source", "started");
-  const normalizedUrl = normalizeUrl(item.source_url);
+  const normalizedUrl = normalizeLinkUrl(item.source_url);
   if (!normalizedUrl) {
     await markFailed(supabase, item.id, "Invalid source URL.");
     logStage(item.id, "normalize_source", "failed", "invalid_url");
@@ -101,35 +85,69 @@ Deno.serve(async (request: Request): Promise<Response> => {
   await supabase.from("items").update({ processing_status: "processing" }).eq("id", item.id);
 
   try {
-    logStage(item.id, "extract_text", "started");
-    const metadata = await fetchLinkMetadata(normalizedUrl);
-    logStage(item.id, "extract_text", "completed");
+    logStage(item.id, "resolve_link", "started");
+    const resolvedLink = await resolveLink(normalizedUrl.toString());
+    logStage(item.id, "resolve_link", "completed");
 
-    const title = metadata.title || item.title || normalizedUrl.hostname;
-    const summary = metadata.description || metadata.siteName || normalizedUrl.hostname;
-    const aliases = buildAliases(title, metadata.siteName, normalizedUrl.hostname);
+    logStage(item.id, "enrich_link", "started");
+    const enrichment = await enrichLinkUnofficial(resolvedLink);
+    const enrichedLink = mergeResolvedLinkWithEnrichment(resolvedLink, enrichment);
+    logStage(item.id, "enrich_link", "completed", enrichment.status);
+
+    const decision = decideLinkProcessing(enrichedLink);
+    const title = enrichedLink.title || item.title || normalizedUrl.hostname;
+    const summary = enrichedLink.description || enrichedLink.providerName || enrichedLink.platform || normalizedUrl.hostname;
+    const aliases = buildAliases(title, enrichedLink.providerName, enrichedLink.authorName, normalizedUrl.hostname);
+    const readMinutes = estimateReadMinutes(summary);
     const rawContentExpiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString();
 
     logStage(item.id, "extract_fields", "started");
+    const parsedContent = decision.uiKind === "restricted_social_link"
+      ? {
+        kind: "restricted_social_link",
+        platform: enrichedLink.platform,
+        url: normalizedUrl.toString(),
+        title,
+        siteName: enrichedLink.providerName,
+        canonicalUrl: enrichedLink.canonicalUrl,
+        resolver: enrichedLink.resolver,
+        sourcePlatform: enrichedLink.platform,
+        extractionQuality: decision.extractionQuality,
+        enrichmentStatus: enrichment.status,
+        canonicalDataPath: "raw_content.resolved_link",
+      }
+      : {
+        kind: "link_preview",
+        sourcePlatform: enrichedLink.platform,
+        url: enrichedLink.canonicalUrl ?? normalizedUrl.toString(),
+        title,
+        description: enrichedLink.description,
+        authorName: enrichedLink.authorName,
+        authorUrl: enrichedLink.authorUrl,
+        siteName: enrichedLink.providerName,
+        image: enrichedLink.thumbnailUrl,
+        htmlEmbed: enrichedLink.htmlEmbed,
+        resolver: enrichedLink.resolver,
+        extractionQuality: decision.extractionQuality,
+        enrichmentStatus: enrichment.status,
+        canonicalDataPath: "raw_content.resolved_link",
+        readMinutes,
+      };
+
     const update = {
-      type: "article",
-      source_url: normalizedUrl.toString(),
+      type: decision.itemType,
+      source_url: enrichedLink.canonicalUrl ?? normalizedUrl.toString(),
       raw_content: {
         sourceType: "link",
         url: normalizedUrl.toString(),
         fetchedAt: new Date().toISOString(),
-        metadata,
+        resolved_link: enrichedLink,
+        official_resolved_link: resolvedLink,
+        experimental_enrichment: enrichment,
       },
-      parsed_content: {
-        kind: "link_preview",
-        url: normalizedUrl.toString(),
-        title,
-        description: metadata.description,
-        siteName: metadata.siteName,
-        image: metadata.image,
-      },
+      parsed_content: parsedContent,
       title,
-      thumbnail_url: metadata.image,
+      thumbnail_url: enrichedLink.thumbnailUrl,
       searchable_summary: summary,
       searchable_aliases: aliases,
       processing_status: "ready",
@@ -159,101 +177,52 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 });
 
+type LinkProcessingDecision = {
+  itemType: "article" | "video" | "unknown";
+  uiKind: "link_preview" | "restricted_social_link";
+  extractionQuality: "complete" | "partial_needs_context";
+};
+
+function decideLinkProcessing(link: LinkResolverResult): LinkProcessingDecision {
+  if (shouldShowRestrictedLink(link)) {
+    return {
+      itemType: "unknown",
+      uiKind: "restricted_social_link",
+      extractionQuality: "partial_needs_context",
+    };
+  }
+
+  if (link.platform === "tiktok" || link.platform === "youtube") {
+    return {
+      itemType: "video",
+      uiKind: "link_preview",
+      extractionQuality: link.needsUserContext ? "partial_needs_context" : "complete",
+    };
+  }
+
+  return {
+    itemType: "article",
+    uiKind: "link_preview",
+    extractionQuality: link.needsUserContext ? "partial_needs_context" : "complete",
+  };
+}
+
+function shouldShowRestrictedLink(link: LinkResolverResult): boolean {
+  const hasUsefulPreview = Boolean(link.title && (link.description || link.thumbnailUrl || link.authorName || link.htmlEmbed));
+  return link.needsUserContext && !hasUsefulPreview;
+}
+
 function logStage(itemId: string, stage: PipelineStage, status: "started" | "completed" | "failed", reason?: string) {
   console.info(JSON.stringify({ item_id: itemId, stage, status, reason }));
 }
 
-function normalizeUrl(value: string): URL | null {
-  try {
-    const url = new URL(value.trim());
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      return null;
-    }
-    return url;
-  } catch {
-    return null;
-  }
+function buildAliases(title: string, siteName: string | undefined, authorName: string | undefined, hostname: string): string[] {
+  return [...new Set([title, siteName, authorName, hostname].filter(Boolean).flatMap((value) => value!.toLowerCase().split(/[\s,.;:!?/|-]+/)).filter((word) => word.length > 3).slice(0, 12))];
 }
 
-async function fetchLinkMetadata(url: URL) {
-  const response = await fetch(url, {
-    redirect: "follow",
-    headers: {
-      "accept": "text/html,application/xhtml+xml",
-      "user-agent": "DualioBot/0.1 link metadata fetcher",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`fetch_failed_${response.status}`);
-  }
-
-  const contentType = response.headers.get("content-type") ?? "";
-  if (!contentType.includes("text/html") && !contentType.includes("application/xhtml+xml")) {
-    return {
-      finalUrl: response.url,
-      title: url.hostname,
-      description: "",
-      siteName: url.hostname,
-      image: null,
-      contentType,
-    };
-  }
-
-  const html = await response.text();
-  const baseUrl = new URL(response.url);
-  const title = cleanText(firstMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i));
-  const description = metaContent(html, "description") ?? metaProperty(html, "og:description") ?? metaName(html, "twitter:description");
-  const image = metaProperty(html, "og:image") ?? metaName(html, "twitter:image");
-  const siteName = metaProperty(html, "og:site_name") ?? baseUrl.hostname;
-
-  return {
-    finalUrl: baseUrl.toString(),
-    title: title || cleanText(metaProperty(html, "og:title") ?? metaName(html, "twitter:title") ?? ""),
-    description: cleanText(description ?? ""),
-    siteName: cleanText(siteName),
-    image: image ? new URL(decodeHtml(image), baseUrl).toString() : null,
-    contentType,
-  };
-}
-
-function metaContent(html: string, name: string): string | null {
-  return metaName(html, name) ?? metaProperty(html, name);
-}
-
-function metaName(html: string, name: string): string | null {
-  const pattern = new RegExp(`<meta[^>]+name=["']${escapeRegExp(name)}["'][^>]+content=["']([^"']*)["'][^>]*>`, "i");
-  return firstMatch(html, pattern);
-}
-
-function metaProperty(html: string, property: string): string | null {
-  const pattern = new RegExp(`<meta[^>]+property=["']${escapeRegExp(property)}["'][^>]+content=["']([^"']*)["'][^>]*>`, "i");
-  return firstMatch(html, pattern);
-}
-
-function firstMatch(value: string, pattern: RegExp): string | null {
-  return value.match(pattern)?.[1] ?? null;
-}
-
-function cleanText(value: string | null): string {
-  return decodeHtml(value ?? "").replace(/\s+/g, " ").trim();
-}
-
-function decodeHtml(value: string): string {
-  return value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", "\"")
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function buildAliases(title: string, siteName: string | null, hostname: string): string[] {
-  return [...new Set([title, siteName, hostname].filter(Boolean).flatMap((value) => value!.toLowerCase().split(/[\s,.;:!?/|-]+/)).filter((word) => word.length > 3).slice(0, 12))];
+function estimateReadMinutes(text: string): number {
+  const wordCount = text.split(/\s+/).filter((word) => word.length > 0).length;
+  return Math.max(1, Math.ceil(wordCount / 220));
 }
 
 async function markReadyWithoutProcessing(supabase: ReturnType<typeof createClient>, item: ItemRow) {

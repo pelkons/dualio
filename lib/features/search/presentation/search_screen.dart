@@ -30,16 +30,33 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final strings = AppLocalizations.of(context);
     final palette = Theme.of(context).extension<DualioPalette>()!;
     final remoteItems = ref.watch(visibleSemanticItemsProvider).valueOrNull;
-    final List<SemanticItem> items = remoteItems ?? ref.watch(semanticItemsProvider);
-    final results = _query.trim().isEmpty ? <SemanticItem>[] : _rank(items, _query);
+    final List<SemanticItem> items =
+        remoteItems ?? ref.watch(semanticItemsProvider);
+    final results = _query.trim().isEmpty
+        ? <SemanticItem>[]
+        : _rank(items, _query);
 
     return FeedShell(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 24, DualioTheme.mobileMargin, 128),
+        padding: const EdgeInsets.fromLTRB(
+          DualioTheme.mobileMargin,
+          24,
+          DualioTheme.mobileMargin,
+          128,
+        ),
         children: <Widget>[
-          Text(strings.searchTitle, style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            strings.searchTitle,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: 8),
-          Text(strings.searchBody, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: palette.muted, fontSize: 14)),
+          Text(
+            strings.searchBody,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: palette.muted,
+              fontSize: 14,
+            ),
+          ),
           const SizedBox(height: 18),
           TextField(
             controller: _controller,
@@ -52,10 +69,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               prefixIcon: const Icon(Icons.manage_search_rounded),
               filled: true,
               fillColor: palette.card,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(999)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(999),
-                borderSide: BorderSide(color: palette.outline.withValues(alpha: 0.45)),
+                borderSide: BorderSide(
+                  color: palette.outline.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ),
@@ -65,7 +86,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           else if (results.isEmpty)
             _SearchHint(text: strings.searchNoResults)
           else ...<Widget>[
-            Text(strings.searchResults, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              strings.searchResults,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 12),
             for (final item in results)
               Column(
@@ -75,10 +99,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(
                       strings.semanticDebugReason,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: palette.muted),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(color: palette.muted),
                     ),
                   ),
-                  SemanticItemFeedCard(item: item, onTap: () => context.go('/items/${item.id}')),
+                  SemanticItemFeedCard(
+                    item: item,
+                    onTap: () => context.push('/items/${item.id}'),
+                    onRetry: () => ref
+                        .read(semanticItemsProvider.notifier)
+                        .retryProcessing(item),
+                  ),
                 ],
               ),
           ],
@@ -88,7 +120,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   List<SemanticItem> _rank(List<SemanticItem> items, String query) {
-    final terms = query.toLowerCase().split(RegExp(r'\s+')).where((term) => term.isNotEmpty).toList(growable: false);
+    final terms = query
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((term) => term.isNotEmpty)
+        .toList(growable: false);
     final scored = <({SemanticItem item, int score})>[];
 
     for (final item in items) {
@@ -98,7 +134,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         if (item.title.toLowerCase().contains(term)) {
           score += 5;
         }
-        if (item.searchableAliases.any((alias) => alias.toLowerCase().contains(term))) {
+        if (item.searchableAliases.any(
+          (alias) => alias.toLowerCase().contains(term),
+        )) {
           score += 4;
         }
         if (item.searchableSummary.toLowerCase().contains(term)) {
@@ -144,7 +182,12 @@ class _SearchHint extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(18),
-        child: Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: palette.muted)),
+        child: Text(
+          text,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: palette.muted),
+        ),
       ),
     );
   }

@@ -41,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
             icon: Icons.person_rounded,
             title: strings.accountSetting,
             subtitle: session?.user.email == null ? strings.accountSettingBody : strings.signedInAs(session!.user.email!),
-            onTap: () => context.go('/sign-in'),
+            onTap: () => context.push('/sign-in'),
           ),
           _SettingsTile(icon: Icons.workspace_premium_rounded, title: strings.subscriptionSetting, subtitle: strings.subscriptionSettingBody),
         ],

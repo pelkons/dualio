@@ -22,6 +22,7 @@ dependencies:
   receive_sharing_intent: ^1.8.1
   share_plus: ^13.1.0
   supabase_flutter: ^2.12.2
+  url_launcher: ^6.3.2
   vibration: ^3.1.8
 
 dev_dependencies:

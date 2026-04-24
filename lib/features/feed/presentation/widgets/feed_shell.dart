@@ -13,35 +13,58 @@ class FeedShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final palette = Theme.of(context).extension<DualioPalette>()!;
+    final path = GoRouterState.of(context).uri.path;
+    final canPopRoute = Navigator.of(context).canPop();
 
-    return Scaffold(
-      appBar: AppBar(
-        leadingWidth: 0,
-        titleSpacing: DualioTheme.mobileMargin,
-        title: Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: Text(strings.appName),
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: 18),
-            child: IconButton(
-              tooltip: strings.settingsTab,
-              onPressed: () => context.go('/settings'),
-              icon: CircleAvatar(
-                radius: 16,
-                backgroundColor: palette.pill,
-                child: const Icon(Icons.person_rounded, size: 18),
+    return PopScope(
+      canPop: path == '/' || canPopRoute,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && path != '/') {
+          context.go('/');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leadingWidth: 0,
+          titleSpacing: DualioTheme.mobileMargin,
+          title: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(strings.appName),
+          ),
+          actions: <Widget>[
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 18),
+              child: IconButton(
+                tooltip: strings.settingsTab,
+                onPressed: () => _openRoute(context, '/settings'),
+                icon: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: palette.pill,
+                  child: const Icon(Icons.person_rounded, size: 18),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+        body: child,
+        floatingActionButton: floatingActionButton,
+        bottomNavigationBar: _BottomNav(strings: strings),
       ),
-      body: child,
-      floatingActionButton: floatingActionButton,
-      bottomNavigationBar: _BottomNav(strings: strings),
     );
   }
+}
+
+void _openRoute(BuildContext context, String route) {
+  final currentPath = GoRouterState.of(context).uri.path;
+  if (currentPath == route) {
+    return;
+  }
+  if (route == '/') {
+    context.go(route);
+    return;
+  }
+  context.push(route);
 }
 
 class _BottomNav extends StatelessWidget {
@@ -69,9 +92,9 @@ class _BottomNav extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
-              _NavButton(icon: Icons.all_inbox_rounded, label: strings.feedTab, selected: path == '/', onTap: () => context.go('/')),
-              _NavButton(icon: Icons.search_rounded, label: strings.searchTab, selected: path == '/search', onTap: () => context.go('/search')),
-              _NavButton(icon: Icons.view_agenda_outlined, selectedIcon: Icons.view_agenda_rounded, label: strings.categoriesTab, selected: path == '/categories', onTap: () => context.go('/categories')),
+              _NavButton(icon: Icons.all_inbox_rounded, label: strings.feedTab, selected: path == '/', onTap: () => _openRoute(context, '/')),
+              _NavButton(icon: Icons.search_rounded, label: strings.searchTab, selected: path == '/search', onTap: () => _openRoute(context, '/search')),
+              _NavButton(icon: Icons.view_agenda_outlined, selectedIcon: Icons.view_agenda_rounded, label: strings.categoriesTab, selected: path == '/categories', onTap: () => _openRoute(context, '/categories')),
             ],
           ),
         ),

@@ -124,6 +124,11 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 4. Smoke-test magic-link sign-in on Android.
 5. Smoke-test Add text/link -> Supabase pending item -> Feed remote read.
 
+## Future Backlog Notes
+
+- `roadmap.md` now contains a Future Source Resolver Backlog covering social/video, shopping, maps/places, articles, recipes, media/books, developer/knowledge, local marketplaces, and travel/events sources.
+- Resolver backlog should be implemented as official API/oEmbed/OpenGraph first, with optional non-blocking enrichment as a second stage.
+
 ## Files New Agents Should Read First
 
 1. `PROJECT_STATUS.md`

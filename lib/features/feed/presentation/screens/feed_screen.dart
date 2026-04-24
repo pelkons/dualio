@@ -15,10 +15,17 @@ class FeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsState = ref.watch(visibleSemanticItemsProvider);
+    final localItems = ref.watch(semanticItemsProvider);
     final removedIds = ref.watch(removedItemIdsProvider);
-    final previousItems = (itemsState.valueOrNull ?? const <SemanticItem>[])
+    final optimisticItems = localItems
+        .where((item) => item.id.startsWith('local-'))
         .where((item) => !removedIds.contains(item.id))
         .toList(growable: false);
+    final previousItems = _withOptimisticItems(
+      itemsState.valueOrNull ?? const <SemanticItem>[],
+      optimisticItems,
+      removedIds,
+    );
 
     return FeedShell(
       floatingActionButton: FloatingActionButton(
@@ -27,16 +34,33 @@ class FeedScreen extends ConsumerWidget {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         elevation: 8,
-        onPressed: () => context.go('/add'),
+        onPressed: () => context.push('/add'),
         child: const Icon(Icons.add_rounded, size: 30),
       ),
       child: itemsState.when(
-        data: (items) => _FeedList(items: items),
+        data: (items) => _FeedList(
+          items: _withOptimisticItems(items, optimisticItems, removedIds),
+        ),
         loading: () => _FeedList(items: previousItems),
         error: (_, _) => _FeedList(items: previousItems),
       ),
     );
   }
+}
+
+List<SemanticItem> _withOptimisticItems(
+  List<SemanticItem> items,
+  List<SemanticItem> optimisticItems,
+  Set<String> removedIds,
+) {
+  final visibleItems = items
+      .where((item) => !removedIds.contains(item.id))
+      .toList(growable: false);
+  final visibleIds = visibleItems.map((item) => item.id).toSet();
+  final missingOptimisticItems = optimisticItems.where(
+    (item) => !visibleIds.contains(item.id),
+  );
+  return <SemanticItem>[...missingOptimisticItems, ...visibleItems];
 }
 
 class _FeedList extends ConsumerWidget {
@@ -52,7 +76,12 @@ class _FeedList extends ConsumerWidget {
         slivers: <Widget>[
           const SliverToBoxAdapter(child: DualioSearchBar()),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 6, DualioTheme.mobileMargin, 108),
+            padding: const EdgeInsets.fromLTRB(
+              DualioTheme.mobileMargin,
+              6,
+              DualioTheme.mobileMargin,
+              108,
+            ),
             sliver: SliverList.builder(
               itemCount: items.length,
               itemBuilder: (context, index) {
@@ -100,11 +129,16 @@ class _DismissibleFeedCard extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Icon(Icons.delete_rounded, color: Theme.of(context).colorScheme.onErrorContainer),
+                  Icon(
+                    Icons.delete_rounded,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     strings.deleteItem,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onErrorContainer),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
                   ),
                 ],
               ),
@@ -112,7 +146,12 @@ class _DismissibleFeedCard extends ConsumerWidget {
           ),
         ),
       ),
-      child: SemanticItemFeedCard(item: item, onTap: () => context.go('/items/${item.id}')),
+      child: SemanticItemFeedCard(
+        item: item,
+        onTap: () => context.push('/items/${item.id}'),
+        onRetry: () =>
+            ref.read(semanticItemsProvider.notifier).retryProcessing(item),
+      ),
     );
   }
 

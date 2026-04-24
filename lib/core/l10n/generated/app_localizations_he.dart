@@ -42,6 +42,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get addBody => 'הדביקו קישור, הוסיפו תמונה, פתחו מצלמה או שמרו טקסט.';
 
   @override
+  String get shareConfirmTitle => 'לשמור את זה?';
+
+  @override
+  String get shareConfirmBody =>
+      'בדקו את הפריט ששותף והוסיפו הערה אישית לפני שהוא נכנס לתיבה.';
+
+  @override
   String get searchTitle => 'חיפוש סמנטי';
 
   @override
@@ -109,6 +116,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get needsClarificationType => 'צריך הבהרה';
 
   @override
+  String get socialLinkType => 'קישור חברתי';
+
+  @override
+  String get socialLinkLimited =>
+      'נשמר כקישור. אפשר להוסיף צילום מסך בהמשך לחילוץ AI טוב יותר.';
+
+  @override
   String minutesRead(int minutes) {
     return '$minutes דקות קריאה';
   }
@@ -167,6 +181,27 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get processingType => 'Processing';
+
+  @override
+  String get processingFailedType => 'לא ניתן לעבד';
+
+  @override
+  String get retryProcessing => 'נסה שוב';
+
+  @override
+  String get editItem => 'עריכה';
+
+  @override
+  String get personalNote => 'הערה אישית';
+
+  @override
+  String get personalNoteHint => 'הוסיפו הקשר, תזכורת או תגובה משלכם.';
+
+  @override
+  String get personalNoteEmpty => 'אין עדיין הערה אישית.';
+
+  @override
+  String get saveChanges => 'שמירה';
 
   @override
   String get emailAddress => 'Email address';

@@ -174,6 +174,18 @@ abstract class AppLocalizations {
   /// **'Paste a link, add a photo, use the camera, or save raw text.'**
   String get addBody;
 
+  /// No description provided for @shareConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this?'**
+  String get shareConfirmTitle;
+
+  /// No description provided for @shareConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the shared item and add your own note before it goes to your inbox.'**
+  String get shareConfirmBody;
+
   /// No description provided for @searchTitle.
   ///
   /// In en, this message translates to:
@@ -306,6 +318,18 @@ abstract class AppLocalizations {
   /// **'Needs clarification'**
   String get needsClarificationType;
 
+  /// No description provided for @socialLinkType.
+  ///
+  /// In en, this message translates to:
+  /// **'Social link'**
+  String get socialLinkType;
+
+  /// No description provided for @socialLinkLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved as a link. Add a screenshot later for better AI extraction.'**
+  String get socialLinkLimited;
+
   /// No description provided for @minutesRead.
   ///
   /// In en, this message translates to:
@@ -413,6 +437,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Processing'**
   String get processingType;
+
+  /// No description provided for @processingFailedType.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not process'**
+  String get processingFailedType;
+
+  /// No description provided for @retryProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retryProcessing;
+
+  /// No description provided for @editItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editItem;
+
+  /// No description provided for @personalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal note'**
+  String get personalNote;
+
+  /// No description provided for @personalNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your own context, reminder, or comment.'**
+  String get personalNoteHint;
+
+  /// No description provided for @personalNoteEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No personal note yet.'**
+  String get personalNoteEmpty;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveChanges;
 
   /// No description provided for @emailAddress.
   ///

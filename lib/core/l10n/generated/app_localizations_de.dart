@@ -43,6 +43,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Fuge einen Link ein, wahle ein Foto, nutze die Kamera oder speichere Text.';
 
   @override
+  String get shareConfirmTitle => 'Das speichern?';
+
+  @override
+  String get shareConfirmBody =>
+      'Prufe das geteilte Element und fuge eine eigene Notiz hinzu, bevor es im Eingang landet.';
+
+  @override
   String get searchTitle => 'Semantische Suche';
 
   @override
@@ -111,6 +118,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get needsClarificationType => 'Klarung notig';
 
   @override
+  String get socialLinkType => 'Social-Link';
+
+  @override
+  String get socialLinkLimited =>
+      'Als Link gespeichert. Fuge spater einen Screenshot hinzu, damit die KI mehr extrahieren kann.';
+
+  @override
   String minutesRead(int minutes) {
     return '$minutes Min. Lesezeit';
   }
@@ -169,6 +183,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get processingType => 'Processing';
+
+  @override
+  String get processingFailedType => 'Could not process';
+
+  @override
+  String get retryProcessing => 'Retry';
+
+  @override
+  String get editItem => 'Edit';
+
+  @override
+  String get personalNote => 'Personal note';
+
+  @override
+  String get personalNoteHint => 'Add your own context, reminder, or comment.';
+
+  @override
+  String get personalNoteEmpty => 'No personal note yet.';
+
+  @override
+  String get saveChanges => 'Save';
 
   @override
   String get emailAddress => 'Email address';

@@ -14,6 +14,27 @@ The product is a single AI-first inbox for anything a user wants to save for lat
 - Mock-first UI until feed quality matches the design.
 - Backend access must be secure by default with strict RLS.
 - Cross-lingual search must work across English, Hebrew, Russian, Italian, French, Spanish, and German.
+- Cost controls are a core product constraint: the free tier must not allow unbounded AI processing, media storage, or lifetime storage of abandoned user data.
+
+## Free Tier And Retention Guardrails
+
+Initial free tier:
+
+- Allow 10 saved memories total per free account.
+- Limit free image/photo/screenshot items to 3 total.
+- Limit free processing attempts to 20 total.
+- Limit free image OCR/vision attempts to 3 total.
+- Enforce a maximum upload size before writing to R2.
+- Keep thumbnails and extracted searchable text while the item exists.
+- Expire original full-resolution images after a defined retention window, starting with 30 days for free accounts.
+- Delete failed, abandoned, or orphaned pending uploads with a scheduled cleanup job.
+- Delete all Postgres rows and R2 objects when a user deletes an item or account.
+- Check limits in backend code before uploading media to R2 or starting AI processing.
+
+Required accounting fields:
+
+- Track plan, saved item count, processing attempt count, image processing attempt count, and media storage bytes per user.
+- Store R2 object keys with user/item prefixes so backend cleanup can reliably delete media for one item or account.
 
 ## Current Status
 
@@ -96,6 +117,7 @@ Goal: process saved inputs into typed semantic memory items.
 
 - Implement idempotent `process-item` Edge Function.
 - Fetch and normalize URLs.
+- Resolve social links through official oEmbed/API or OpenGraph first; public HTML enrichment for social platforms must stay opt-in and disabled by default.
 - Extract HTML metadata.
 - OCR screenshots/photos.
 - Detect item type with OpenAI.
@@ -117,6 +139,41 @@ Definition of done:
 - One saved screenshot/photo can become a ready or clarification item.
 - Failed processing is retry-safe.
 - Processing logs are useful for debugging.
+
+### Future Source Resolver Backlog
+
+Dualio should expect users to save links from many app categories. Resolver support should be added incrementally, with official APIs/oEmbed/OpenGraph first, and optional enrichment only as a non-blocking second stage.
+
+Priority source groups:
+
+- Social/video: TikTok, Instagram, Facebook, YouTube, X/Twitter, Reddit, Pinterest, Threads, Snapchat Spotlight, LinkedIn, Telegram public posts/channels.
+- Shopping/marketplaces: Amazon, eBay, AliExpress, Temu, SHEIN, Etsy, Walmart, Target, Best Buy, Wayfair, IKEA, Home Depot, Zara, H&M.
+- Maps/places/travel: Google Maps, Apple Maps, Waze, TripAdvisor, Yelp, Booking.com, Airbnb, Google Travel/Hotels.
+- Articles/read-later: Medium, Substack, NYTimes, WSJ, Guardian, BBC, CNN, local news, Wikipedia, Hacker News, Product Hunt.
+- Food/recipes: Allrecipes, NYT Cooking, Tasty, Food Network, Serious Eats, restaurant sites, Uber Eats, DoorDash, Wolt, Deliveroo, Grubhub.
+- Media/books: Spotify, Apple Music, SoundCloud, YouTube Music, Goodreads, Amazon Books/Kindle links, IMDb, Letterboxd, Rotten Tomatoes, Netflix, Prime Video, Disney+, Apple TV.
+- Developer/knowledge: GitHub, GitLab, Stack Overflow, npm, pub.dev, arXiv, Google Scholar, Hugging Face, Notion public pages, Google Docs/Sheets public links.
+- Local marketplaces: Facebook Marketplace, Craigslist, OfferUp, Vinted, Depop, Poshmark, Mercari, Yad2, Gumtree, OLX, Mercado Libre, Shopee, Lazada, Coupang, Rakuten.
+- Later/community/events: Twitch clips, Discord public links, Bluesky, Mastodon, Tumblr, Quora, Behance, Dribbble, DeviantArt, Expedia, Skyscanner, Kayak, Google Flights, Eventbrite, Meetup, Ticketmaster, OpenTable, TheFork, Resy.
+
+Resolver families to build:
+
+- `oembed_resolver`
+- `opengraph_resolver`
+- `schema_org_product_resolver`
+- `schema_org_recipe_resolver`
+- `schema_org_place_resolver`
+- `marketplace_resolver`
+- `maps_resolver`
+- `fallback_resolver`
+
+Suggested implementation order:
+
+1. TikTok, YouTube, X/Twitter, Reddit, Pinterest.
+2. Instagram/Facebook with Meta token plus OpenGraph fallback.
+3. Amazon, eBay, AliExpress, Temu, Etsy.
+4. Google Maps, Booking.com, Airbnb, TripAdvisor.
+5. Recipe and article sites.
 
 ## Phase 5: Hybrid Semantic Search
 

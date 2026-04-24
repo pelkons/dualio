@@ -27,5 +27,12 @@ abstract class SemanticItem with _$SemanticItem {
     String? clarificationQuestion,
   }) = _SemanticItem;
 
-  factory SemanticItem.fromJson(Map<String, Object?> json) => _$SemanticItemFromJson(json);
+  factory SemanticItem.fromJson(Map<String, Object?> json) =>
+      _$SemanticItemFromJson(json);
+}
+
+extension SemanticItemClassification on SemanticItem {
+  bool get usesGenericLinkPresentation =>
+      parsedContent['kind'] == 'link_preview' &&
+      (type == ItemType.article || type == ItemType.unknown);
 }

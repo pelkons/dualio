@@ -43,6 +43,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Incolla un link, aggiungi una foto, usa la fotocamera o salva testo.';
 
   @override
+  String get shareConfirmTitle => 'Salvare questo?';
+
+  @override
+  String get shareConfirmBody =>
+      'Controlla l elemento condiviso e aggiungi una nota personale prima di salvarlo nella inbox.';
+
+  @override
   String get searchTitle => 'Ricerca semantica';
 
   @override
@@ -111,6 +118,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get needsClarificationType => 'Serve chiarimento';
 
   @override
+  String get socialLinkType => 'Link social';
+
+  @override
+  String get socialLinkLimited =>
+      'Salvato come link. Aggiungi uno screenshot piu tardi per una migliore estrazione AI.';
+
+  @override
   String minutesRead(int minutes) {
     return '$minutes min di lettura';
   }
@@ -169,6 +183,27 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get processingType => 'Processing';
+
+  @override
+  String get processingFailedType => 'Could not process';
+
+  @override
+  String get retryProcessing => 'Retry';
+
+  @override
+  String get editItem => 'Edit';
+
+  @override
+  String get personalNote => 'Personal note';
+
+  @override
+  String get personalNoteHint => 'Add your own context, reminder, or comment.';
+
+  @override
+  String get personalNoteEmpty => 'No personal note yet.';
+
+  @override
+  String get saveChanges => 'Save';
 
   @override
   String get emailAddress => 'Email address';

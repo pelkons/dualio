@@ -43,6 +43,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Вставьте ссылку, добавьте фото, откройте камеру или сохраните текст.';
 
   @override
+  String get shareConfirmTitle => 'Сохранить это?';
+
+  @override
+  String get shareConfirmBody =>
+      'Проверьте общий материал и добавьте личную заметку перед сохранением во входящие.';
+
+  @override
   String get searchTitle => 'Семантический поиск';
 
   @override
@@ -111,6 +118,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get needsClarificationType => 'Нужно уточнение';
 
   @override
+  String get socialLinkType => 'Соцссылка';
+
+  @override
+  String get socialLinkLimited =>
+      'Сохранено как ссылка. Позже можно добавить скриншот для более точного AI-разбора.';
+
+  @override
   String minutesRead(int minutes) {
     return '$minutes мин чтения';
   }
@@ -169,6 +183,27 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get processingType => 'Processing';
+
+  @override
+  String get processingFailedType => 'Could not process';
+
+  @override
+  String get retryProcessing => 'Retry';
+
+  @override
+  String get editItem => 'Edit';
+
+  @override
+  String get personalNote => 'Personal note';
+
+  @override
+  String get personalNoteHint => 'Add your own context, reminder, or comment.';
+
+  @override
+  String get personalNoteEmpty => 'No personal note yet.';
+
+  @override
+  String get saveChanges => 'Save';
 
   @override
   String get emailAddress => 'Email address';
