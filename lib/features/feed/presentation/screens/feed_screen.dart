@@ -12,23 +12,44 @@ class FeedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(semanticItemsProvider);
+    final itemsState = ref.watch(visibleSemanticItemsProvider);
 
     return FeedShell(
-      child: CustomScrollView(
-        slivers: <Widget>[
-          const SliverToBoxAdapter(child: DualioSearchBar()),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 6, DualioTheme.mobileMargin, 108),
-            sliver: SliverList.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return SemanticItemFeedCard(item: item, onTap: () => context.go('/items/${item.id}'));
-              },
-            ),
+      child: itemsState.when(
+        data: (items) => RefreshIndicator(
+          onRefresh: () async => ref.invalidate(visibleSemanticItemsProvider),
+          child: CustomScrollView(
+            slivers: <Widget>[
+              const SliverToBoxAdapter(child: DualioSearchBar()),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 6, DualioTheme.mobileMargin, 108),
+                sliver: SliverList.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return SemanticItemFeedCard(item: item, onTap: () => context.go('/items/${item.id}'));
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => CustomScrollView(
+          slivers: <Widget>[
+            const SliverToBoxAdapter(child: DualioSearchBar()),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 6, DualioTheme.mobileMargin, 108),
+              sliver: SliverList.builder(
+                itemCount: ref.watch(semanticItemsProvider).length,
+                itemBuilder: (context, index) {
+                  final item = ref.watch(semanticItemsProvider)[index];
+                  return SemanticItemFeedCard(item: item, onTap: () => context.go('/items/${item.id}'));
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

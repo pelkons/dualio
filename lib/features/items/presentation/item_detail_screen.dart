@@ -14,7 +14,8 @@ class ItemDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(semanticItemsProvider);
+    final remoteItems = ref.watch(visibleSemanticItemsProvider).valueOrNull;
+    final List<SemanticItem> items = remoteItems ?? ref.watch(semanticItemsProvider);
     final item = items.firstWhere((candidate) => candidate.id == itemId, orElse: () => items.first);
     return FeedShell(
       child: ListView(

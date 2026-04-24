@@ -48,6 +48,9 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Built and installed the debug APK with the new launcher icon on the connected Samsung Android phone.
 - Added Supabase migration for profiles, items, item_chunks, item_entities, search_events, RLS, indexes, pgvector, and hybrid search RPC.
 - Added Edge Function contracts for `process-item` and `search`.
+- Added `ItemsRepository` for Supabase `items` reads and pending item inserts.
+- Connected feed/detail/search to remote Supabase items when a signed-in user exists, with mock/local fallback.
+- Connected Add and Android share intake to insert pending items into Supabase after local optimistic insertion.
 - Created `roadmap.md`.
 - Installed project-level skills in `.codex/skills/`.
 - Added Claude project context in `CLAUDE.md`.
@@ -81,6 +84,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
 - Google sign-in has not yet been tested with real Supabase credentials.
 - Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
+- Add/feed remote item flow has been built but not yet verified with a signed-in Supabase user.
 - Supabase CLI is available through `npx supabase`; access token is present locally in `.env.local`.
 - Supabase anon key is present locally in `.env.local`; it must not be committed.
 - Google sign-in requires Supabase anon key via `--dart-define`, Google provider configuration in Supabase, and `dualio://auth/callback` in the Supabase redirect allow-list.
@@ -95,9 +99,9 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 
 1. Run the newest build on the connected Samsung phone.
 2. Smoke-test sharing an image/screenshot into Dualio.
-3. Smoke-test feed, capture, search, settings, and sign-in-not-configured state.
-4. Tune non-design UX issues discovered on device.
-5. Configure a real Supabase project and test Google/Apple auth callbacks.
+3. Configure Supabase Auth redirect URL `dualio://auth/callback` in the Dashboard.
+4. Smoke-test magic-link sign-in on Android.
+5. Smoke-test Add text/link -> Supabase pending item -> Feed remote read.
 
 ## Files New Agents Should Read First
 

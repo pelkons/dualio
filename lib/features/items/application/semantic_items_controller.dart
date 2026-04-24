@@ -1,8 +1,24 @@
+import 'package:dualio/features/items/data/items_repository.dart';
 import 'package:dualio/features/items/domain/semantic_item.dart';
 import 'package:dualio/mock/mock_semantic_items.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final semanticItemsProvider = NotifierProvider<SemanticItemsController, List<SemanticItem>>(SemanticItemsController.new);
+
+final visibleSemanticItemsProvider = FutureProvider<List<SemanticItem>>((ref) async {
+  final localItems = ref.watch(semanticItemsProvider);
+  final repository = ref.watch(itemsRepositoryProvider);
+  if (repository == null || !repository.hasSignedInUser) {
+    return localItems;
+  }
+
+  final remoteItems = await repository.fetchLatestItems();
+  if (remoteItems.isEmpty) {
+    return localItems;
+  }
+
+  return remoteItems;
+});
 
 class SemanticItemsController extends Notifier<List<SemanticItem>> {
   @override
@@ -10,10 +26,10 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
     return mockSemanticItems;
   }
 
-  void addPendingText({
+  Future<void> addPendingText({
     required String content,
     required SourceType sourceType,
-  }) {
+  }) async {
     final normalized = content.trim();
     if (normalized.isEmpty) {
       return;
@@ -37,6 +53,14 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
     );
 
     state = <SemanticItem>[item, ...state];
+
+    final repository = ref.read(itemsRepositoryProvider);
+    if (repository == null || !repository.hasSignedInUser) {
+      return;
+    }
+
+    await repository.createPendingInput(content: normalized, sourceType: sourceType);
+    ref.invalidate(visibleSemanticItemsProvider);
   }
 
   ItemType _inferLocalType(String content) {

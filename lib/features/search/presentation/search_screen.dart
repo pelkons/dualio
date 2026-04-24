@@ -29,7 +29,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final palette = Theme.of(context).extension<DualioPalette>()!;
-    final items = ref.watch(semanticItemsProvider);
+    final remoteItems = ref.watch(visibleSemanticItemsProvider).valueOrNull;
+    final List<SemanticItem> items = remoteItems ?? ref.watch(semanticItemsProvider);
     final results = _query.trim().isEmpty ? <SemanticItem>[] : _rank(items, _query);
 
     return FeedShell(
