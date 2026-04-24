@@ -78,12 +78,13 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 
 - The app has launched on a physical Samsung Android phone.
 - Android share-sheet link/text intake into Dualio works on the physical phone.
+- Email magic-link callback opens Dualio on the physical Android phone after the routing fix.
 
 ## Not Yet Verified
 
 - Image/screenshot share intake has not yet been tested on the physical phone.
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
-- Email magic-link callback reached the app on Android, but the end-to-end signed-in state needs to be re-tested after the routing fix.
+- End-to-end signed-in state and remote item insert still need to be verified after the successful callback.
 - Google sign-in has not yet been tested with real Supabase credentials.
 - Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
 - Add/feed remote item flow has been built but not yet verified with a signed-in Supabase user.
