@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class FeedShell extends StatelessWidget {
-  const FeedShell({required this.child, super.key});
+  const FeedShell({required this.child, this.floatingActionButton, super.key});
 
   final Widget child;
+  final Widget? floatingActionButton;
 
   @override
   Widget build(BuildContext context) {
@@ -37,15 +38,7 @@ class FeedShell extends StatelessWidget {
         ],
       ),
       body: child,
-      floatingActionButton: FloatingActionButton(
-        tooltip: strings.addItem,
-        shape: const CircleBorder(),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        elevation: 8,
-        onPressed: () => context.go('/add'),
-        child: const Icon(Icons.add_rounded, size: 30),
-      ),
+      floatingActionButton: floatingActionButton,
       bottomNavigationBar: _BottomNav(strings: strings),
     );
   }
