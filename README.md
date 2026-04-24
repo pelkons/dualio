@@ -4,10 +4,9 @@ Dualio is a Flutter mobile client for an AI-first semantic memory inbox. The cur
 
 ## Setup
 
-Flutter is not installed in this workspace environment, so native platform wrappers and generated localization files should be produced locally after installing Flutter latest stable.
+Flutter is installed locally at `C:\Users\plkns\dev\flutter`.
 
 ```bash
-flutter create --platforms=android,ios --project-name dualio .
 flutter pub get
 flutter gen-l10n
 dart run build_runner build --delete-conflicting-outputs
@@ -15,5 +14,21 @@ flutter analyze
 flutter test
 flutter run -d android
 ```
+
+## Supabase
+
+Development project URL:
+
+```text
+https://uogaveubabnsskfwftui.supabase.co
+```
+
+Run the app with Supabase enabled:
+
+```powershell
+.\scripts\run_android_dev.ps1 -d RFCY702JKVP
+```
+
+Do not commit Supabase anon, service role, OpenAI, Cloudflare, or OAuth secrets.
 
 The feed is intentionally backed by mock semantic items until the card system visually matches the design.

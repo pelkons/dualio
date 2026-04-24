@@ -54,6 +54,9 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added Claude subagents in `.claude/agents/`.
 - Renamed app identity from Embera to Dualio.
 - Connected Git remote `origin` and completed the first GitHub push.
+- Created the Supabase development project at `https://uogaveubabnsskfwftui.supabase.co`.
+- Added local `.env.local` for uncommitted secrets and `.env.example` for safe project documentation.
+- Added `scripts/run_android_dev.ps1` to run Flutter with Supabase values loaded from `.env.local`.
 - Installed Flutter stable at `C:\Users\plkns\dev\flutter`.
 - Installed Android command-line tools and accepted Android SDK licenses.
 - Generated Android/iOS Flutter wrappers with `flutter create`.
@@ -75,7 +78,8 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
 - Google sign-in has not yet been tested with real Supabase credentials.
 - Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
-- Google sign-in requires Supabase credentials via `--dart-define`, Google provider configuration in Supabase, and `dualio://auth/callback` in the Supabase redirect allow-list.
+- Supabase anon key is present locally in `.env.local`; it must not be committed.
+- Google sign-in requires Supabase anon key via `--dart-define`, Google provider configuration in Supabase, and `dualio://auth/callback` in the Supabase redirect allow-list.
 - Apple sign-in requires Apple provider configuration in Supabase, Apple Developer capability/signing setup, and `dualio://auth/callback` in the Supabase redirect allow-list.
 
 ## Current Blockers

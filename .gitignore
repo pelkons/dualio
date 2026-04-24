@@ -7,6 +7,9 @@
 build/
 coverage/
 .idea/
+.env
+.env.*
+!.env.example
 
 android/.gradle/
 android/app/debug/
