@@ -43,7 +43,9 @@ class ItemDetailScreen extends ConsumerWidget {
           120,
         ),
         children: <Widget>[
-          if (item.usesGenericLinkPresentation)
+          if (item.usesImageAnalysisPresentation)
+            ImageAnalysisDetail(item: item)
+          else if (item.usesGenericLinkPresentation)
             LinkPreviewDetail(item: item)
           else
             switch (item.type) {
@@ -60,6 +62,39 @@ class ItemDetailScreen extends ConsumerWidget {
           UserNoteSection(item: item),
         ],
       ),
+    );
+  }
+}
+
+class ImageAnalysisDetail extends StatelessWidget {
+  const ImageAnalysisDetail({required this.item, super.key});
+
+  final SemanticItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final summary =
+        (item.parsedContent['summary'] as String?) ?? item.searchableSummary;
+    final visibleText = item.parsedContent['visibleText'] as String?;
+
+    return _DetailCard(
+      children: <Widget>[
+        _HeroImage(url: item.thumbnailUrl),
+        _Title(item.title),
+        if (summary.trim().isNotEmpty)
+          Text(summary, style: Theme.of(context).textTheme.bodyMedium),
+        if (visibleText != null && visibleText.trim().isNotEmpty)
+          _Section(
+            title: strings.notes,
+            children: <Widget>[
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(visibleText),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

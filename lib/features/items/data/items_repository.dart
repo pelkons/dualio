@@ -56,7 +56,8 @@ class ItemsRepository {
     final summary = normalized;
     final note = personalNote.trim();
 
-    final processingStatus = sourceType == SourceType.link
+    final processingStatus =
+        sourceType == SourceType.link || _isImageSource(sourceType)
         ? 'pending'
         : 'ready';
     var row = await _client
@@ -96,6 +97,10 @@ class ItemsRepository {
         localImagePath: localImagePath,
         sourceType: sourceType,
       );
+      final processed = await _invokeProcessItem(row['id']! as String);
+      if (!processed) {
+        row = await _markProcessingFailed(row['id']! as String);
+      }
     }
 
     return _itemFromRow(row);
@@ -140,11 +145,11 @@ class ItemsRepository {
         return _markAssetUploadFailed(row, itemId, 'missing_upload_payload');
       }
 
-        final bytes = await file.readAsBytes();
-        final uploadRequest = await HttpClient().putUrl(Uri.parse(uploadUrl));
-        uploadRequest.headers.contentType = ContentType.parse(contentType);
-        uploadRequest.contentLength = bytes.length;
-        uploadRequest.add(bytes);
+      final bytes = await file.readAsBytes();
+      final uploadRequest = await HttpClient().putUrl(Uri.parse(uploadUrl));
+      uploadRequest.headers.contentType = ContentType.parse(contentType);
+      uploadRequest.contentLength = bytes.length;
+      uploadRequest.add(bytes);
       final uploadResponse = await uploadRequest.close();
       if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
         return _markAssetUploadFailed(

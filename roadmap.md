@@ -140,6 +140,12 @@ Definition of done:
 - Failed processing is retry-safe.
 - Processing logs are useful for debugging.
 
+Current implementation note:
+
+- Link processing resolves public metadata and optional enrichment.
+- Image/photo/screenshot processing now reads Cloudflare R2 asset metadata, signs a temporary GET URL, calls OpenAI vision when `OPENAI_API_KEY` is configured, stores parsed image summary/visible text, writes chunks/entities, and falls back safely when vision credentials are missing.
+- Item and chunk embeddings are still pending.
+
 ### Future Source Resolver Backlog
 
 Dualio should expect users to save links from many app categories. Resolver support should be added incrementally, with official APIs/oEmbed/OpenGraph first, and optional enrichment only as a non-blocking second stage.

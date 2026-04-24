@@ -21,6 +21,10 @@ class SemanticItemFeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (item.usesImageAnalysisPresentation) {
+      return ImageAnalysisFeedCard(item: item, onTap: onTap);
+    }
+
     if (item.usesGenericLinkPresentation) {
       return LinkPreviewFeedCard(item: item, onTap: onTap);
     }
@@ -39,6 +43,84 @@ class SemanticItemFeedCard extends StatelessWidget {
         onRetry: onRetry,
       ),
     };
+  }
+}
+
+class ImageAnalysisFeedCard extends StatelessWidget {
+  const ImageAnalysisFeedCard({
+    required this.item,
+    required this.onTap,
+    super.key,
+  });
+
+  final SemanticItem item;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final visibleText = item.parsedContent['visibleText'] as String?;
+    final hasSummary = item.searchableSummary.trim().isNotEmpty;
+    final hasVisibleText = visibleText != null && visibleText.trim().isNotEmpty;
+
+    return FeedCardFrame(
+      onTap: onTap,
+      padding: EdgeInsets.zero,
+      clip: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _ImageHero(
+            url: item.thumbnailUrl,
+            height: 178,
+            meta: CardMeta(
+              icon: Icons.image_rounded,
+              label: strings.addFromLibrary,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  item.title,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                if (hasSummary) ...<Widget>[
+                  const SizedBox(height: 10),
+                  Text(
+                    item.searchableSummary,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).extension<DualioPalette>()!.muted,
+                      fontSize: 14,
+                    ),
+                  ),
+                ] else if (hasVisibleText) ...<Widget>[
+                  const SizedBox(height: 10),
+                  Text(
+                    visibleText,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).extension<DualioPalette>()!.muted,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+                _Footer(label: item.createdLabel, withDivider: true),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

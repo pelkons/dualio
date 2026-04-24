@@ -35,4 +35,8 @@ extension SemanticItemClassification on SemanticItem {
   bool get usesGenericLinkPresentation =>
       parsedContent['kind'] == 'link_preview' &&
       (type == ItemType.article || type == ItemType.unknown);
+
+  bool get usesImageAnalysisPresentation =>
+      parsedContent['kind'] == 'image_analysis' &&
+      (sourceType == SourceType.photo || sourceType == SourceType.screenshot);
 }

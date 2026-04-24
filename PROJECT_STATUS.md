@@ -1,6 +1,6 @@
 # Dualio Project Status
 
-Last updated: 2026-04-24
+Last updated: 2026-04-25
 
 ## Current Identity
 
@@ -90,16 +90,27 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Ran `flutter analyze` successfully.
 - Added a Flutter smoke test and ran `flutter test` successfully.
 - Built Android debug APK successfully at `build\app\outputs\flutter-apk\app-debug.apk`.
+- Created Cloudflare R2 bucket `dualio-assets` and configured R2 secrets for Supabase Edge Functions.
+- Added `item_assets` migration for per-user image asset metadata with strict RLS.
+- Added `create-asset-upload` Edge Function for signed R2 PUT/GET URL creation.
+- Connected photo/screenshot share intake to upload images to R2 before processing.
+- Fixed R2 upload `411 Length Required` by sending explicit `Content-Length` from Flutter.
+- Verified a shared WhatsApp image uploads to R2, creates an `item_assets` row, and replaces the local Android cache path with a signed R2 URL.
+- Extended `process-item` to process photo/screenshot items from R2 asset metadata.
+- Added image vision analysis contract using the OpenAI Responses API when `OPENAI_API_KEY` is configured, with a safe fallback when vision credentials are absent.
+- Added image search-doc writes: `item_chunks`, `item_entities`, searchable summary, searchable aliases, parsed image summary, and visible text.
+- Added dedicated feed/detail presentation for processed image items so inferred item type does not rely on mock-only fields.
 
 ## Verified
 
 - The app has launched on a physical Samsung Android phone.
 - Android share-sheet link/text intake into Dualio works on the physical phone.
 - Email magic-link callback opens Dualio on the physical Android phone after the routing fix.
+- Shared images upload to Cloudflare R2 and persist asset metadata in Supabase.
+- `process-item` Edge Function with image-processing path has been deployed to Supabase.
 
 ## Not Yet Verified
 
-- Image/screenshot share intake has not yet been tested on the physical phone.
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
 - End-to-end signed-in state and remote item insert still need to be verified after the successful callback.
 - End-to-end link processing needs to be tested from the Android app after sign-in: save link -> pending item -> Edge Function metadata -> ready card.
@@ -110,6 +121,7 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Supabase anon key is present locally in `.env.local`; it must not be committed.
 - Google sign-in requires Supabase anon key via `--dart-define`, Google provider configuration in Supabase, and `dualio://auth/callback` in the Supabase redirect allow-list.
 - Apple sign-in requires Apple provider configuration in Supabase, Apple Developer capability/signing setup, and `dualio://auth/callback` in the Supabase redirect allow-list.
+- Full AI vision extraction requires adding `OPENAI_API_KEY` as a Supabase Function secret. Until then image items use the built-in fallback summary.
 
 ## Current Blockers
 
@@ -118,11 +130,11 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 
 ## Immediate Next Tasks
 
-1. Run the newest build on the connected Samsung phone.
-2. Smoke-test sharing an image/screenshot into Dualio.
-3. Configure Supabase Auth redirect URL `dualio://auth/callback` in the Dashboard.
-4. Smoke-test magic-link sign-in on Android.
-5. Smoke-test Add text/link -> Supabase pending item -> Feed remote read.
+1. Add `OPENAI_API_KEY` to Supabase Function secrets.
+2. Smoke-test sharing an image/screenshot into Dualio with vision enabled.
+3. Verify image item transitions from Processing to ready/clarification without manual refresh.
+4. Smoke-test Add text/link -> Supabase pending item -> Feed remote read.
+5. Add embedding generation for item-level and chunk-level search.
 
 ## Future Backlog Notes
 
