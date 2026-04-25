@@ -37,6 +37,13 @@ import {
   type SemanticExtraction,
 } from "../_shared/semantic_extraction.ts";
 import { callOpenRouterStructuredJson } from "../_shared/openrouter.ts";
+import {
+  enrichMemoryProfileForContent,
+  type MemoryProfile,
+  memoryProfileChunkContent,
+  memoryProfileEntities,
+  memoryProfileSearchTerms,
+} from "../_shared/memory_profile.ts";
 
 type SupabaseClient = any;
 
@@ -79,6 +86,7 @@ type ImageAnalysis = {
     | "note"
     | "unknown";
   language: string;
+  memoryProfile: MemoryProfile;
   visibleText: string;
   ingredients: string[];
   materials: string[];
@@ -106,6 +114,7 @@ type ImageAnalysis = {
 };
 
 type SearchDocsAnalysis = {
+  memoryProfile?: MemoryProfile;
   chunks: Array<{
     chunkType: string;
     content: string;
@@ -259,7 +268,10 @@ Deno.serve(async (request: Request): Promise<Response> => {
         enrichedLink.authorName,
         normalizedUrl.hostname,
       ),
-      extraction.aliases,
+      [
+        ...extraction.aliases,
+        ...memoryProfileSearchTerms(extraction.memoryProfile),
+      ],
     );
     const parsedContent = buildLinkParsedContent({
       item,
@@ -373,7 +385,10 @@ async function processTextItem(
     const summary = extraction.summary || rawText || "Saved note";
     const aliases = mergeAliases(
       buildAliases(title, undefined, undefined, summary),
-      extraction.aliases,
+      [
+        ...extraction.aliases,
+        ...memoryProfileSearchTerms(extraction.memoryProfile),
+      ],
     );
     const parsedContent = buildTextParsedContent(
       item,
@@ -500,8 +515,9 @@ async function processImageItem(
         asset.original_filename || item.title,
       ),
       ...analysis.aliases,
+      ...memoryProfileSearchTerms(analysis.memoryProfile),
     ].filter((value, index, values) => value && values.indexOf(value) === index)
-      .slice(0, 24);
+      .slice(0, 64);
     const parsedContent = {
       ...(item.parsed_content ?? {}),
       kind: "image_analysis",
@@ -511,6 +527,7 @@ async function processImageItem(
       language: analysis.language,
       visibleText: analysis.visibleText,
       contentType: analysis.contentType,
+      memoryProfile: analysis.memoryProfile,
       ...(analysis.ingredients.length > 0
         ? { ingredients: analysis.ingredients }
         : {}),
@@ -702,6 +719,7 @@ function buildLinkParsedContent(input: {
     enrichmentStatus: input.enrichmentStatus,
     canonicalDataPath: "raw_content.resolved_link",
     readMinutes,
+    memoryProfile: input.extraction.memoryProfile,
     structuredFields: input.extraction.structuredFields,
   };
 
@@ -732,6 +750,7 @@ function buildTextParsedContent(
     summary,
     rawText,
     extractionStatus: extraction.extractionStatus,
+    memoryProfile: extraction.memoryProfile,
     structuredFields: extraction.structuredFields,
   };
   return withTypeSpecificFields(
@@ -842,7 +861,7 @@ function mergeAliases(primary: string[], secondary: string[]): string[] {
         Boolean,
       ),
     ),
-  ].slice(0, 32);
+  ].slice(0, 64);
 }
 
 function textFromItem(item: ItemRow): string {
@@ -1111,6 +1130,7 @@ const imageAnalysisSchema = {
     "summary",
     "contentType",
     "language",
+    "memoryProfile",
     "visibleText",
     "ingredients",
     "materials",
@@ -1143,6 +1163,42 @@ const imageAnalysisSchema = {
       ],
     },
     language: { type: "string" },
+    memoryProfile: {
+      type: "object",
+      additionalProperties: false,
+      required: [
+        "domain",
+        "objectType",
+        "canonicalConcepts",
+        "primaryConcepts",
+        "searchIntents",
+        "usageContexts",
+        "facets",
+        "incidentalMentions",
+        "possibleRecallPhrases",
+        "negativeSignals",
+        "confidence",
+      ],
+      properties: {
+        domain: { type: "string" },
+        objectType: { type: "string" },
+        canonicalConcepts: { type: "array", items: { type: "string" } },
+        primaryConcepts: { type: "array", items: { type: "string" } },
+        searchIntents: { type: "array", items: { type: "string" } },
+        usageContexts: { type: "array", items: { type: "string" } },
+        facets: {
+          type: "object",
+          additionalProperties: {
+            type: "array",
+            items: { type: "string" },
+          },
+        },
+        incidentalMentions: { type: "array", items: { type: "string" } },
+        possibleRecallPhrases: { type: "array", items: { type: "string" } },
+        negativeSignals: { type: "array", items: { type: "string" } },
+        confidence: { type: "number" },
+      },
+    },
     visibleText: { type: "string" },
     ingredients: { type: "array", items: { type: "string" } },
     materials: { type: "array", items: { type: "string" } },
@@ -1196,8 +1252,12 @@ function buildImageAnalysisPrompt(): string {
     "Use manual for how-to screenshots, setup instructions, repair guides, checklists, tutorials, workflows, and other step-by-step instructions that are not recipes.",
     "If the image is a non-recipe step-by-step guide, set contentType=manual and extract materials plus steps.",
     "Keep title user-facing and short. Summary should explain what the user likely wanted to remember.",
+    "Build memoryProfile for future associative search: domain, objectType, canonicalConcepts, primaryConcepts, searchIntents, usageContexts, facets, incidentalMentions, possibleRecallPhrases, negativeSignals, confidence.",
+    "Before filling memoryProfile, reason silently about what this saved object is, why a person might save it, when/where/how it could be useful, and how they may vaguely remember it months later.",
+    "memoryProfile must separate central meaning from accidental visible text. Put central associations in primaryConcepts/searchIntents/usageContexts/facets/possibleRecallPhrases. Put words that merely appear in the image but are not what it is about in incidentalMentions. Put concepts that should not retrieve this item in negativeSignals.",
+    "Use stable English canonical concepts plus useful multilingual possibleRecallPhrases when the concept is central. Keep user-facing fields in the source language.",
     "If the image is ambiguous, ask exactly one short clarification question.",
-    'Schema: {"title":"","summary":"","contentType":"unknown","language":"en","visibleText":"","ingredients":[],"materials":[],"steps":[],"prepTime":"","cookTime":"","servings":"","difficulty":"","aliases":[],"entities":[{"entity":"","entityType":"","normalizedValue":"","metadata":{}}],"chunks":[{"chunkType":"visual|ocr|summary|ingredients|steps","content":"","metadata":{}}],"needsClarification":false,"clarificationQuestion":""}',
+    'Schema: {"title":"","summary":"","contentType":"unknown","language":"en","memoryProfile":{"domain":"unknown","objectType":"","canonicalConcepts":[],"primaryConcepts":[],"searchIntents":[],"usageContexts":[],"facets":{},"incidentalMentions":[],"possibleRecallPhrases":[],"negativeSignals":[],"confidence":0.7},"visibleText":"","ingredients":[],"materials":[],"steps":[],"prepTime":"","cookTime":"","servings":"","difficulty":"","aliases":[],"entities":[{"entity":"","entityType":"","normalizedValue":"","metadata":{}}],"chunks":[{"chunkType":"visual|ocr|summary|ingredients|steps","content":"","metadata":{}}],"needsClarification":false,"clarificationQuestion":""}',
   ].join(" ");
 }
 
@@ -1228,11 +1288,17 @@ function fallbackImageAnalysis(
   const summary = status === "vision_disabled"
     ? "Image saved. Vision analysis will run after OpenAI credentials are configured."
     : "Image saved. Vision analysis could not complete yet.";
+  const memoryProfile = enrichMemoryProfileForContent({
+    contentType: "unknown",
+    title,
+    summary,
+  });
   return {
     title,
     summary,
     contentType: "unknown",
     language: "en",
+    memoryProfile,
     visibleText: "",
     ingredients: [],
     materials: [],
@@ -1241,7 +1307,10 @@ function fallbackImageAnalysis(
     cookTime: "",
     servings: "",
     difficulty: "",
-    aliases: buildAliases(title, undefined, undefined, summary),
+    aliases: [
+      ...buildAliases(title, undefined, undefined, summary),
+      ...memoryProfileSearchTerms(memoryProfile),
+    ],
     entities: [],
     chunks: [{ chunkType: "summary", content: summary }],
     needsClarification: false,
@@ -1327,8 +1396,22 @@ function normalizeImageAnalysis(
     sourceScript,
     visibleText || "Saved image",
   );
+  const memoryProfile = enrichMemoryProfileForContent({
+    contentType,
+    title,
+    summary,
+    language: cleanText(value.language) ||
+      languageCodeForScript(sourceScript) ||
+      "en",
+    aliases: toStringArray(value.aliases),
+    ingredients,
+    materials,
+    steps,
+    existing: value.memoryProfile,
+  });
   const aliases = toStringArray(value.aliases).concat(
     buildAliases(title, undefined, undefined, summary),
+    memoryProfileSearchTerms(memoryProfile),
   );
   const chunks = toChunkArray(value.chunks);
   if (visibleText) {
@@ -1351,6 +1434,7 @@ function normalizeImageAnalysis(
     language: cleanText(value.language) ||
       languageCodeForScript(sourceScript) ||
       "en",
+    memoryProfile,
     visibleText,
     ingredients,
     materials,
@@ -1571,12 +1655,13 @@ async function replaceSearchDocs(
   await supabase.from("item_chunks").delete().eq("item_id", item.id);
   await supabase.from("item_entities").delete().eq("item_id", item.id);
 
-  const chunks = analysis.chunks.length > 0
-    ? analysis.chunks
+  const searchAnalysis = withMemoryProfileSearchDocs(analysis);
+  const chunks = searchAnalysis.chunks.length > 0
+    ? searchAnalysis.chunks
     : [{ chunkType: "summary", content: summary }];
 
   const embeddingInput = [
-    buildItemEmbeddingText(title, summary, analysis),
+    buildItemEmbeddingText(title, summary, searchAnalysis),
     ...chunks.map((chunk) => chunk.content),
   ];
   const embeddings = await generateEmbeddings(embeddingInput);
@@ -1610,9 +1695,9 @@ async function replaceSearchDocs(
     },
   })));
 
-  if (analysis.entities.length > 0) {
+  if (searchAnalysis.entities.length > 0) {
     await supabase.from("item_entities").insert(
-      analysis.entities.map((entity) => ({
+      searchAnalysis.entities.map((entity) => ({
         item_id: item.id,
         user_id: item.user_id,
         entity: entity.entity,
@@ -1630,6 +1715,34 @@ async function replaceSearchDocs(
     embeddingStatus: embeddings.status,
     embeddingModel: embeddings.model,
     embeddingError: embeddings.error,
+  };
+}
+
+function withMemoryProfileSearchDocs(
+  analysis: SearchDocsAnalysis,
+): SearchDocsAnalysis {
+  const profile = analysis.memoryProfile;
+  if (!profile) {
+    return analysis;
+  }
+
+  const profileChunk = memoryProfileChunkContent(profile);
+  return {
+    ...analysis,
+    chunks: [
+      ...analysis.chunks,
+      ...(profileChunk
+        ? [{
+          chunkType: "memory_profile",
+          content: profileChunk,
+          metadata: { role: "strong_memory_profile" },
+        }]
+        : []),
+    ],
+    entities: [
+      ...analysis.entities,
+      ...memoryProfileEntities(profile),
+    ],
   };
 }
 

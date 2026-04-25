@@ -11,10 +11,45 @@ The product is a single AI-first inbox for anything a user wants to save for lat
 - Premium editorial visual system based on `design/`.
 - Search is the primary navigation and retrieval experience.
 - Saved items are semantic memory objects, not generic cards.
+- Saved items must become associative memory objects, not hard-coded category examples.
 - Mock-first UI until feed quality matches the design.
 - Backend access must be secure by default with strict RLS.
 - Cross-lingual search must work across English, Hebrew, Russian, Italian, French, Spanish, and German.
 - Cost controls are a core product constraint: the free tier must not allow unbounded AI processing, media storage, or lifetime storage of abandoned user data.
+
+## Core Architecture: Associative Memory
+
+The heart of Dualio is not a bookmark feed and not keyword search. A saved item must be processed as a memory object that knows what it is, why it may matter, and how a person may later remember it vaguely.
+
+Dualio must not grow a hard-coded dictionary of examples such as breakfast, films, books, bottles, drinks, contracts, gifts, screenshots, tables, restaurants, or documents. Those are only examples of the same product principle: AI should reason associatively at save time and search time.
+
+When processing any saved input, AI should silently reason about:
+
+- What is this object?
+- Why might a person save it?
+- In what life/work context could it be useful?
+- How might the user vaguely remember it months later?
+- Which associations are central meaning?
+- Which words are only incidental mentions?
+- Which concepts should not retrieve this item?
+
+The backend stores this as a universal `memoryProfile`, not as one-off rules. Intended shape:
+
+- `domain`
+- `objectType`
+- `canonicalConcepts`
+- `primaryConcepts`
+- `searchIntents`
+- `usageContexts`
+- `facets`
+- `incidentalMentions`
+- `possibleRecallPhrases`
+- `negativeSignals`
+- `confidence`
+
+Strong memory-profile terms may be written into aliases, chunks, and entities. Incidental mentions must stay weak, so a card is found because it is meaningfully about a concept, not merely because a word appears somewhere in the source.
+
+Search should use an AI query planner through OpenRouter to interpret the user's memory request before hybrid retrieval. Rule-based parsing is only a cheap fallback for obvious type/date hints and must not become a hand-written ontology of every possible object or association.
 
 ## Free Tier And Retention Guardrails
 
@@ -58,10 +93,11 @@ Required accounting fields:
 - Recipe links with schema.org Recipe JSON-LD can extract ingredients, steps, timing, yield, image, author, and rating before AI semantic extraction runs.
 - Image/photo/screenshot processing now routes vision analysis through OpenRouter when `OPENROUTER_API_KEY` is configured, with a temporary direct OpenAI fallback.
 - Image/photo/screenshot processing can classify semantic item type from the visual context and extract recipe/manual structured fields such as ingredients/materials and steps instead of treating every saved image as a generic photo.
+- Processing now builds a `memoryProfile` for saved links, text, photos, and screenshots with domain, object type, canonical concepts, primary concepts, search intents, usage contexts, facets, incidental mentions, possible recall phrases, negative signals, and confidence. Strong memory-profile terms are written into aliases, chunks, and entities while incidental mentions stay weak.
 - Public HTML enrichment is split into general unofficial enrichment and a separate social HTML opt-in flag so social platforms remain disabled by default unless explicitly enabled.
 - Processing now generates item-level and chunk-level embeddings through OpenRouter when `OPENROUTER_API_KEY` is configured, using `openai/text-embedding-3-small` by default to preserve the current `vector(1536)` schema.
 - The `search` Edge Function now performs first-pass hybrid search with query embeddings, the existing `match_semantic_items` RPC, trigram similarity for morphology/typos, type-filter relaxation for recall, and lexical fallback when embeddings/RPC are unavailable.
-- Search intent inference for Russian and Hebrew queries is covered by Deno tests.
+- Search intent inference, saved-time phrase parsing, and memory-profile ranking are covered by Deno tests. The search function now supports an OpenRouter query planner that interprets associative memory requests before hybrid retrieval, with cheap keyword fallback when AI planning is unavailable.
 - The Flutter search screen calls backend search for signed-in users and preserves local search fallback.
 
 ## Phase 1: Mobile Foundation

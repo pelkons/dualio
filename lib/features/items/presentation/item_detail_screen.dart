@@ -816,13 +816,11 @@ class ArticleDetail extends StatelessWidget {
     final author = item.parsedContent['author'] as String?;
     final authorName = item.parsedContent['authorName'] as String?;
     final siteName = item.parsedContent['siteName'] as String?;
-    final readMinutes = item.parsedContent['readMinutes'] as int?;
     final body =
         (item.parsedContent['body'] as String?) ?? item.searchableSummary;
     final meta = <String>[
       if (authorName != null) authorName else if (author != null) author,
       if (siteName != null) siteName,
-      if (readMinutes != null) strings.minutesRead(readMinutes),
     ].join(' - ');
 
     return _DetailCard(

@@ -64,7 +64,10 @@ abstract final class DualioTheme {
     required Color outline,
   }) {
     final serif = GoogleFonts.notoSerifTextTheme();
-    final sans = GoogleFonts.manropeTextTheme();
+    final sans = GoogleFonts.manropeTextTheme().apply(
+      bodyColor: text,
+      displayColor: text,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -77,14 +80,71 @@ abstract final class DualioTheme {
         primary: brightness == Brightness.light ? Colors.black : Colors.white,
       ),
       extensions: <ThemeExtension<dynamic>>[
-        DualioPalette(card: card, subtle: subtle, pill: pill, muted: muted, outline: outline),
+        DualioPalette(
+          card: card,
+          subtle: subtle,
+          pill: pill,
+          muted: muted,
+          outline: outline,
+        ),
       ],
       textTheme: sans.copyWith(
-        displayLarge: serif.displayLarge?.copyWith(fontSize: 36, fontWeight: FontWeight.w600, height: 1.2, color: text),
-        headlineMedium: serif.headlineMedium?.copyWith(fontSize: 24, fontWeight: FontWeight.w500, height: 1.3, color: text),
-        titleLarge: serif.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w600, height: 1.25, color: text),
-        bodyMedium: sans.bodyMedium?.copyWith(fontSize: 16, fontWeight: FontWeight.w400, height: 1.6, color: text),
-        labelSmall: sans.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w500, height: 1.2, color: muted),
+        displayLarge: serif.displayLarge?.copyWith(
+          fontSize: 36,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+          color: text,
+        ),
+        headlineMedium: serif.headlineMedium?.copyWith(
+          fontSize: 24,
+          fontWeight: FontWeight.w500,
+          height: 1.3,
+          color: text,
+        ),
+        titleLarge: serif.titleLarge?.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          height: 1.25,
+          color: text,
+        ),
+        titleMedium: sans.titleMedium?.copyWith(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
+          color: text,
+        ),
+        bodyLarge: sans.bodyLarge?.copyWith(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          height: 1.6,
+          color: text,
+        ),
+        bodyMedium: sans.bodyMedium?.copyWith(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          height: 1.6,
+          color: text,
+        ),
+        labelSmall: sans.labelSmall?.copyWith(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          height: 1.2,
+          color: muted,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        labelStyle: TextStyle(color: muted),
+        floatingLabelStyle: TextStyle(color: text),
+        hintStyle: TextStyle(color: muted),
+        prefixIconColor: muted,
+        suffixIconColor: muted,
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: text,
+        selectionColor: muted.withValues(
+          alpha: brightness == Brightness.dark ? 0.32 : 0.22,
+        ),
+        selectionHandleColor: text,
       ),
       appBarTheme: AppBarTheme(
         centerTitle: true,
@@ -92,7 +152,11 @@ abstract final class DualioTheme {
         scrolledUnderElevation: 0,
         backgroundColor: card,
         foregroundColor: text,
-        titleTextStyle: serif.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w700, color: text),
+        titleTextStyle: serif.titleLarge?.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: text,
+        ),
       ),
     );
   }
@@ -114,7 +178,13 @@ class DualioPalette extends ThemeExtension<DualioPalette> {
   final Color outline;
 
   @override
-  DualioPalette copyWith({Color? card, Color? subtle, Color? pill, Color? muted, Color? outline}) {
+  DualioPalette copyWith({
+    Color? card,
+    Color? subtle,
+    Color? pill,
+    Color? muted,
+    Color? outline,
+  }) {
     return DualioPalette(
       card: card ?? this.card,
       subtle: subtle ?? this.subtle,

@@ -1,5 +1,10 @@
 import type { LinkResolverResult } from "./link_resolver.ts";
 import { callOpenRouterStructuredJson, parseJsonObject } from "./openrouter.ts";
+import {
+  enrichMemoryProfileForContent,
+  type MemoryProfile,
+  memoryProfileSearchTerms,
+} from "./memory_profile.ts";
 
 export type SemanticContentType =
   | "recipe"
@@ -36,6 +41,7 @@ export type SemanticExtraction = {
   summary: string;
   contentType: SemanticContentType;
   language: string;
+  memoryProfile: MemoryProfile;
   aliases: string[];
   entities: SemanticEntity[];
   chunks: SemanticChunk[];
@@ -131,6 +137,7 @@ const semanticExtractionSchema = {
     "summary",
     "contentType",
     "language",
+    "memoryProfile",
     "aliases",
     "entities",
     "chunks",
@@ -156,6 +163,42 @@ const semanticExtractionSchema = {
       ],
     },
     language: { type: "string" },
+    memoryProfile: {
+      type: "object",
+      additionalProperties: false,
+      required: [
+        "domain",
+        "objectType",
+        "canonicalConcepts",
+        "primaryConcepts",
+        "searchIntents",
+        "usageContexts",
+        "facets",
+        "incidentalMentions",
+        "possibleRecallPhrases",
+        "negativeSignals",
+        "confidence",
+      ],
+      properties: {
+        domain: { type: "string" },
+        objectType: { type: "string" },
+        canonicalConcepts: { type: "array", items: { type: "string" } },
+        primaryConcepts: { type: "array", items: { type: "string" } },
+        searchIntents: { type: "array", items: { type: "string" } },
+        usageContexts: { type: "array", items: { type: "string" } },
+        facets: {
+          type: "object",
+          additionalProperties: {
+            type: "array",
+            items: { type: "string" },
+          },
+        },
+        incidentalMentions: { type: "array", items: { type: "string" } },
+        possibleRecallPhrases: { type: "array", items: { type: "string" } },
+        negativeSignals: { type: "array", items: { type: "string" } },
+        confidence: { type: "number" },
+      },
+    },
     aliases: { type: "array", items: { type: "string" } },
     entities: {
       type: "array",
@@ -234,6 +277,11 @@ function buildExtractionPrompt(input: SemanticExtractionInput): string {
     "Hard language rule: title, summary, structuredFields, chunks, and clarificationQuestion must use the same primary language and writing system as the saved source text. If the source is Russian/Cyrillic, write Russian/Cyrillic. If the source is Hebrew, write Hebrew. Do not translate these user-facing fields into English.",
     "Never transliterate titles or proper names into Latin script unless the source itself uses Latin script. Preserve the original script for dish names, places, products, media titles, people, and organizations.",
     "Write a short user-facing summary in 1-2 sentences explaining what the user likely wanted to remember.",
+    "Build memoryProfile for associative retrieval: domain, objectType, canonicalConcepts, primaryConcepts, searchIntents, usageContexts, facets, incidentalMentions, possibleRecallPhrases, negativeSignals, confidence.",
+    "Before filling memoryProfile, reason silently about what this saved object is, why a person might save it, when/where/how it could be useful, and how they may vaguely remember it months later.",
+    "memoryProfile must distinguish central meaning from accidental text. Put central associations in primaryConcepts/searchIntents/usageContexts/facets/possibleRecallPhrases. Put words that merely appear in the source but are not what the item is about in incidentalMentions. Put concepts that should not retrieve this item in negativeSignals.",
+    "Use canonicalConcepts/searchIntents/facets mostly as stable English concepts, but include useful multilingual possibleRecallPhrases for English, Hebrew, Russian, Italian, French, Spanish, and German when a concept is central.",
+    "Do not rely on hard-coded categories beyond contentType. Think associatively for any object: documents, contracts, books, bottles, drinks, receipts, products, places, screenshots, tables, people, events, tasks, and notes.",
     "Generate searchable aliases/synonyms useful for cross-lingual retrieval in English, Hebrew, Russian, Italian, French, Spanish, and German when appropriate; aliases are the only field allowed to include extra languages.",
     "Extract entities such as people, places, brands, ingredients, media titles, organizations, products, and topics.",
     "Create semantic chunks that will later be embedded. Keep chunks concise and meaningful.",
@@ -243,7 +291,7 @@ function buildExtractionPrompt(input: SemanticExtractionInput): string {
     "For manual structuredFields, extract materials/tools/requirements when present and steps as an ordered list. Do not put manuals into article just because they came from a web page.",
     "Supported structuredFields keys: author, authorName, siteName, readMinutes, body, prepTime, cookTime, totalTime, recipeYield, difficulty, ingredients, materials, tools, requirements, steps, year, director, rating, synopsis, cast, address, venueType, hours, notes, price, store, specs, duration.",
     "If the saved input is ambiguous, set needsClarification true and ask exactly one short question.",
-    'Schema: {"title":"","summary":"","contentType":"unknown","language":"en","aliases":[],"entities":[{"entity":"","entityType":"","normalizedValue":"","metadata":{}}],"chunks":[{"chunkType":"summary|body|metadata|entity","content":"","metadata":{}}],"structuredFields":{},"needsClarification":false,"clarificationQuestion":""}.',
+    'Schema: {"title":"","summary":"","contentType":"unknown","language":"en","memoryProfile":{"domain":"unknown","objectType":"","canonicalConcepts":[],"primaryConcepts":[],"searchIntents":[],"usageContexts":[],"facets":{},"incidentalMentions":[],"possibleRecallPhrases":[],"negativeSignals":[],"confidence":0.7},"aliases":[],"entities":[{"entity":"","entityType":"","normalizedValue":"","metadata":{}}],"chunks":[{"chunkType":"summary|body|metadata|entity","content":"","metadata":{}}],"structuredFields":{},"needsClarification":false,"clarificationQuestion":""}.',
     `Input: ${JSON.stringify(sourcePayload)}`,
   ].join(" ");
 }
@@ -302,13 +350,25 @@ function fallbackSemanticExtraction(
       ].join(" ")
       : [title, summary, input.text].join(" "),
   );
+  const memoryProfile = enrichMemoryProfileForContent({
+    contentType: recipe ? "recipe" : input.fallbackContentType,
+    title,
+    summary,
+    language,
+    ingredients: recipe?.ingredients,
+    steps: recipe?.instructions,
+  });
 
   return {
     title,
     summary,
     contentType: recipe ? "recipe" : input.fallbackContentType,
     language,
-    aliases: buildFallbackAliases(title, summary),
+    memoryProfile,
+    aliases: [
+      ...buildFallbackAliases(title, summary),
+      ...memoryProfileSearchTerms(memoryProfile),
+    ],
     entities: [],
     chunks: [
       { chunkType: "summary", content: summary },
@@ -344,6 +404,22 @@ function normalizeSemanticExtraction(
     value.contentType,
     input.fallbackContentType,
   );
+  const structuredFields = normalizeStructuredFields(value.structuredFields);
+  const memoryProfile = enrichMemoryProfileForContent({
+    contentType,
+    title,
+    summary,
+    language: cleanText(value.language) || fallback.language,
+    aliases: toStringArray(value.aliases),
+    ingredients: stringArrayField(structuredFields, "ingredients"),
+    materials: [
+      ...stringArrayField(structuredFields, "materials"),
+      ...stringArrayField(structuredFields, "tools"),
+      ...stringArrayField(structuredFields, "requirements"),
+    ],
+    steps: stringArrayField(structuredFields, "steps"),
+    existing: value.memoryProfile,
+  });
   const chunks = toChunkArray(value.chunks);
   chunks.push({ chunkType: "summary", content: summary });
   if (input.sourceType === "text" && cleanText(input.text)) {
@@ -355,16 +431,19 @@ function normalizeSemanticExtraction(
     summary,
     contentType,
     language: cleanText(value.language) || fallback.language,
+    memoryProfile,
     aliases: [
       ...new Set(
-        [...toStringArray(value.aliases), ...fallback.aliases].map((alias) =>
-          alias.toLowerCase()
-        ),
+        [
+          ...toStringArray(value.aliases),
+          ...fallback.aliases,
+          ...memoryProfileSearchTerms(memoryProfile),
+        ].map((alias) => alias.toLowerCase()),
       ),
-    ].slice(0, 32),
+    ].slice(0, 64),
     entities: toEntityArray(value.entities),
     chunks: dedupeChunks(chunks),
-    structuredFields: normalizeStructuredFields(value.structuredFields),
+    structuredFields,
     needsClarification: value.needsClarification === true,
     clarificationQuestion: cleanText(value.clarificationQuestion),
     extractionStatus: "complete",
@@ -402,6 +481,13 @@ function normalizeStructuredFields(value: unknown): Record<string, unknown> {
     return {};
   }
   return value as Record<string, unknown>;
+}
+
+function stringArrayField(
+  source: Record<string, unknown>,
+  key: string,
+): string[] {
+  return toStringArray(source[key]);
 }
 
 function toStringArray(value: unknown): string[] {

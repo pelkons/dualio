@@ -238,13 +238,12 @@ class ArticleFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final readMinutes = item.parsedContent['readMinutes'] as int?;
     final authorName = item.parsedContent['authorName'] as String?;
     final siteName = item.parsedContent['siteName'] as String?;
-    final metaLabel = readMinutes == null
-        ? strings.articleType
-        : '${strings.articleType} - ${strings.minutesRead(readMinutes)}';
-    final meta = CardMeta(icon: Icons.article_rounded, label: metaLabel);
+    final meta = CardMeta(
+      icon: Icons.article_rounded,
+      label: strings.articleType,
+    );
 
     if (item.thumbnailUrl != null) {
       return FeedCardFrame(

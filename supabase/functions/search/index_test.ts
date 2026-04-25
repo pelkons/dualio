@@ -3,6 +3,7 @@ import {
   filterWeakTrigramRows,
   searchWithRpc,
 } from "./index.ts";
+import { planSearchQuery } from "../_shared/search_intent.ts";
 
 const delikatesItemId = "79297971-852e-4e0f-bc8e-6562c493fca2";
 const russianShopQuery = "\u043c\u0430\u0433\u0430\u0437\u0438\u043d";
@@ -25,7 +26,7 @@ Deno.test("searchWithRpc keeps Russian whole-word recall via trigram", async () 
     fakeSearchClient(russianShopQuery),
     russianShopQuery,
     "[0,0,0]",
-    "product",
+    planSearchQuery(russianShopQuery),
     20,
   );
 
@@ -43,7 +44,7 @@ Deno.test("searchWithRpc keeps Russian typo recall via trigram", async () => {
     fakeSearchClient(mixedScriptShopTypoQuery),
     mixedScriptShopTypoQuery,
     "[0,0,0]",
-    "product",
+    planSearchQuery(mixedScriptShopTypoQuery),
     20,
   );
 
@@ -116,11 +117,160 @@ Deno.test("searchWithRpc does not return weak vector-only results", async () => 
     }),
     "zzzznotfound",
     "[0,0,0]",
-    null,
+    planSearchQuery("zzzznotfound"),
     20,
   );
 
   assertEquals(result.results.length, 0);
+});
+
+Deno.test("searchWithRpc uses memory profile intent instead of incidental mentions", async () => {
+  const queryPlan = {
+    inferredType: "product" as const,
+    targetTypes: ["product" as const],
+    excludedTypes: ["article" as const],
+    concepts: ["gift"],
+    intentTerms: ["gift", "present for parent"],
+    negativeTerms: [],
+    queryTerms: ["gift"],
+    fieldScope: "memory" as const,
+    strictTypeFilter: true,
+    plannerStatus: "ai" as const,
+  };
+  const result = await searchWithRpc(
+    fakeSearchClient("gift for parent", {
+      semanticRows: [],
+      trigramRows: [],
+      memoryItems: [
+        {
+          id: "00000000-0000-0000-0000-000000000101",
+          title: "Handmade ceramic bottle",
+          type: "product",
+          searchable_summary: "A saved product idea.",
+          searchable_aliases: ["ceramic bottle"],
+          parsed_content: {
+            memoryProfile: {
+              domain: "shopping",
+              objectType: "ceramic bottle",
+              canonicalConcepts: ["product", "gift"],
+              primaryConcepts: ["ceramic bottle"],
+              searchIntents: ["gift", "present for parent"],
+              usageContexts: ["holiday"],
+              facets: { recipient: ["parent"] },
+              incidentalMentions: [],
+              possibleRecallPhrases: ["gift idea", "bottle gift"],
+              negativeSignals: [],
+              confidence: 0.8,
+            },
+          },
+          created_at: "2026-04-25T00:00:00Z",
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000102",
+          title: "Article mentioning a gift",
+          type: "article",
+          searchable_summary: "The article contains a passing phrase.",
+          searchable_aliases: ["gift"],
+          parsed_content: {
+            memoryProfile: {
+              domain: "news",
+              objectType: "article",
+              canonicalConcepts: ["article"],
+              primaryConcepts: ["news"],
+              searchIntents: ["news"],
+              usageContexts: [],
+              facets: {},
+              incidentalMentions: ["gift"],
+              possibleRecallPhrases: [],
+              negativeSignals: ["shopping"],
+              confidence: 0.8,
+            },
+          },
+          created_at: "2026-04-25T00:00:00Z",
+        },
+      ],
+    }),
+    "gift for parent",
+    "[0,0,0]",
+    queryPlan,
+    20,
+  );
+
+  const first = result.results[0] as {
+    item?: { id?: string };
+    match_reason?: string;
+  };
+  assertEquals(first.item?.id, "00000000-0000-0000-0000-000000000101");
+  assertIncludes(first.match_reason ?? "", "memory_profile");
+  assertEquals(result.results.length, 1);
+});
+
+Deno.test("searchWithRpc lets explicit title-scope query override item domain", async () => {
+  const query = "movie with river in the title";
+  const queryPlan = {
+    inferredType: "film" as const,
+    targetTypes: ["film" as const],
+    excludedTypes: ["recipe" as const],
+    concepts: ["river"],
+    intentTerms: [],
+    negativeTerms: [],
+    queryTerms: ["river"],
+    fieldScope: "title" as const,
+    strictTypeFilter: true,
+    plannerStatus: "ai" as const,
+  };
+  const result = await searchWithRpc(
+    fakeSearchClient(query, {
+      semanticRows: [],
+      trigramRows: [],
+      memoryItems: [
+        {
+          id: "00000000-0000-0000-0000-000000000201",
+          title: "Mystic River",
+          type: "film",
+          searchable_summary: "A classic film.",
+          searchable_aliases: ["mystic river"],
+          parsed_content: {
+            memoryProfile: {
+              domain: "entertainment",
+              objectType: "film",
+              canonicalConcepts: ["film"],
+              primaryConcepts: ["crime drama"],
+              searchIntents: ["watch later"],
+              usageContexts: [],
+              facets: { titleTheme: ["river"] },
+              incidentalMentions: [],
+              possibleRecallPhrases: ["movie with river title"],
+              negativeSignals: [],
+              confidence: 0.8,
+            },
+          },
+          created_at: "2026-04-25T00:00:00Z",
+        },
+        {
+          id: "00000000-0000-0000-0000-000000000202",
+          title: "River fish guide",
+          type: "manual",
+          searchable_summary: "A saved guide.",
+          searchable_aliases: ["river"],
+          parsed_content: {},
+          created_at: "2026-04-25T00:00:00Z",
+        },
+      ],
+    }),
+    query,
+    "[0,0,0]",
+    queryPlan,
+    20,
+  );
+
+  const first = result.results[0] as {
+    item?: { id?: string };
+    match_reason?: string;
+  };
+  assertEquals(first.item?.id, "00000000-0000-0000-0000-000000000201");
+  assertIncludes(first.match_reason ?? "", "title_scope");
+  assertEquals(result.results.length, 1);
 });
 
 function fakeSearchClient(
@@ -137,6 +287,15 @@ function fakeSearchClient(
       chunk_id: string | null;
       score: number;
       match_reason: string;
+    }>;
+    memoryItems?: Array<{
+      id: string;
+      title: string;
+      type: string;
+      searchable_summary: string;
+      searchable_aliases: string[];
+      parsed_content: Record<string, unknown>;
+      created_at: string;
     }>;
   } = {},
 ) {
@@ -190,9 +349,23 @@ function fakeSearchClient(
       return {
         select(_columns: string) {
           return {
+            order(_column: string, _options: { ascending: boolean }) {
+              return {
+                limit(_count: number) {
+                  return Promise.resolve({
+                    data: options.memoryItems ?? [item],
+                    error: null,
+                  });
+                },
+              };
+            },
             in(_column: string, ids: string[]) {
+              const memoryItems = options.memoryItems ?? [];
+              const rows = [item, ...memoryItems].filter((row) =>
+                ids.includes(row.id)
+              );
               return Promise.resolve({
-                data: ids.includes(delikatesItemId) ? [item] : [],
+                data: rows,
               });
             },
           };

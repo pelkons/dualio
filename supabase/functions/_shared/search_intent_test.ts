@@ -1,4 +1,4 @@
-import { inferItemTypeFromQuery } from "./search_intent.ts";
+import { inferItemTypeFromQuery, planSearchQuery } from "./search_intent.ts";
 
 function assertEquals<T>(actual: T, expected: T) {
   if (actual !== expected) {
@@ -88,4 +88,30 @@ Deno.test("inferItemTypeFromQuery recognizes English manual intent", () => {
 
 Deno.test("inferItemTypeFromQuery keeps unknown broad queries unconstrained", () => {
   assertEquals(inferItemTypeFromQuery("saved ideas from last week"), null);
+});
+
+Deno.test("planSearchQuery keeps broad association queries for AI planning", () => {
+  const plan = planSearchQuery(
+    "\u043d\u0430\u0439\u0434\u0438 \u0442\u043e, \u0447\u0442\u043e \u044f \u0445\u043e\u0442\u0435\u043b \u043f\u043e\u0434\u0430\u0440\u0438\u0442\u044c",
+  );
+  assertEquals(plan.inferredType, null);
+  assertEquals(plan.strictTypeFilter, false);
+  assertEquals(plan.plannerStatus, "fallback");
+});
+
+Deno.test("planSearchQuery keeps explicit object type as cheap fallback", () => {
+  const plan = planSearchQuery(
+    "\u043a\u0438\u043d\u043e \u0441 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435\u043c \u043f\u0440\u043e \u0440\u0435\u043a\u0443",
+  );
+  assertEquals(plan.inferredType, "film");
+  assertEquals(plan.targetTypes[0], "film");
+  assertEquals(plan.fieldScope, "general");
+});
+
+Deno.test("planSearchQuery parses saved time separately from usage context", () => {
+  const plan = planSearchQuery(
+    "Find the document I saved a few months ago",
+    new Date("2026-04-26T00:00:00Z"),
+  );
+  assertEquals(plan.dateRange?.label, "a_few_months_ago");
 });

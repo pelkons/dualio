@@ -1,10 +1,17 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+﻿import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   embeddingToPgVector,
   generateEmbeddings,
 } from "../_shared/embeddings.ts";
-import { inferItemTypeFromQuery } from "../_shared/search_intent.ts";
+import {
+  planSearchQueryWithAi,
+  type SearchQueryPlan,
+} from "../_shared/search_intent.ts";
 import type { SemanticContentType } from "../_shared/semantic_extraction.ts";
+import {
+  memoryProfileSearchTerms,
+  normalizeMemoryProfile,
+} from "../_shared/memory_profile.ts";
 
 type SearchRequest = {
   query: string;
@@ -111,17 +118,18 @@ export async function handleSearchRequest(request: Request): Promise<Response> {
 
   const limit = clampLimit(body.limit);
   const locale = normalizeLocale(body.locale);
-  const inferred = inferItemTypeFromQuery(query);
+  const queryPlan = await planSearchQueryWithAi(query, locale);
+  const inferred = queryPlan.inferredType;
   const embedding = await generateEmbeddings([query]);
   const searchResult = embedding.status === "complete" && embedding.vectors[0]
     ? await searchWithRpc(
       supabase,
       query,
       embeddingToPgVector(embedding.vectors[0]),
-      inferred,
+      queryPlan,
       limit,
     )
-    : await fallbackLexicalSearch(supabase, query, inferred, limit);
+    : await fallbackLexicalSearch(supabase, query, queryPlan, limit);
 
   await supabase.from("search_events").insert({
     user_id: user.id,
@@ -144,6 +152,7 @@ export async function handleSearchRequest(request: Request): Promise<Response> {
       ? {
         embedding_error: embedding.error,
         fallback_reason: searchResult.fallbackReason,
+        query_plan: queryPlan,
       }
       : undefined,
   });
@@ -153,29 +162,39 @@ export async function searchWithRpc(
   supabase: any,
   query: string,
   queryEmbedding: string,
-  inferred: SemanticContentType | null,
+  queryPlan: SearchQueryPlan,
   limit: number,
 ): Promise<SearchExecutionResult> {
   const weights = weightsForQuery(query);
+  const inferred = queryPlan.inferredType;
+  const allowTypeRelaxation = !queryPlan.strictTypeFilter;
   const semantic = await fetchRowsWithTypeRelaxation(
     (type) => fetchSemanticRows(supabase, query, queryEmbedding, type, limit),
     inferred,
     "type_filter_relaxed",
+    allowTypeRelaxation,
   );
   const trigram = await fetchRowsWithTypeRelaxation(
     (type) => fetchTrigramRows(supabase, query, type, limit),
     inferred,
     "trigram_type_filter_relaxed",
+    allowTypeRelaxation,
+  );
+  const memory = await fetchMemoryPlanRows(
+    supabase,
+    query,
+    queryPlan,
+    limit,
   );
 
   if (
     semantic.errorCode && semantic.rows.length === 0 &&
-    trigram.rows.length === 0
+    trigram.rows.length === 0 && memory.rows.length === 0
   ) {
     return await fallbackLexicalSearch(
       supabase,
       query,
-      inferred,
+      queryPlan,
       limit,
       semantic.errorCode,
     );
@@ -194,6 +213,13 @@ export async function searchWithRpc(
       name: "trigram_rpc",
       weight: weights.trigram,
       rows: trigram.rows,
+    });
+  }
+  if (memory.rows.length > 0) {
+    signals.push({
+      name: "memory_plan",
+      weight: weights.memory,
+      rows: memory.rows,
     });
   }
 
@@ -231,10 +257,12 @@ export async function searchWithRpc(
 async function fallbackLexicalSearch(
   supabase: any,
   query: string,
-  inferred: SemanticContentType | null,
+  queryPlan: SearchQueryPlan,
   limit: number,
   fallbackReason?: string,
 ): Promise<SearchExecutionResult> {
+  const inferred = queryPlan.inferredType;
+  const allowTypeRelaxation = !queryPlan.strictTypeFilter;
   let candidateResult = await fetchLexicalCandidates(supabase, inferred);
   if (candidateResult.errorCode) {
     return {
@@ -246,7 +274,7 @@ async function fallbackLexicalSearch(
 
   let lexicalRows = lexicalRowsFromItems(candidateResult.items, query);
   let lexicalRelaxed = false;
-  if (lexicalRows.length === 0 && inferred) {
+  if (lexicalRows.length === 0 && inferred && allowTypeRelaxation) {
     candidateResult = await fetchLexicalCandidates(supabase, null);
     lexicalRows = appendReasonToRows(
       lexicalRowsFromItems(candidateResult.items, query),
@@ -259,6 +287,13 @@ async function fallbackLexicalSearch(
     (type) => fetchTrigramRows(supabase, query, type, limit),
     inferred,
     "trigram_type_filter_relaxed",
+    allowTypeRelaxation,
+  );
+  const memory = await fetchMemoryPlanRows(
+    supabase,
+    query,
+    queryPlan,
+    limit,
   );
   const weights = weightsForQuery(query);
   const signals: RankedSignal[] = [];
@@ -274,6 +309,13 @@ async function fallbackLexicalSearch(
       name: "trigram_rpc",
       weight: weights.trigram,
       rows: trigram.rows,
+    });
+  }
+  if (memory.rows.length > 0) {
+    signals.push({
+      name: "memory_plan",
+      weight: weights.memory,
+      rows: memory.rows,
     });
   }
 
@@ -361,10 +403,12 @@ async function fetchRowsWithTypeRelaxation(
   fetcher: (inferred: SemanticContentType | null) => Promise<RowsResult>,
   inferred: SemanticContentType | null,
   relaxedReason: string,
+  allowRelaxation = true,
 ): Promise<RowsResult> {
   const constrained = await fetcher(inferred);
   if (
-    constrained.rows.length > 0 || inferred === null || constrained.errorCode
+    constrained.rows.length > 0 || inferred === null || constrained.errorCode ||
+    !allowRelaxation
   ) {
     return constrained;
   }
@@ -381,6 +425,34 @@ async function fetchRowsWithTypeRelaxation(
     rows: appendReasonToRows(relaxed.rows, relaxedReason),
     errorCode: constrained.errorCode ?? relaxed.errorCode,
     typeFilterRelaxed: true,
+  };
+}
+
+async function fetchMemoryPlanRows(
+  supabase: any,
+  query: string,
+  queryPlan: SearchQueryPlan,
+  limit: number,
+): Promise<RowsResult> {
+  if (!shouldRunMemoryPlan(queryPlan)) {
+    return { rows: [] };
+  }
+
+  const { data, error } = await supabase
+    .from("items")
+    .select(itemSelect)
+    .order("created_at", { ascending: false })
+    .limit(Math.max(limit * 12, 120));
+
+  if (error || !Array.isArray(data)) {
+    return { rows: [], errorCode: error?.code ?? "memory_plan_fetch_failed" };
+  }
+
+  return {
+    rows: memoryRowsFromItems(data as ItemRow[], query, queryPlan).slice(
+      0,
+      limit,
+    ),
   };
 }
 
@@ -418,6 +490,118 @@ function lexicalRowsFromItems(items: ItemRow[], query: string): MatchRow[] {
       score: entry.score / 100,
       match_reason: entry.reasons.join(", "),
     }));
+}
+
+function memoryRowsFromItems(
+  items: ItemRow[],
+  query: string,
+  queryPlan: SearchQueryPlan,
+): MatchRow[] {
+  return items
+    .map((item) => scoreMemoryPlanItem(item, query, queryPlan))
+    .filter((row): row is MatchRow => row !== null)
+    .sort((left, right) => right.score - left.score);
+}
+
+function scoreMemoryPlanItem(
+  item: ItemRow,
+  query: string,
+  queryPlan: SearchQueryPlan,
+): MatchRow | null {
+  const itemType = normalizeItemType(item.type);
+  if (
+    queryPlan.strictTypeFilter &&
+    queryPlan.targetTypes.length > 0 &&
+    !queryPlan.targetTypes.includes(itemType)
+  ) {
+    return null;
+  }
+
+  const profile = normalizeMemoryProfile(
+    item.parsed_content?.memoryProfile,
+    itemType,
+  );
+  const profileTerms = memoryProfileSearchTerms(profile).map(normalizeTerm);
+  const aliases = Array.isArray(item.searchable_aliases)
+    ? item.searchable_aliases.map(normalizeTerm)
+    : [];
+  const titleTerms = [item.title, ...aliases].map(normalizeTerm);
+  const itemText = normalizeTerm([
+    item.title,
+    item.searchable_summary ?? "",
+    ...aliases,
+  ].join(" "));
+  const queryTerms = [
+    ...queryPlan.concepts,
+    ...queryPlan.intentTerms,
+    ...queryPlan.queryTerms,
+    ...query.split(/\s+/),
+  ].map(normalizeTerm).filter(Boolean);
+  const negativeTerms = queryPlan.negativeTerms.map(normalizeTerm).filter(
+    Boolean,
+  );
+
+  let score = 0;
+  const reasons = new Set<string>();
+
+  if (queryPlan.targetTypes.includes(itemType)) {
+    score += 0.42;
+    reasons.add("planned_type");
+  }
+
+  if (queryTerms.length > 0 && intersectsTerms(profileTerms, queryTerms)) {
+    score += queryPlan.fieldScope === "mentions" ? 0.35 : 0.9;
+    reasons.add("memory_profile");
+  }
+
+  if (queryTerms.length > 0 && intersectsTerms(aliases, queryTerms)) {
+    score += 0.55;
+    reasons.add("alias");
+  }
+
+  if (
+    queryPlan.fieldScope === "title" &&
+    queryTerms.length > 0 &&
+    intersectsTerms(titleTerms, queryTerms)
+  ) {
+    score += 0.7;
+    reasons.add("title_scope");
+  }
+
+  if (
+    queryPlan.fieldScope === "mentions" &&
+    queryTerms.length > 0 &&
+    queryTerms.some((term) => itemText.includes(term))
+  ) {
+    score += 0.32;
+    reasons.add("explicit_mention_scope");
+  }
+
+  if (
+    negativeTerms.length > 0 && intersectsTerms(profileTerms, negativeTerms)
+  ) {
+    score *= 0.4;
+    reasons.add("negative_memory_signal");
+  }
+
+  const timeScore = savedDateScore(item.created_at, queryPlan);
+  if (timeScore > 0) {
+    score += timeScore;
+    reasons.add("saved_time_match");
+  } else if (queryPlan.dateRange) {
+    score *= 0.82;
+  }
+
+  if (score < 0.55 || reasons.size === 0) {
+    return null;
+  }
+
+  return {
+    item_id: item.id,
+    chunk_id: null,
+    score: Math.min(0.99, score),
+    match_reason: [...reasons].join(", "),
+  };
 }
 
 async function fetchItemsByIds(
@@ -509,6 +693,79 @@ function scoreItem(
   return { score, reasons: [...reasons] };
 }
 
+function shouldRunMemoryPlan(queryPlan: SearchQueryPlan): boolean {
+  return queryPlan.strictTypeFilter ||
+    queryPlan.concepts.length > 0 ||
+    queryPlan.intentTerms.length > 0 ||
+    queryPlan.fieldScope !== "general" ||
+    Boolean(queryPlan.dateRange);
+}
+
+function savedDateScore(
+  createdAt: string | undefined,
+  queryPlan: SearchQueryPlan,
+): number {
+  if (!queryPlan.dateRange || !createdAt) {
+    return 0;
+  }
+  const savedAt = Date.parse(createdAt);
+  const from = queryPlan.dateRange.from
+    ? Date.parse(queryPlan.dateRange.from)
+    : Number.NEGATIVE_INFINITY;
+  const to = queryPlan.dateRange.to
+    ? Date.parse(queryPlan.dateRange.to)
+    : Number.POSITIVE_INFINITY;
+  if (!Number.isFinite(savedAt)) {
+    return 0;
+  }
+  return savedAt >= from && savedAt <= to ? 0.28 : 0;
+}
+
+function intersectsTerms(left: string[], right: string[]): boolean {
+  for (const leftTerm of left) {
+    if (!leftTerm) {
+      continue;
+    }
+    for (const rightTerm of right) {
+      if (!rightTerm) {
+        continue;
+      }
+      if (
+        leftTerm === rightTerm ||
+        leftTerm.includes(rightTerm) ||
+        rightTerm.includes(leftTerm)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function normalizeTerm(value: string): string {
+  return value.toLocaleLowerCase().normalize("NFC").replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeItemType(value: string): SemanticContentType {
+  if (
+    [
+      "recipe",
+      "film",
+      "place",
+      "article",
+      "product",
+      "video",
+      "manual",
+      "note",
+      "unknown",
+    ].includes(value)
+  ) {
+    return value as SemanticContentType;
+  }
+  return "unknown";
+}
+
 function appendReasonToRows(rows: MatchRow[], reason: string): MatchRow[] {
   return rows.map((row) => ({
     ...row,
@@ -524,12 +781,13 @@ function weightsForQuery(query: string): {
   semantic: number;
   lexical: number;
   trigram: number;
+  memory: number;
 } {
   const length = [...query.replace(/\s+/g, "")].length;
   if (length <= 4) {
-    return { semantic: 0.75, lexical: 1.2, trigram: 1.8 };
+    return { semantic: 0.75, lexical: 1.2, trigram: 1.8, memory: 2.0 };
   }
-  return { semantic: 1, lexical: 1, trigram: 1.15 };
+  return { semantic: 1, lexical: 1, trigram: 1.15, memory: 1.8 };
 }
 
 function trigramThresholdFor(query: string): number {
@@ -600,10 +858,23 @@ function strategyForSignals(
 ): string {
   const names = new Set(signals.map((signal) => signal.name));
   if (names.has("hybrid_rpc") && names.has("trigram_rpc")) {
-    return "hybrid_rpc_trigram";
+    return names.has("memory_plan")
+      ? "hybrid_rpc_trigram_memory_plan"
+      : "hybrid_rpc_trigram";
+  }
+  if (names.has("hybrid_rpc") && names.has("memory_plan")) {
+    return "hybrid_rpc_memory_plan";
   }
   if (names.has("lexical_fallback") && names.has("trigram_rpc")) {
-    return "lexical_fallback_trigram";
+    return names.has("memory_plan")
+      ? "lexical_fallback_trigram_memory_plan"
+      : "lexical_fallback_trigram";
+  }
+  if (names.has("lexical_fallback") && names.has("memory_plan")) {
+    return "lexical_fallback_memory_plan";
+  }
+  if (names.has("memory_plan")) {
+    return "memory_plan";
   }
   if (names.has("trigram_rpc")) {
     return "trigram_rpc";
