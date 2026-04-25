@@ -1,6 +1,6 @@
 export type LinkPlatform = "tiktok" | "instagram" | "facebook" | "x" | "youtube" | "reddit" | "generic";
 
-export type LinkResolverName = "tiktok_oembed" | "meta_oembed" | "x_oembed" | "youtube_oembed" | "reddit_json" | "opengraph" | "fallback";
+export type LinkResolverName = "tiktok_oembed" | "meta_oembed" | "x_oembed" | "youtube_oembed" | "reddit_json" | "reddit_oembed" | "opengraph" | "fallback";
 
 export type LinkExtractionStatus = "complete" | "partial" | "failed";
 
@@ -82,7 +82,7 @@ export async function resolveLink(url: string): Promise<LinkResolverResult> {
 
   if (platform === "reddit") {
     const redditResult = await resolveRedditJson(normalizedUrl);
-    if (redditResult.extractionStatus === "complete") {
+    if (redditResult.extractionStatus !== "failed") {
       return redditResult;
     }
   }
@@ -240,8 +240,9 @@ async function resolveYouTubeOEmbed(url: URL): Promise<LinkResolverResult> {
 }
 
 async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
+  let canonicalPostUrl = url;
   try {
-    const canonicalPostUrl = await expandRedditShareUrl(url);
+    canonicalPostUrl = await expandRedditShareUrl(url);
     const endpoint = redditJsonEndpoint(canonicalPostUrl);
 
     const response = await fetchWithTimeout(endpoint, {
@@ -249,13 +250,13 @@ async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
       headers: redditFetchHeaders,
     });
     if (!response.ok) {
-      return minimalFallback(canonicalPostUrl, "reddit", `reddit_json_${response.status}`);
+      return await resolveRedditOEmbed(canonicalPostUrl, `reddit_json_${response.status}`);
     }
 
     const payload = await response.json();
     const post = extractRedditPost(payload);
     if (!post) {
-      return minimalFallback(canonicalPostUrl, "reddit", "reddit_json_no_post");
+      return await resolveRedditOEmbed(canonicalPostUrl, "reddit_json_no_post");
     }
 
     return {
@@ -273,7 +274,38 @@ async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
       needsUserContext: false,
     };
   } catch (error) {
-    return minimalFallback(url, "reddit", errorName(error));
+    return await resolveRedditOEmbed(canonicalPostUrl, errorName(error));
+  }
+}
+
+async function resolveRedditOEmbed(url: URL, previousError?: string): Promise<LinkResolverResult> {
+  try {
+    const endpoint = new URL("https://www.reddit.com/oembed");
+    endpoint.searchParams.set("url", url.toString());
+    const response = await fetchWithTimeout(endpoint, {
+      redirect: "follow",
+      headers: redditFetchHeaders,
+    });
+    if (!response.ok) {
+      return minimalFallback(url, "reddit", previousError ? `${previousError};reddit_oembed_${response.status}` : `reddit_oembed_${response.status}`);
+    }
+
+    const payload = await response.json() as Record<string, unknown>;
+    return {
+      url: url.toString(),
+      canonicalUrl: url.toString(),
+      platform: "reddit",
+      resolver: "reddit_oembed",
+      extractionStatus: "partial",
+      title: stringValue(payload.title),
+      authorName: stringValue(payload.author_name),
+      providerName: stringValue(payload.provider_name) ?? "Reddit",
+      htmlEmbed: stringValue(payload.html),
+      needsUserContext: false,
+      error: previousError,
+    };
+  } catch (error) {
+    return minimalFallback(url, "reddit", previousError ? `${previousError};${errorName(error)}` : errorName(error));
   }
 }
 
