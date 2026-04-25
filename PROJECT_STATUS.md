@@ -15,9 +15,9 @@ Last updated: 2026-04-25
 
 ## Current Stage
 
-Dualio is in early foundation stage.
+Dualio is in processing-pipeline MVP stage.
 
-The project has a Flutter-first mobile scaffold, mock semantic feed, mock capture/search flows, RAG-first Supabase schema, project-level Codex skills, and Claude agent instructions. Flutter and Android tooling are installed and the Android debug APK builds successfully.
+The project has a Flutter-first mobile app, authenticated Supabase feed, Android share intake, R2 image uploads, first-pass social/link resolving, RAG-first Supabase schema, project-level Codex skills, and Claude agent instructions. Flutter and Android tooling are installed and the Android debug APK builds successfully.
 
 ## Completed
 
@@ -100,6 +100,13 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Added image vision analysis contract using the OpenAI Responses API when `OPENAI_API_KEY` is configured, with a safe fallback when vision credentials are absent.
 - Added image search-doc writes: `item_chunks`, `item_entities`, searchable summary, searchable aliases, parsed image summary, and visible text.
 - Added dedicated feed/detail presentation for processed image items so inferred item type does not rely on mock-only fields.
+- Added share-confirmation flow before saving incoming Android shares, including optional personal note capture.
+- Fixed duplicate local `Processing` placeholders by matching optimistic local captures to processed remote items by source, URL, filename, and asset metadata.
+- Added social/link resolver support for TikTok, YouTube, X/Twitter, Facebook/Instagram fallback paths, Reddit, and generic OpenGraph.
+- Fixed Reddit short-share links (`/r/.../s/...`) by expanding them to canonical `/comments/...` URLs before resolving.
+- Added Reddit JSON extraction for title, self text, author, subreddit, score, comment count, permalink, and usable preview metadata.
+- Added Reddit oEmbed fallback so Reddit links do not degrade to empty `Reddit link` cards if JSON is unavailable.
+- Added Reddit preview thumbnail fallback for self posts using `share.redd.it/preview/post/<post_id>`.
 
 ## Verified
 
@@ -108,12 +115,13 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 - Email magic-link callback opens Dualio on the physical Android phone after the routing fix.
 - Shared images upload to Cloudflare R2 and persist asset metadata in Supabase.
 - `process-item` Edge Function with image-processing path has been deployed to Supabase.
+- Reddit resolver behavior has been manually verified against concrete Reddit short links that expand to `An open letter to Anthropic`.
 
 ## Not Yet Verified
 
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
 - End-to-end signed-in state and remote item insert still need to be verified after the successful callback.
-- End-to-end link processing needs to be tested from the Android app after sign-in: save link -> pending item -> Edge Function metadata -> ready card.
+- End-to-end social-link processing still needs repeated Android smoke tests after each resolver change: share link -> confirm -> pending item -> Edge Function metadata -> ready card.
 - Google sign-in has not yet been tested with real Supabase credentials.
 - Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
 - Add/feed remote item flow has been built but not yet verified with a signed-in Supabase user.
@@ -131,10 +139,10 @@ The project has a Flutter-first mobile scaffold, mock semantic feed, mock captur
 ## Immediate Next Tasks
 
 1. Add `OPENAI_API_KEY` to Supabase Function secrets.
-2. Smoke-test sharing an image/screenshot into Dualio with vision enabled.
-3. Verify image item transitions from Processing to ready/clarification without manual refresh.
-4. Smoke-test Add text/link -> Supabase pending item -> Feed remote read.
-5. Add embedding generation for item-level and chunk-level search.
+2. Implement OpenAI extraction for link/text/image content: item type, summary, entities, aliases, language, and clarification question.
+3. Add embedding generation for item-level and chunk-level search.
+4. Wire the `search` Edge Function to hybrid search over embeddings, full text, aliases, entities, and recency.
+5. Smoke-test Android flows after AI processing is enabled: Reddit link, Facebook/TikTok link, WhatsApp image, raw text.
 
 ## Future Backlog Notes
 

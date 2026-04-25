@@ -38,15 +38,20 @@ Required accounting fields:
 
 ## Current Status
 
-- Flutter project scaffold exists.
+- Flutter project scaffold exists and builds for Android.
 - Design tokens, light/dark themes, typography, feed shell, search bar, bottom navigation, and floating add button exist.
-- Mock semantic feed exists for all 8 supported item types.
+- The app is connected to Supabase for authenticated item persistence and newest-first feed reads.
 - Compact feed cards exist for article, recipe, film, place, product, video, note, and unknown.
 - Type-specific detail placeholders exist.
 - Localization files exist for all target languages.
 - Supabase migration exists for the RAG-first schema.
-- Edge Function contracts exist for `process-item` and `search`.
-- Feed is intentionally not connected to Supabase yet.
+- Edge Function contracts exist for `process-item` and `search`; `process-item` is implemented for first-pass metadata/image processing.
+- Android share intake opens a confirmation screen before saving and supports links, text, photos, and screenshots.
+- Cloudflare R2 stores user-uploaded image assets through signed URLs.
+- Link processing resolves public metadata through platform-specific paths and OpenGraph/oEmbed fallback.
+- Reddit short-share links now expand to canonical posts and can extract title, self text, author, subreddit, score, comments, and preview metadata.
+- Image/photo/screenshot processing has an OpenAI vision contract and safe fallback when `OPENAI_API_KEY` is not configured.
+- Search is still not backed by real embeddings/reranking.
 
 ## Phase 1: Mobile Foundation
 
@@ -142,9 +147,11 @@ Definition of done:
 
 Current implementation note:
 
-- Link processing resolves public metadata and optional enrichment.
-- Image/photo/screenshot processing now reads Cloudflare R2 asset metadata, signs a temporary GET URL, calls OpenAI vision when `OPENAI_API_KEY` is configured, stores parsed image summary/visible text, writes chunks/entities, and falls back safely when vision credentials are missing.
+- Link processing resolves public metadata and optional enrichment. Reddit currently has the strongest resolver path: short-link expansion, JSON extraction, oEmbed fallback, and preview thumbnail fallback.
+- Image/photo/screenshot processing reads Cloudflare R2 asset metadata, signs a temporary GET URL, calls OpenAI vision when `OPENAI_API_KEY` is configured, stores parsed image summary/visible text, writes chunks/entities, and falls back safely when vision credentials are missing.
+- OpenAI extraction for saved links/text is still pending.
 - Item and chunk embeddings are still pending.
+- Hybrid semantic search UI/backend integration is still pending.
 
 ### Future Source Resolver Backlog
 
