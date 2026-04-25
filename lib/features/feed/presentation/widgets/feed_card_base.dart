@@ -30,7 +30,11 @@ class FeedCardFrame extends StatelessWidget {
         borderRadius: BorderRadius.circular(DualioTheme.cardRadius),
         border: Border.all(color: palette.outline.withValues(alpha: 0.45)),
         boxShadow: <BoxShadow>[
-          BoxShadow(color: Colors.black.withValues(alpha: 0.035), blurRadius: 30, offset: const Offset(0, 8)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: child,
@@ -43,7 +47,12 @@ class FeedCardFrame extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(DualioTheme.cardRadius),
           onTap: onTap,
-          child: clip ? ClipRRect(borderRadius: BorderRadius.circular(DualioTheme.cardRadius), child: card) : card,
+          child: clip
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(DualioTheme.cardRadius),
+                  child: card,
+                )
+              : card,
         ),
       ),
     );
@@ -51,7 +60,12 @@ class FeedCardFrame extends StatelessWidget {
 }
 
 class CardMeta extends StatelessWidget {
-  const CardMeta({required this.icon, required this.label, this.inverse = false, super.key});
+  const CardMeta({
+    required this.icon,
+    required this.label,
+    this.inverse = false,
+    super.key,
+  });
 
   final IconData icon;
   final String label;
@@ -70,10 +84,10 @@ class CardMeta extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-              ),
+            color: color,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+          ),
         ),
       ],
     );
@@ -88,6 +102,7 @@ IconData itemIcon(ItemType type) {
     ItemType.place => Icons.place_rounded,
     ItemType.product => Icons.shopping_bag_rounded,
     ItemType.video => Icons.smart_display_rounded,
+    ItemType.manual => Icons.checklist_rounded,
     ItemType.note => Icons.format_quote_rounded,
     ItemType.unknown => Icons.help_outline_rounded,
   };

@@ -56,6 +56,7 @@ const _$ItemTypeEnumMap = {
   ItemType.article: 'article',
   ItemType.product: 'product',
   ItemType.video: 'video',
+  ItemType.manual: 'manual',
   ItemType.note: 'note',
   ItemType.unknown: 'unknown',
 };

@@ -37,11 +37,25 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
 
     return FeedShell(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 24, DualioTheme.mobileMargin, 128),
+        padding: const EdgeInsets.fromLTRB(
+          DualioTheme.mobileMargin,
+          24,
+          DualioTheme.mobileMargin,
+          128,
+        ),
         children: <Widget>[
-          Text(strings.addTitle, style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            strings.addTitle,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: 8),
-          Text(strings.addBody, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: palette.muted, fontSize: 14)),
+          Text(
+            strings.addBody,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: palette.muted,
+              fontSize: 14,
+            ),
+          ),
           const SizedBox(height: 22),
           SegmentedButton<SourceType>(
             segments: <ButtonSegment<SourceType>>[
@@ -57,7 +71,8 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               ),
             ],
             selected: <SourceType>{_sourceType},
-            onSelectionChanged: (selection) => setState(() => _sourceType = selection.first),
+            onSelectionChanged: (selection) =>
+                setState(() => _sourceType = selection.first),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -71,10 +86,14 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
               errorText: _showEmptyError ? strings.emptyCaptureError : null,
               filled: true,
               fillColor: palette.card,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(DualioTheme.cardRadius)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DualioTheme.cardRadius),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DualioTheme.cardRadius),
-                borderSide: BorderSide(color: palette.outline.withValues(alpha: 0.45)),
+                borderSide: BorderSide(
+                  color: palette.outline.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ),
@@ -108,24 +127,27 @@ class _AddItemScreenState extends ConsumerState<AddItemScreen> {
       return;
     }
 
-    ref.read(semanticItemsProvider.notifier).addPendingText(
-          content: value,
-          sourceType: _sourceType,
-        );
+    ref
+        .read(semanticItemsProvider.notifier)
+        .addPendingText(content: value, sourceType: _sourceType);
     _notifySuccess();
     context.go('/');
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final image = await _picker.pickImage(source: source, imageQuality: 85);
+    final image = await _picker.pickImage(
+      source: source,
+      maxWidth: 2200,
+      maxHeight: 2200,
+      imageQuality: 90,
+    );
     if (image == null || !mounted) {
       return;
     }
 
-    ref.read(semanticItemsProvider.notifier).addPendingText(
-          content: image.name,
-          sourceType: SourceType.photo,
-        );
+    ref
+        .read(semanticItemsProvider.notifier)
+        .addPendingText(content: image.path, sourceType: SourceType.photo);
     _notifySuccess();
     if (mounted) {
       context.go('/');
@@ -168,7 +190,12 @@ class _CaptureAction extends StatelessWidget {
             children: <Widget>[
               Icon(icon),
               const SizedBox(width: 14),
-              Expanded(child: Text(title, style: Theme.of(context).textTheme.bodyMedium)),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
               const Icon(Icons.chevron_right_rounded),
             ],
           ),

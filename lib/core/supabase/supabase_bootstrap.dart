@@ -18,7 +18,7 @@ class SupabaseBootstrap {
   static SupabaseClient? get client {
     try {
       return Supabase.instance.client;
-    } on StateError {
+    } on Object {
       return null;
     }
   }

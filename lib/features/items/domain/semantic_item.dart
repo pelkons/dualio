@@ -3,7 +3,17 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'semantic_item.freezed.dart';
 part 'semantic_item.g.dart';
 
-enum ItemType { recipe, film, place, article, product, video, note, unknown }
+enum ItemType {
+  recipe,
+  film,
+  place,
+  article,
+  product,
+  video,
+  manual,
+  note,
+  unknown,
+}
 
 enum SourceType { link, screenshot, photo, text }
 
@@ -39,4 +49,12 @@ extension SemanticItemClassification on SemanticItem {
   bool get usesImageAnalysisPresentation =>
       parsedContent['kind'] == 'image_analysis' &&
       (sourceType == SourceType.photo || sourceType == SourceType.screenshot);
+
+  bool get usesActionStepsPresentation {
+    final steps = parsedContent['steps'];
+    return type != ItemType.recipe &&
+        type != ItemType.manual &&
+        steps is List<Object?> &&
+        steps.isNotEmpty;
+  }
 }

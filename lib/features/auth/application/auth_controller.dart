@@ -3,7 +3,9 @@ import 'package:dualio/core/supabase/supabase_bootstrap.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-final authControllerProvider = AsyncNotifierProvider<AuthController, void>(AuthController.new);
+final authControllerProvider = AsyncNotifierProvider<AuthController, void>(
+  AuthController.new,
+);
 
 final authSessionProvider = StreamProvider<Session?>((ref) {
   final client = SupabaseBootstrap.client;
@@ -11,7 +13,10 @@ final authSessionProvider = StreamProvider<Session?>((ref) {
     return Stream<Session?>.value(null);
   }
 
-  return client.auth.onAuthStateChange.map((state) => state.session).distinct().startWith(client.auth.currentSession);
+  return client.auth.onAuthStateChange
+      .map((state) => state.session)
+      .distinct()
+      .startWith(client.auth.currentSession);
 });
 
 class AuthController extends AsyncNotifier<void> {
@@ -52,7 +57,9 @@ class AuthController extends AsyncNotifier<void> {
         redirectTo: AppConfig.authRedirectUri,
       );
       if (!launched) {
-        throw const AuthConfigurationException('Could not open Google sign-in.');
+        throw const AuthConfigurationException(
+          'Could not open Google sign-in.',
+        );
       }
     });
     state.requireValue;
@@ -85,6 +92,23 @@ class AuthController extends AsyncNotifier<void> {
 
     state = const AsyncLoading<void>();
     state = await AsyncValue.guard(client.auth.signOut);
+    state.requireValue;
+  }
+
+  Future<void> deleteAccount() async {
+    final client = SupabaseBootstrap.client;
+    if (client == null) {
+      throw const AuthConfigurationException('Supabase is not configured yet.');
+    }
+
+    state = const AsyncLoading<void>();
+    state = await AsyncValue.guard(() async {
+      await client.functions.invoke(
+        'delete-account',
+        body: <String, Object?>{'confirm': true},
+      );
+      await client.auth.signOut();
+    });
     state.requireValue;
   }
 }

@@ -1,0 +1,98 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+
+const updated = "April 25, 2026";
+---
+
+<Base
+  title="Privacy Policy — Dualio"
+  description="What Dualio collects, how it's stored, and how to delete it."
+>
+  <Nav />
+  <main class="container legal section">
+    <span class="eyebrow">Last updated · {updated}</span>
+    <h1>Privacy Policy</h1>
+
+    <p>
+      Dualio is a personal memory inbox. We collect only what we need to make
+      your saved items work for you across your devices.
+    </p>
+
+    <h2>What we store</h2>
+    <ul>
+      <li>
+        Your email address, used only for sign-in.
+      </li>
+      <li>
+        Items you save — links, raw text, screenshots, photos — together with
+        their AI-generated metadata (title, summary, type, embeddings).
+      </li>
+      <li>
+        Original images you upload, kept in private object storage with signed
+        URLs. Free-tier images are deleted after 30 days unless you keep them
+        on a paid tier.
+      </li>
+    </ul>
+
+    <h2>What we do not do</h2>
+    <ul>
+      <li>We do not sell or rent your data.</li>
+      <li>
+        We do not run advertising or behavioural tracking inside the app.
+      </li>
+      <li>
+        We do not share your saved items with anyone other than the AI
+        providers required to process them (currently OpenAI for embeddings and
+        text/image extraction). These providers process data on our behalf and
+        do not train on it.
+      </li>
+    </ul>
+
+    <h2>Deleting your data</h2>
+    <p>
+      Inside the app you can delete any saved item at any time. To remove your
+      account and everything we have stored on your behalf, email
+      <a href="mailto:privacy@dualio.app">privacy@dualio.app</a> from the
+      address you used to sign in. We will delete every record and stored file
+      tied to your account within 7 days.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions about this policy? Write to
+      <a href="mailto:privacy@dualio.app">privacy@dualio.app</a>.
+    </p>
+
+    <p class="muted small">
+      This page is a working draft and will be updated before Dualio leaves
+      private beta.
+    </p>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .legal {
+    max-width: 720px;
+  }
+
+  .legal h2 {
+    margin-top: 2em;
+  }
+
+  .legal ul {
+    padding-left: 1.25em;
+    margin: 0 0 1em;
+  }
+
+  .legal li {
+    margin-bottom: 0.5em;
+  }
+
+  .small {
+    font-size: 13px;
+    margin-top: 3em;
+  }
+</style>

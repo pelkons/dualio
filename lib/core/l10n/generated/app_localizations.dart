@@ -228,6 +228,12 @@ abstract class AppLocalizations {
   /// **'Ingredients'**
   String get ingredients;
 
+  /// No description provided for @materials.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials'**
+  String get materials;
+
   /// No description provided for @steps.
   ///
   /// In en, this message translates to:
@@ -306,6 +312,12 @@ abstract class AppLocalizations {
   /// **'Video'**
   String get videoType;
 
+  /// No description provided for @manualType.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get manualType;
+
   /// No description provided for @highlightType.
   ///
   /// In en, this message translates to:
@@ -335,6 +347,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} min read'**
   String minutesRead(int minutes);
+
+  /// No description provided for @stepsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} steps'**
+  String stepsCount(int count);
 
   /// No description provided for @streamingLinksPlaceholder.
   ///
@@ -455,6 +473,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get editItem;
+
+  /// No description provided for @editGeneratedContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit generated content'**
+  String get editGeneratedContent;
+
+  /// No description provided for @generatedTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get generatedTitleLabel;
+
+  /// No description provided for @ingredientsEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One ingredient per line.'**
+  String get ingredientsEditHint;
+
+  /// No description provided for @materialsEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One material, tool, or requirement per line.'**
+  String get materialsEditHint;
+
+  /// No description provided for @stepsEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One step per line.'**
+  String get stepsEditHint;
 
   /// No description provided for @personalNote.
   ///
@@ -627,7 +675,7 @@ abstract class AppLocalizations {
   /// No description provided for @categoriesBody.
   ///
   /// In en, this message translates to:
-  /// **'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.'**
+  /// **'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, manuals, notes, and unknown items.'**
   String get categoriesBody;
 
   /// No description provided for @continueWithGoogle.
@@ -731,6 +779,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signed-in account'**
   String get unknownAccount;
+
+  /// No description provided for @deleteAccountSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountSetting;
+
+  /// No description provided for @deleteAccountSettingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account, saved items, and uploaded images.'**
+  String get deleteAccountSettingBody;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your account, saved items, extracted data, and uploaded images. This cannot be undone.'**
+  String get deleteAccountBody;
+
+  /// No description provided for @deleteAccountCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get deleteAccountCancel;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Try again.'**
+  String get deleteAccountFailed;
 }
 
 class _AppLocalizationsDelegate

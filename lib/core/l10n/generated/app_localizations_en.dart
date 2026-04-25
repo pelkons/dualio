@@ -73,6 +73,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ingredients => 'Ingredients';
 
   @override
+  String get materials => 'Materials';
+
+  @override
   String get steps => 'Steps';
 
   @override
@@ -112,6 +115,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoType => 'Video';
 
   @override
+  String get manualType => 'Manual';
+
+  @override
   String get highlightType => 'Highlight';
 
   @override
@@ -127,6 +133,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String minutesRead(int minutes) {
     return '$minutes min read';
+  }
+
+  @override
+  String stepsCount(int count) {
+    return '$count steps';
   }
 
   @override
@@ -192,6 +203,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editItem => 'Edit';
+
+  @override
+  String get editGeneratedContent => 'Edit generated content';
+
+  @override
+  String get generatedTitleLabel => 'Title';
+
+  @override
+  String get ingredientsEditHint => 'One ingredient per line.';
+
+  @override
+  String get materialsEditHint =>
+      'One material, tool, or requirement per line.';
+
+  @override
+  String get stepsEditHint => 'One step per line.';
 
   @override
   String get personalNote => 'Personal note';
@@ -280,7 +307,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoriesBody =>
-      'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
+      'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, manuals, notes, and unknown items.';
 
   @override
   String get continueWithGoogle => 'Continue with Google';
@@ -334,4 +361,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknownAccount => 'Signed-in account';
+
+  @override
+  String get deleteAccountSetting => 'Delete account';
+
+  @override
+  String get deleteAccountSettingBody =>
+      'Permanently delete your account, saved items, and uploaded images.';
+
+  @override
+  String get deleteAccountTitle => 'Delete your account?';
+
+  @override
+  String get deleteAccountBody =>
+      'This permanently deletes your account, saved items, extracted data, and uploaded images. This cannot be undone.';
+
+  @override
+  String get deleteAccountCancel => 'Cancel';
+
+  @override
+  String get deleteAccountConfirm => 'Delete account';
+
+  @override
+  String get deleteAccountFailed => 'Could not delete the account. Try again.';
 }

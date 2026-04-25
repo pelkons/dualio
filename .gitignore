@@ -25,3 +25,8 @@ ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
 
 *.iml
 *.log
+
+.astro/
+dualio_screen*.png
+tmp_*.png
+fb_items.json

@@ -1,0 +1,258 @@
+---
+// Pure-CSS phone mockup — no screenshot dependency.
+// Mirrors the in-app feed shell: brand bar, search field, semantic cards.
+---
+
+<div class="phone" aria-hidden="true">
+  <div class="phone-body">
+    <div class="status">
+      <span>9:41</span>
+      <span class="status-icons">
+        <span class="dot" />
+        <span class="dot" />
+        <span class="bar" />
+      </span>
+    </div>
+
+    <div class="appbar">
+      <span class="brand-mark">Dualio</span>
+      <span class="avatar" />
+    </div>
+
+    <div class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <span>Find anything you saved…</span>
+    </div>
+
+    <article class="card">
+      <span class="meta">ARTICLE · 4 MIN READ</span>
+      <h4>The Quiet Revolution of Slow Architecture</h4>
+      <p>In an era obsessed with speed and immediate gratification, a new movement is taking root.</p>
+      <span class="footer-meta">Added 2 hours ago</span>
+    </article>
+
+    <article class="card recipe">
+      <span class="badge">RECIPE</span>
+      <div class="thumb"></div>
+      <h4>No-Knead Olive Sourdough</h4>
+      <span class="meta">18h prep · high difficulty</span>
+    </article>
+
+    <article class="card quote">
+      <span class="meta">HIGHLIGHT</span>
+      <blockquote>"Simplicity is the ultimate sophistication."</blockquote>
+      <span class="meta cite">— Leonardo da Vinci</span>
+    </article>
+  </div>
+</div>
+
+<style>
+  .phone {
+    --phone-w: 280px;
+    --phone-r: 36px;
+    width: var(--phone-w);
+    aspect-ratio: 9 / 19;
+    margin: 0 auto;
+    border-radius: var(--phone-r);
+    padding: 10px;
+    background: linear-gradient(160deg, #2a2a2c 0%, #111113 100%);
+    box-shadow:
+      0 36px 72px rgba(0, 0, 0, 0.18),
+      0 8px 16px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    position: relative;
+  }
+
+  .phone::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 96px;
+    height: 22px;
+    background: #050506;
+    border-radius: 999px;
+    z-index: 2;
+  }
+
+  .phone-body {
+    width: 100%;
+    height: 100%;
+    background: var(--surface);
+    border-radius: calc(var(--phone-r) - 8px);
+    padding: 36px 14px 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: var(--font-sans);
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--on-surface);
+    padding: 0 6px;
+    margin-top: -4px;
+  }
+
+  .status-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--on-surface);
+  }
+
+  .status .bar {
+    width: 16px;
+    height: 8px;
+    border-radius: 2px;
+    border: 1px solid var(--on-surface);
+    position: relative;
+  }
+
+  .status .bar::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    width: 70%;
+    background: var(--on-surface);
+    border-radius: 1px;
+  }
+
+  .appbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+  }
+
+  .brand-mark {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 18px;
+  }
+
+  .avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface-container-high);
+    border: 1px solid var(--outline-variant);
+  }
+
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: var(--surface-container);
+    border-radius: 999px;
+    color: var(--on-surface-variant);
+    font-size: 12px;
+  }
+
+  .card {
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .meta {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--on-surface-variant);
+    text-transform: uppercase;
+  }
+
+  .card h4 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--on-surface);
+  }
+
+  .card p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--on-surface-variant);
+  }
+
+  .footer-meta {
+    font-size: 10px;
+    color: var(--on-surface-variant);
+    margin-top: 2px;
+  }
+
+  .recipe {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .recipe .badge {
+    position: absolute;
+    margin: 8px;
+    background: rgba(0, 0, 0, 0.78);
+    color: #fff;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    z-index: 1;
+  }
+
+  .recipe .thumb {
+    height: 78px;
+    background: linear-gradient(135deg, #c9a36b 0%, #8b5a2b 60%, #4a2c14 100%);
+  }
+
+  .recipe h4 {
+    padding: 8px 14px 0;
+  }
+
+  .recipe .meta {
+    padding: 0 14px 12px;
+  }
+
+  .quote blockquote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--on-surface);
+  }
+
+  .quote .cite {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+    font-size: 10px;
+  }
+
+  @media (max-width: 880px) {
+    .phone {
+      --phone-w: 240px;
+    }
+  }
+</style>

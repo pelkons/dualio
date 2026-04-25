@@ -1,0 +1,105 @@
+---
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+
+const updated = "April 25, 2026";
+---
+
+<Base
+  title="Terms of Service — Dualio"
+  description="The rules for using Dualio during private beta."
+>
+  <Nav />
+  <main class="container legal section">
+    <span class="eyebrow">Last updated · {updated}</span>
+    <h1>Terms of Service</h1>
+
+    <p>
+      These terms apply to the Dualio mobile app and the dualio.app website
+      while Dualio is in private beta.
+    </p>
+
+    <h2>Beta nature</h2>
+    <p>
+      Dualio is early software. Things may break, data may occasionally need
+      to be migrated, and features may change without notice. Don't store your
+      only copy of anything important here.
+    </p>
+
+    <h2>Your content</h2>
+    <p>
+      You keep ownership of everything you save into Dualio. We process your
+      content only to make it searchable and useful for you. We need a license
+      to do that processing — to read, store, generate metadata for, and
+      display your content back to you across your devices. That license
+      ends when you delete an item or your account.
+    </p>
+
+    <h2>Acceptable use</h2>
+    <ul>
+      <li>Don't use Dualio to break the law.</li>
+      <li>Don't upload content you don't have the right to save.</li>
+      <li>
+        Don't try to extract data from other users, abuse the AI processing
+        pipeline, or interfere with the service.
+      </li>
+    </ul>
+
+    <h2>Free tier limits</h2>
+    <p>
+      During beta the free tier is generous but not unlimited. Limits exist on
+      the number of saved items, image uploads, AI processing attempts, and
+      original-image retention. Limits are enforced server-side and may be
+      adjusted as we learn what users actually need.
+    </p>
+
+    <h2>Liability</h2>
+    <p>
+      Dualio is provided as-is. We are not liable for lost data, missed
+      reminders, or any indirect damages arising from your use of the service.
+      Where required by law, this limit does not apply to gross negligence.
+    </p>
+
+    <h2>Changes</h2>
+    <p>
+      We may update these terms. If we change anything material, we will
+      notify users by email or in-app before the change takes effect.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      <a href="mailto:hello@dualio.app">hello@dualio.app</a>
+    </p>
+
+    <p class="muted small">
+      Working draft — finalised wording will replace this before public
+      launch.
+    </p>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .legal {
+    max-width: 720px;
+  }
+
+  .legal h2 {
+    margin-top: 2em;
+  }
+
+  .legal ul {
+    padding-left: 1.25em;
+    margin: 0 0 1em;
+  }
+
+  .legal li {
+    margin-bottom: 0.5em;
+  }
+
+  .small {
+    font-size: 13px;
+    margin-top: 3em;
+  }
+</style>

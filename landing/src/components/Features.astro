@@ -1,0 +1,74 @@
+---
+const features = [
+  {
+    eyebrow: "Capture",
+    title: "Drop anything. From anywhere.",
+    body:
+      "Share from any app — Reddit, Instagram, Amazon, Google Maps, your camera roll, or a copied paragraph. Dualio takes whatever the system hands it and keeps the original safe.",
+  },
+  {
+    eyebrow: "Understand",
+    title: "AI reads it for you.",
+    body:
+      "Each save is processed into a typed memory: article, recipe, place, product, film, screenshot, note. Titles cleaned, summaries written, key entities pulled out. Across English, Hebrew, Russian, and four more.",
+  },
+  {
+    eyebrow: "Recall",
+    title: "Search by meaning, not by keyword.",
+    body:
+      "Looking for “that pasta with anchovies a friend sent”? Dualio finds it whether the original was in Italian, the description used different words, or you only remember a vibe.",
+  },
+];
+---
+
+<section class="features section" id="how-it-works">
+  <div class="container">
+    <span class="eyebrow">How it works</span>
+    <h2>A semantic memory, not a folder.</h2>
+    <p class="muted intro">
+      Most save-it-later apps are bookmark managers. Dualio is closer to a private,
+      cross-lingual brain — built for the things you save and forget.
+    </p>
+    <div class="grid">
+      {features.map((feature) => (
+        <article class="card feature">
+          <span class="eyebrow">{feature.eyebrow}</span>
+          <h3>{feature.title}</h3>
+          <p class="muted">{feature.body}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .intro {
+    max-width: 56ch;
+    font-size: 17px;
+    margin-bottom: 56px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .feature h3 {
+    margin: 6px 0 12px;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    line-height: 1.25;
+  }
+
+  .feature p {
+    margin: 0;
+    font-size: 15px;
+  }
+
+  @media (max-width: 880px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,6 +1,21 @@
-export type LinkPlatform = "tiktok" | "instagram" | "facebook" | "x" | "youtube" | "reddit" | "generic";
+export type LinkPlatform =
+  | "tiktok"
+  | "instagram"
+  | "facebook"
+  | "x"
+  | "youtube"
+  | "reddit"
+  | "generic";
 
-export type LinkResolverName = "tiktok_oembed" | "meta_oembed" | "x_oembed" | "youtube_oembed" | "reddit_json" | "reddit_oembed" | "opengraph" | "fallback";
+export type LinkResolverName =
+  | "tiktok_oembed"
+  | "meta_oembed"
+  | "x_oembed"
+  | "youtube_oembed"
+  | "reddit_json"
+  | "reddit_oembed"
+  | "opengraph"
+  | "fallback";
 
 export type LinkExtractionStatus = "complete" | "partial" | "failed";
 
@@ -17,32 +32,182 @@ export type LinkResolverResult = {
   thumbnailUrl?: string;
   providerName?: string;
   htmlEmbed?: string;
+  structuredData?: LinkStructuredData;
   needsUserContext: boolean;
   error?: string;
 };
 
-type OpenGraphResult = {
+export type LinkStructuredData = {
+  schemaTypes: string[];
+  recipe?: StructuredRecipe;
+};
+
+export type StructuredRecipe = {
+  name?: string;
+  description?: string;
+  image?: string;
+  authorName?: string;
+  prepTime?: string;
+  cookTime?: string;
+  totalTime?: string;
+  recipeYield?: string;
+  ingredients: string[];
+  instructions: string[];
+  ratingValue?: string;
+};
+
+export type OpenGraphResult = {
   canonicalUrl?: string;
   title?: string;
   description?: string;
   thumbnailUrl?: string;
   providerName?: string;
+  structuredData?: LinkStructuredData;
 };
 
 const htmlFetchHeaders = {
   "accept": "text/html,application/xhtml+xml",
-  "user-agent": "DualioBot/0.1 link metadata fetcher",
+  "user-agent":
+    "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+};
+
+const facebookHtmlFetchHeaders = {
+  "accept": "text/html,application/xhtml+xml",
+  "user-agent": "Mozilla/5.0 (compatible; Twitterbot/1.0)",
 };
 
 const redditFetchHeaders = {
   "accept": "application/json",
-  "user-agent": "Mozilla/5.0 (compatible; Dualio/0.1; +https://github.com/pelkons/dualio)",
+  "user-agent":
+    "Mozilla/5.0 (compatible; Dualio/0.1; +https://github.com/pelkons/dualio)",
 };
 
 const redditRedirectHeaders = {
   "accept": "text/html,application/xhtml+xml",
-  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+  "user-agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
 };
+
+function isRedditShareUrl(url: URL): boolean {
+  return /\/r\/[^/]+\/s\/[^/]+\/?$/i.test(url.pathname);
+}
+
+function hasUsefulRedditPreview(result: LinkResolverResult): boolean {
+  return Boolean(
+    result.title || result.description || result.thumbnailUrl ||
+      result.htmlEmbed,
+  );
+}
+
+type RedditUrlInfo = {
+  postId?: string;
+  slug?: string;
+  subreddit?: string;
+};
+
+function extractRedditUrlInfo(url: URL): RedditUrlInfo {
+  const match = url.pathname.match(
+    /^\/r\/([^/]+)\/comments\/([^/]+)(?:\/([^/]*))?/i,
+  );
+  if (!match) {
+    return {};
+  }
+  return {
+    subreddit: match[1],
+    postId: match[2],
+    slug: match[3] && match[3].length > 0 ? match[3] : undefined,
+  };
+}
+
+function titleFromSlug(slug: string): string {
+  return slug
+    .replace(/[_-]+/g, " ")
+    .split(" ")
+    .filter((word) => word.length > 0)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+    .trim();
+}
+
+type RedditFallbackContext = {
+  title?: string;
+  thumbnailUrl?: string;
+  providerName?: string;
+  canonicalUrl?: string;
+};
+
+function urlInfoToFallback(
+  info: RedditUrlInfo,
+  canonicalUrl: URL,
+): RedditFallbackContext {
+  const fallback: RedditFallbackContext = {};
+  if (info.slug) {
+    fallback.title = titleFromSlug(info.slug);
+  }
+  if (info.subreddit) {
+    fallback.providerName = `r/${info.subreddit}`;
+  }
+  fallback.canonicalUrl = canonicalUrl.toString();
+  return fallback;
+}
+
+function isGenericRedditSharePreview(url: string | undefined): boolean {
+  if (!url) {
+    return false;
+  }
+  return /^https?:\/\/share\.redd\.it\/preview\/post\/[A-Za-z0-9]+$/i.test(url);
+}
+
+function isPlaceholderRedditTitle(value: string | undefined): boolean {
+  if (!value) {
+    return true;
+  }
+  if (value === "Reddit link") {
+    return true;
+  }
+  if (/^From the .+ community on Reddit$/i.test(value)) {
+    return true;
+  }
+  if (/please wait for verification/i.test(value)) {
+    return true;
+  }
+  return false;
+}
+
+function applySlugFallback(
+  result: LinkResolverResult,
+  fallback: RedditFallbackContext,
+): LinkResolverResult {
+  if (
+    !fallback.title && !fallback.thumbnailUrl && !fallback.providerName &&
+    !fallback.canonicalUrl
+  ) {
+    return result;
+  }
+  const title = isPlaceholderRedditTitle(result.title)
+    ? fallback.title ?? result.title
+    : result.title;
+  const thumbnailUrl = result.thumbnailUrl ?? fallback.thumbnailUrl;
+  const providerName =
+    result.providerName && result.providerName !== "Reddit" &&
+      result.providerName !== "www.reddit.com" &&
+      result.providerName !== "reddit.com"
+      ? result.providerName
+      : fallback.providerName ?? result.providerName;
+  const canonicalUrl = result.canonicalUrl ?? fallback.canonicalUrl;
+  const hasUseful = Boolean(title || result.description || thumbnailUrl);
+  return {
+    ...result,
+    title,
+    thumbnailUrl,
+    providerName,
+    canonicalUrl,
+    extractionStatus: hasUseful && result.extractionStatus !== "complete"
+      ? "partial"
+      : result.extractionStatus,
+    needsUserContext: !hasUseful,
+  };
+}
 
 export async function resolveLink(url: string): Promise<LinkResolverResult> {
   const normalizedUrl = normalizeLinkUrl(url);
@@ -81,10 +246,37 @@ export async function resolveLink(url: string): Promise<LinkResolverResult> {
   }
 
   if (platform === "reddit") {
-    const redditResult = await resolveRedditJson(normalizedUrl);
-    if (redditResult.extractionStatus !== "failed") {
+    const expandedUrl = await expandRedditShareUrl(normalizedUrl);
+    const urlInfo = extractRedditUrlInfo(expandedUrl);
+    const slugFallback = urlInfoToFallback(urlInfo, expandedUrl);
+
+    const redditResult = await resolveRedditJson(expandedUrl);
+    if (redditResult.extractionStatus === "complete") {
       return redditResult;
     }
+
+    const ogTarget = redditResult.canonicalUrl
+      ? normalizeLinkUrl(redditResult.canonicalUrl) ?? expandedUrl
+      : expandedUrl;
+    const redditOg = await resolveOpenGraph(ogTarget, "reddit");
+    if (
+      redditOg.extractionStatus !== "failed" && hasUsefulRedditPreview(redditOg)
+    ) {
+      return applySlugFallback(
+        mergeRedditResults(redditResult, redditOg),
+        slugFallback,
+      );
+    }
+
+    if (hasUsefulRedditPreview(redditResult)) {
+      return applySlugFallback(redditResult, slugFallback);
+    }
+
+    if (redditOg.extractionStatus !== "failed") {
+      return applySlugFallback(redditOg, slugFallback);
+    }
+
+    return applySlugFallback(redditResult, slugFallback);
   }
 
   if (platform === "instagram" || platform === "facebook") {
@@ -100,6 +292,41 @@ export async function resolveLink(url: string): Promise<LinkResolverResult> {
   }
 
   return minimalFallback(normalizedUrl, platform, openGraphResult.error);
+}
+
+function mergeRedditResults(
+  primary: LinkResolverResult,
+  og: LinkResolverResult,
+): LinkResolverResult {
+  const primaryHasRealTitle = primary.resolver === "reddit_json" ||
+    primary.resolver === "reddit_oembed";
+  const title = primaryHasRealTitle
+    ? primary.title ?? og.title
+    : og.title ?? primary.title;
+  const description = primary.description ?? og.description;
+  const thumbnailUrl = primary.thumbnailUrl ?? og.thumbnailUrl;
+  const authorName = primary.authorName ?? og.authorName;
+  const authorUrl = primary.authorUrl ?? og.authorUrl;
+  const providerName =
+    (primaryHasRealTitle ? primary.providerName : undefined) ??
+      og.providerName ?? primary.providerName;
+  const canonicalUrl = primary.canonicalUrl ?? og.canonicalUrl;
+
+  return {
+    ...primary,
+    canonicalUrl,
+    extractionStatus: title || description || thumbnailUrl
+      ? "complete"
+      : primary.extractionStatus,
+    title,
+    description,
+    authorName,
+    authorUrl,
+    thumbnailUrl,
+    providerName,
+    htmlEmbed: primary.htmlEmbed ?? og.htmlEmbed,
+    needsUserContext: !(title || description || thumbnailUrl),
+  };
 }
 
 export function normalizeLinkUrl(value: string): URL | null {
@@ -118,7 +345,10 @@ export function normalizeLinkUrl(value: string): URL | null {
 export function detectPlatform(url: URL): LinkPlatform {
   const hostname = url.hostname.toLowerCase();
 
-  if (hostname === "tiktok.com" || hostname.endsWith(".tiktok.com") || hostname === "vt.tiktok.com") {
+  if (
+    hostname === "tiktok.com" || hostname.endsWith(".tiktok.com") ||
+    hostname === "vt.tiktok.com"
+  ) {
     return "tiktok";
   }
 
@@ -126,15 +356,24 @@ export function detectPlatform(url: URL): LinkPlatform {
     return "instagram";
   }
 
-  if (hostname === "facebook.com" || hostname.endsWith(".facebook.com") || hostname === "fb.watch") {
+  if (
+    hostname === "facebook.com" || hostname.endsWith(".facebook.com") ||
+    hostname === "fb.watch"
+  ) {
     return "facebook";
   }
 
-  if (hostname === "x.com" || hostname.endsWith(".x.com") || hostname === "twitter.com" || hostname.endsWith(".twitter.com")) {
+  if (
+    hostname === "x.com" || hostname.endsWith(".x.com") ||
+    hostname === "twitter.com" || hostname.endsWith(".twitter.com")
+  ) {
     return "x";
   }
 
-  if (hostname === "youtu.be" || hostname === "youtube.com" || hostname.endsWith(".youtube.com")) {
+  if (
+    hostname === "youtu.be" || hostname === "youtube.com" ||
+    hostname.endsWith(".youtube.com")
+  ) {
     return "youtube";
   }
 
@@ -217,7 +456,11 @@ async function resolveYouTubeOEmbed(url: URL): Promise<LinkResolverResult> {
       headers: { "accept": "application/json" },
     });
     if (!response.ok) {
-      return minimalFallback(url, "youtube", `youtube_oembed_${response.status}`);
+      return minimalFallback(
+        url,
+        "youtube",
+        `youtube_oembed_${response.status}`,
+      );
     }
 
     const payload = await response.json() as Record<string, unknown>;
@@ -250,7 +493,10 @@ async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
       headers: redditFetchHeaders,
     });
     if (!response.ok) {
-      return await resolveRedditOEmbed(canonicalPostUrl, `reddit_json_${response.status}`);
+      return await resolveRedditOEmbed(
+        canonicalPostUrl,
+        `reddit_json_${response.status}`,
+      );
     }
 
     const payload = await response.json();
@@ -261,14 +507,18 @@ async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
 
     return {
       url: url.toString(),
-      canonicalUrl: post.permalink ? new URL(post.permalink, "https://www.reddit.com").toString() : canonicalPostUrl.toString(),
+      canonicalUrl: post.permalink
+        ? new URL(post.permalink, "https://www.reddit.com").toString()
+        : canonicalPostUrl.toString(),
       platform: "reddit",
       resolver: "reddit_json",
       extractionStatus: "complete",
       title: post.title,
       description: redditDescription(post),
       authorName: post.author,
-      authorUrl: post.author ? `https://www.reddit.com/user/${post.author}` : undefined,
+      authorUrl: post.author
+        ? `https://www.reddit.com/user/${post.author}`
+        : undefined,
       thumbnailUrl: redditThumbnailUrl(post),
       providerName: post.subreddit ? `r/${post.subreddit}` : "Reddit",
       needsUserContext: false,
@@ -278,7 +528,10 @@ async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
   }
 }
 
-async function resolveRedditOEmbed(url: URL, previousError?: string): Promise<LinkResolverResult> {
+async function resolveRedditOEmbed(
+  url: URL,
+  previousError?: string,
+): Promise<LinkResolverResult> {
   try {
     const endpoint = new URL("https://www.reddit.com/oembed");
     endpoint.searchParams.set("url", url.toString());
@@ -287,7 +540,13 @@ async function resolveRedditOEmbed(url: URL, previousError?: string): Promise<Li
       headers: redditFetchHeaders,
     });
     if (!response.ok) {
-      return minimalFallback(url, "reddit", previousError ? `${previousError};reddit_oembed_${response.status}` : `reddit_oembed_${response.status}`);
+      return minimalFallback(
+        url,
+        "reddit",
+        previousError
+          ? `${previousError};reddit_oembed_${response.status}`
+          : `reddit_oembed_${response.status}`,
+      );
     }
 
     const payload = await response.json() as Record<string, unknown>;
@@ -305,27 +564,49 @@ async function resolveRedditOEmbed(url: URL, previousError?: string): Promise<Li
       error: previousError,
     };
   } catch (error) {
-    return minimalFallback(url, "reddit", previousError ? `${previousError};${errorName(error)}` : errorName(error));
+    return minimalFallback(
+      url,
+      "reddit",
+      previousError ? `${previousError};${errorName(error)}` : errorName(error),
+    );
   }
 }
 
 async function expandRedditShareUrl(url: URL): Promise<URL> {
-  if (!/\/r\/[^/]+\/s\/[^/]+\/?$/i.test(url.pathname)) {
+  if (!isRedditShareUrl(url)) {
     return url;
   }
 
-  const response = await fetchWithTimeout(url, {
-    redirect: "manual",
-    headers: redditRedirectHeaders,
-  });
-  const location = response.headers.get("location");
-  if (!location) {
-    return url;
+  try {
+    const manualResponse = await fetchWithTimeout(url, {
+      redirect: "manual",
+      headers: redditRedirectHeaders,
+    });
+    const location = manualResponse.headers.get("location");
+    if (location) {
+      const expanded = new URL(location, url);
+      expanded.hash = "";
+      return expanded;
+    }
+  } catch {
+    // fall through to follow-mode below
   }
 
-  const expanded = new URL(location, url);
-  expanded.hash = "";
-  return expanded;
+  try {
+    const followResponse = await fetchWithTimeout(url, {
+      redirect: "follow",
+      headers: redditRedirectHeaders,
+    });
+    const finalUrl = new URL(followResponse.url);
+    if (!isRedditShareUrl(finalUrl)) {
+      finalUrl.hash = "";
+      return finalUrl;
+    }
+  } catch {
+    // give up, caller will handle the unexpanded URL
+  }
+
+  return url;
 }
 
 export function redditJsonEndpoint(url: URL): URL {
@@ -337,15 +618,22 @@ export function redditJsonEndpoint(url: URL): URL {
   return endpoint;
 }
 
-async function resolveMetaOEmbed(url: URL, platform: "instagram" | "facebook"): Promise<LinkResolverResult> {
+async function resolveMetaOEmbed(
+  url: URL,
+  platform: "instagram" | "facebook",
+): Promise<LinkResolverResult> {
   const accessToken = Deno.env.get("META_OEMBED_ACCESS_TOKEN");
   if (!accessToken) {
     return minimalFallback(url, platform, "meta_oembed_access_token_missing");
   }
 
   try {
-    const endpointName = platform === "instagram" ? "instagram_oembed" : "oembed_post";
-    const endpoint = new URL(`https://graph.facebook.com/v19.0/${endpointName}`);
+    const endpointName = platform === "instagram"
+      ? "instagram_oembed"
+      : "oembed_post";
+    const endpoint = new URL(
+      `https://graph.facebook.com/v19.0/${endpointName}`,
+    );
     endpoint.searchParams.set("url", url.toString());
     endpoint.searchParams.set("access_token", accessToken);
 
@@ -375,11 +663,17 @@ async function resolveMetaOEmbed(url: URL, platform: "instagram" | "facebook"): 
   }
 }
 
-async function resolveOpenGraph(url: URL, platform: LinkPlatform): Promise<LinkResolverResult> {
+async function resolveOpenGraph(
+  url: URL,
+  platform: LinkPlatform,
+): Promise<LinkResolverResult> {
   try {
+    const headers = platform === "facebook"
+      ? facebookHtmlFetchHeaders
+      : htmlFetchHeaders;
     const response = await fetchWithTimeout(url, {
       redirect: "follow",
-      headers: htmlFetchHeaders,
+      headers,
     });
 
     if (!response.ok) {
@@ -387,7 +681,10 @@ async function resolveOpenGraph(url: URL, platform: LinkPlatform): Promise<LinkR
     }
 
     const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/html") && !contentType.includes("application/xhtml+xml")) {
+    if (
+      !contentType.includes("text/html") &&
+      !contentType.includes("application/xhtml+xml")
+    ) {
       return {
         ...minimalFallback(url, platform, "non_html_response"),
         extractionStatus: "partial",
@@ -397,23 +694,31 @@ async function resolveOpenGraph(url: URL, platform: LinkPlatform): Promise<LinkR
 
     const html = await response.text();
     const finalUrl = new URL(response.url);
-    const extracted = extractOpenGraph(html, finalUrl);
+    const extracted = extractOpenGraph(html, finalUrl, platform);
     const weakSocialData = isWeakSocialOpenGraph(platform, finalUrl, extracted);
-    const hasUsefulData = Boolean(extracted.title || extracted.description || extracted.thumbnailUrl);
-    const canonicalUrl = weakSocialData && isSocialLoginRedirect(platform, finalUrl)
-      ? url.toString()
-      : extracted.canonicalUrl ?? finalUrl.toString();
+    const hasUsefulData = Boolean(
+      extracted.title || extracted.description || extracted.thumbnailUrl,
+    );
+    const canonicalUrl =
+      weakSocialData && isSocialLoginRedirect(platform, finalUrl)
+        ? url.toString()
+        : extracted.canonicalUrl ?? finalUrl.toString();
 
     return {
       url: url.toString(),
       canonicalUrl,
       platform,
       resolver: hasUsefulData ? "opengraph" : "fallback",
-      extractionStatus: weakSocialData ? "partial" : hasUsefulData ? "complete" : "partial",
+      extractionStatus: weakSocialData
+        ? "partial"
+        : hasUsefulData
+        ? "complete"
+        : "partial",
       title: extracted.title,
       description: extracted.description,
       thumbnailUrl: extracted.thumbnailUrl,
       providerName: extracted.providerName ?? finalUrl.hostname,
+      structuredData: extracted.structuredData,
       needsUserContext: weakSocialData || !hasUsefulData,
       error: weakSocialData ? "weak_social_metadata" : undefined,
     };
@@ -422,59 +727,524 @@ async function resolveOpenGraph(url: URL, platform: LinkPlatform): Promise<LinkR
   }
 }
 
-function extractOpenGraph(html: string, baseUrl: URL): OpenGraphResult {
+export function extractOpenGraph(
+  html: string,
+  baseUrl: URL,
+  platform: LinkPlatform = "generic",
+): OpenGraphResult {
   const canonicalUrl = linkHref(html, "canonical");
-  const title = cleanText(
-    metaProperty(html, "og:title") ??
-      metaName(html, "twitter:title") ??
-      firstMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i),
+  const ogTitle = cleanText(metaProperty(html, "og:title"));
+  const twitterTitle = cleanText(metaName(html, "twitter:title"));
+  const documentTitle = cleanText(
+    firstMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i),
   );
-  const description = cleanText(
-    metaProperty(html, "og:description") ??
-      metaName(html, "twitter:description") ??
-      metaName(html, "description"),
-  );
-  const image = metaProperty(html, "og:image") ?? metaName(html, "twitter:image");
+  const ogDescription = cleanText(metaProperty(html, "og:description"));
+  const twitterDescription = cleanText(metaName(html, "twitter:description"));
+  const metaDescription = cleanText(metaName(html, "description"));
+
+  let title = ogTitle || twitterTitle || documentTitle;
+  let description = ogDescription || twitterDescription || metaDescription;
+
+  if (platform === "reddit") {
+    const cleanedDocumentTitle = stripRedditTitleSuffix(documentTitle);
+    if (cleanedDocumentTitle && !isRedditGenericTitle(cleanedDocumentTitle)) {
+      title = cleanedDocumentTitle;
+    } else if (isRedditGenericTitle(title)) {
+      const altTitle = extractRedditTitleFromOgImageAlt(html);
+      if (altTitle) {
+        title = altTitle;
+      }
+    }
+    if (metaDescription && !isRedditGenericDescription(metaDescription)) {
+      description = metaDescription;
+    }
+  }
+
+  const image = metaProperty(html, "og:image") ??
+    metaName(html, "twitter:image");
   const providerName = cleanText(metaProperty(html, "og:site_name"));
+  let resolvedImage = image ? resolveImageCandidate(image, baseUrl) : undefined;
+
+  if (isAmazonHost(baseUrl.hostname)) {
+    title = cleanAmazonTitle(title);
+  }
+
+  const structuredData = extractStructuredData(html, baseUrl);
+  if (structuredData.recipe) {
+    title = structuredData.recipe.name ?? title;
+    description = structuredData.recipe.description ?? description;
+    resolvedImage = structuredData.recipe.image ?? resolvedImage;
+  }
+  resolvedImage = resolvedImage ??
+    extractJsonLdImageHint(html, baseUrl) ??
+    extractProductImageHint(html, baseUrl) ??
+    extractLinkImageHint(html, baseUrl) ??
+    extractFirstMeaningfulImage(html, baseUrl);
 
   return {
-    canonicalUrl: canonicalUrl ? new URL(decodeHtml(canonicalUrl), baseUrl).toString() : undefined,
+    canonicalUrl: canonicalUrl
+      ? new URL(decodeHtml(canonicalUrl), baseUrl).toString()
+      : undefined,
     title: title || undefined,
     description: description || undefined,
-    thumbnailUrl: image ? new URL(decodeHtml(image), baseUrl).toString() : undefined,
+    thumbnailUrl:
+      platform === "reddit" && isGenericRedditSharePreview(resolvedImage)
+        ? undefined
+        : resolvedImage,
     providerName: providerName || undefined,
+    structuredData,
   };
 }
 
-function isWeakSocialOpenGraph(platform: LinkPlatform, finalUrl: URL, result: OpenGraphResult): boolean {
-  if (platform === "generic" || platform === "youtube" || platform === "reddit") {
+export function extractStructuredData(
+  html: string,
+  baseUrl: URL,
+): LinkStructuredData {
+  const nodes = extractJsonLdNodes(html);
+  const schemaTypes = [
+    ...new Set(nodes.flatMap((node) => typeValues(node["@type"]))),
+  ];
+  const recipeNode = nodes.find((node) =>
+    typeValues(node["@type"]).some((type) => type.toLowerCase() === "recipe")
+  );
+
+  return {
+    schemaTypes,
+    recipe: recipeNode ? recipeFromJsonLd(recipeNode, baseUrl) : undefined,
+  };
+}
+
+function extractJsonLdNodes(html: string): Array<Record<string, unknown>> {
+  const nodes: Array<Record<string, unknown>> = [];
+  for (
+    const match of html.matchAll(
+      /<script\b[^>]*type\s*=\s*(["'])application\/ld\+json\1[^>]*>([\s\S]*?)<\/script>/gi,
+    )
+  ) {
+    const rawJson = decodeHtml(match[2])
+      .replace(/^\s*<!--/, "")
+      .replace(/-->\s*$/, "")
+      .trim();
+    if (!rawJson) {
+      continue;
+    }
+    try {
+      collectJsonLdNodes(JSON.parse(rawJson), nodes);
+    } catch {
+      // Ignore malformed JSON-LD; OpenGraph data can still be useful.
+    }
+  }
+  return nodes;
+}
+
+function collectJsonLdNodes(
+  value: unknown,
+  nodes: Array<Record<string, unknown>>,
+) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectJsonLdNodes(item, nodes);
+    }
+    return;
+  }
+  if (!value || typeof value !== "object") {
+    return;
+  }
+
+  const object = value as Record<string, unknown>;
+  if (object["@type"]) {
+    nodes.push(object);
+  }
+  if (Array.isArray(object["@graph"])) {
+    collectJsonLdNodes(object["@graph"], nodes);
+  }
+}
+
+function recipeFromJsonLd(
+  value: Record<string, unknown>,
+  baseUrl: URL,
+): StructuredRecipe {
+  return {
+    name: textValue(value.name),
+    description: textValue(value.description),
+    image: imageValue(value.image, baseUrl),
+    authorName: textValue(value.author),
+    prepTime: textValue(value.prepTime),
+    cookTime: textValue(value.cookTime),
+    totalTime: textValue(value.totalTime),
+    recipeYield: recipeYieldValue(value.recipeYield),
+    ingredients: stringArrayValue(value.recipeIngredient),
+    instructions: instructionValues(value.recipeInstructions),
+    ratingValue: ratingValue(value.aggregateRating),
+  };
+}
+
+function typeValues(value: unknown): string[] {
+  if (typeof value === "string") {
+    return [value];
+  }
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+  return [];
+}
+
+function textValue(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return cleanText(stripHtml(value));
+  }
+  if (Array.isArray(value)) {
+    return value.map(textValue).find(Boolean);
+  }
+  if (value && typeof value === "object") {
+    const object = value as Record<string, unknown>;
+    return textValue(object.name ?? object.text ?? object["@value"]);
+  }
+  return undefined;
+}
+
+function recipeYieldValue(value: unknown): string | undefined {
+  if (Array.isArray(value)) {
+    return value.map(textValue).filter(Boolean).join(", ") || undefined;
+  }
+  return textValue(value);
+}
+
+function stringArrayValue(value: unknown): string[] {
+  if (typeof value === "string") {
+    return value.split(/\r?\n/).map((item) => cleanText(stripHtml(item)))
+      .filter(
+        Boolean,
+      );
+  }
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.map(textValue).filter((item): item is string => Boolean(item));
+}
+
+function instructionValues(value: unknown): string[] {
+  if (typeof value === "string") {
+    return [cleanText(stripHtml(value))].filter(Boolean);
+  }
+  if (!Array.isArray(value)) {
+    return textValue(value) ? [textValue(value)!] : [];
+  }
+
+  const steps: string[] = [];
+  for (const item of value) {
+    if (typeof item === "string") {
+      const text = cleanText(stripHtml(item));
+      if (text) {
+        steps.push(text);
+      }
+      continue;
+    }
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+    const object = item as Record<string, unknown>;
+    if (Array.isArray(object.itemListElement)) {
+      steps.push(...instructionValues(object.itemListElement));
+      continue;
+    }
+    const text = textValue(object.text ?? object.name);
+    if (text) {
+      steps.push(text);
+    }
+  }
+  return steps;
+}
+
+function imageValue(value: unknown, baseUrl: URL): string | undefined {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  const raw = candidate && typeof candidate === "object"
+    ? textValue(
+      (candidate as Record<string, unknown>).url ??
+        (candidate as Record<string, unknown>).contentUrl,
+    )
+    : textValue(candidate);
+  if (!raw) {
+    return undefined;
+  }
+  try {
+    return new URL(raw, baseUrl).toString();
+  } catch {
+    return undefined;
+  }
+}
+
+function ratingValue(value: unknown): string | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  return textValue((value as Record<string, unknown>).ratingValue);
+}
+
+function stripHtml(value: string): string {
+  return value.replace(/<[^>]+>/g, " ");
+}
+
+function extractJsonLdImageHint(
+  html: string,
+  baseUrl: URL,
+): string | undefined {
+  const nodes = extractJsonLdNodes(html);
+  for (const node of nodes) {
+    const image = imageValue(
+      node.image ?? node.logo ?? node.thumbnailUrl,
+      baseUrl,
+    );
+    if (image) {
+      return image;
+    }
+  }
+  return undefined;
+}
+
+function extractProductImageHint(
+  html: string,
+  baseUrl: URL,
+): string | undefined {
+  const oldHires = html.match(/\bdata-old-hires\s*=\s*["'](https?:\/\/[^"']+)/i)
+    ?.[1];
+  if (oldHires) {
+    return resolveImageCandidate(oldHires, baseUrl);
+  }
+  const hiRes = html.match(/"hiRes"\s*:\s*"(https?:\/\/[^"]+)"/i)?.[1];
+  if (hiRes) {
+    return resolveImageCandidate(hiRes, baseUrl);
+  }
+  const landing = html.match(
+    /<img[^>]+id\s*=\s*["']landingImage["'][^>]+src\s*=\s*["'](https?:\/\/[^"']+)/i,
+  )?.[1];
+  if (landing) {
+    return resolveImageCandidate(landing, baseUrl);
+  }
+  return undefined;
+}
+
+function extractLinkImageHint(html: string, baseUrl: URL): string | undefined {
+  const rels = [
+    "image_src",
+    "apple-touch-icon",
+    "apple-touch-icon-precomposed",
+    "icon",
+    "mask-icon",
+  ];
+  for (const rel of rels) {
+    const href = linkHref(html, rel);
+    const image = href ? resolveImageCandidate(href, baseUrl) : undefined;
+    if (image) {
+      return image;
+    }
+  }
+  return undefined;
+}
+
+function extractFirstMeaningfulImage(
+  html: string,
+  baseUrl: URL,
+): string | undefined {
+  for (const match of html.matchAll(/<img\b[^>]*>/gi)) {
+    const image = imageFromImgTag(match[0], baseUrl);
+    if (image) {
+      return image;
+    }
+  }
+  return undefined;
+}
+
+function imageFromImgTag(tag: string, baseUrl: URL): string | undefined {
+  const directAttributes = [
+    "src",
+    "data-src",
+    "data-lazy-src",
+    "data-original",
+    "data-image",
+  ];
+  for (const attribute of directAttributes) {
+    const value = attributeValue(tag, attribute);
+    const image = value ? resolveImageCandidate(value, baseUrl) : undefined;
+    if (image) {
+      return image;
+    }
+  }
+  return imageFromSrcSet(
+    attributeValue(tag, "srcset") ?? attributeValue(tag, "data-srcset"),
+    baseUrl,
+  );
+}
+
+function imageFromSrcSet(
+  srcset: string | null,
+  baseUrl: URL,
+): string | undefined {
+  if (!srcset) {
+    return undefined;
+  }
+  const parts = srcset.split(
+    /,\s+(?=(?:https?:)?\/\/|\/|\.\.?\/|[^,\s]+\.(?:avif|gif|jpe?g|png|svg|webp))/i,
+  );
+  let best: { image: string; score: number } | undefined;
+  for (const part of parts) {
+    const [rawUrl, descriptor] = part.trim().split(/\s+/, 2);
+    const image = resolveImageCandidate(rawUrl, baseUrl);
+    if (!image) {
+      continue;
+    }
+    const score = srcSetDescriptorScore(descriptor);
+    if (!best || score > best.score) {
+      best = { image, score };
+    }
+  }
+  return best?.image;
+}
+
+function srcSetDescriptorScore(value: string | undefined): number {
+  if (!value) {
+    return 1;
+  }
+  const density = value.match(/^([0-9.]+)x$/i);
+  if (density) {
+    return Number.parseFloat(density[1]) || 1;
+  }
+  const width = value.match(/^([0-9]+)w$/i);
+  if (width) {
+    return Number.parseInt(width[1], 10) || 1;
+  }
+  return 1;
+}
+
+function resolveImageCandidate(
+  value: string,
+  baseUrl: URL,
+): string | undefined {
+  const decoded = decodeHtml(value).trim();
+  if (!isLikelyUsefulImageUrl(decoded)) {
+    return undefined;
+  }
+  try {
+    const url = new URL(decoded, baseUrl);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return undefined;
+    }
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+function isLikelyUsefulImageUrl(value: string): boolean {
+  if (!value) {
+    return false;
+  }
+  const lower = value.toLowerCase();
+  if (
+    lower.startsWith("data:") ||
+    lower.startsWith("blob:") ||
+    lower.startsWith("javascript:")
+  ) {
+    return false;
+  }
+  return !/(^|[/_.-])(pixel|spacer|blank|transparent|tracking)([/_.-]|$)/i
+    .test(lower);
+}
+
+function isAmazonHost(hostname: string): boolean {
+  const lower = hostname.toLowerCase();
+  return lower === "a.co" ||
+    lower === "amzn.to" ||
+    lower === "amazon.com" ||
+    lower.endsWith(".amazon.com") ||
+    /(^|\.)amazon\.[a-z.]+$/i.test(lower);
+}
+
+function cleanAmazonTitle(value: string): string {
+  if (!value) {
+    return value;
+  }
+  let cleaned = value.replace(/^Amazon\.[a-z.]+:\s*/i, "");
+  cleaned = cleaned.replace(/\s*:\s*[^:]{1,40}$/, "");
+  return cleaned.trim();
+}
+
+function stripRedditTitleSuffix(value: string): string {
+  return value.replace(/\s*[:|–-]\s*r\/[A-Za-z0-9_]+\s*$/i, "").trim();
+}
+
+function isRedditGenericTitle(value: string): boolean {
+  if (!value) {
+    return true;
+  }
+  return /^From the .+ community on Reddit$/i.test(value);
+}
+
+function isRedditGenericDescription(value: string): boolean {
+  if (!value) {
+    return true;
+  }
+  return /^Explore this post and more from the .+ community$/i.test(value);
+}
+
+function extractRedditTitleFromOgImageAlt(html: string): string | null {
+  const alt = cleanText(metaProperty(html, "og:image:alt"));
+  if (!alt) {
+    return null;
+  }
+  const match = alt.match(
+    /^From the .+ community on Reddit:\s*["“]?(.+?)["”]?$/i,
+  );
+  return match ? match[1].trim() : null;
+}
+
+function isWeakSocialOpenGraph(
+  platform: LinkPlatform,
+  finalUrl: URL,
+  result: OpenGraphResult,
+): boolean {
+  if (
+    platform === "generic" || platform === "youtube" || platform === "reddit"
+  ) {
     return false;
   }
 
   const title = (result.title ?? "").toLowerCase();
   const description = result.description ?? "";
-  const hasUsefulData = Boolean(result.title && (description || result.thumbnailUrl));
+  const hasUsefulData = Boolean(
+    result.title && (description || result.thumbnailUrl),
+  );
   const redirectedToLogin = isSocialLoginRedirect(platform, finalUrl);
-  const genericTitle =
-    title === "facebook" ||
+  const genericTitle = title === "facebook" ||
     title.includes("log in") ||
     title.includes("make your day") ||
     title === "instagram" ||
     title === "x" ||
     title === "twitter";
 
-  return redirectedToLogin || (genericTitle && !hasUsefulData) || !hasUsefulData;
+  return redirectedToLogin || (genericTitle && !hasUsefulData) ||
+    !hasUsefulData;
 }
 
-export function isSocialLoginRedirect(platform: LinkPlatform, finalUrl: URL): boolean {
-  if (platform === "generic" || platform === "youtube" || platform === "reddit") {
+export function isSocialLoginRedirect(
+  platform: LinkPlatform,
+  finalUrl: URL,
+): boolean {
+  if (
+    platform === "generic" || platform === "youtube" || platform === "reddit"
+  ) {
     return false;
   }
 
-  return finalUrl.pathname.includes("/login") || finalUrl.pathname.includes("/accounts/login");
+  return finalUrl.pathname.includes("/login") ||
+    finalUrl.pathname.includes("/accounts/login");
 }
 
-function minimalFallback(url: URL, platform: LinkPlatform, error?: string): LinkResolverResult {
+function minimalFallback(
+  url: URL,
+  platform: LinkPlatform,
+  error?: string,
+): LinkResolverResult {
   return {
     url: url.toString(),
     platform,
@@ -487,7 +1257,10 @@ function minimalFallback(url: URL, platform: LinkPlatform, error?: string): Link
   };
 }
 
-async function fetchWithTimeout(input: URL, init: RequestInit): Promise<Response> {
+async function fetchWithTimeout(
+  input: URL,
+  init: RequestInit,
+): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 4500);
   try {
@@ -501,7 +1274,9 @@ function linkHref(html: string, rel: string): string | null {
   for (const match of html.matchAll(/<link\b[^>]*>/gi)) {
     const tag = match[0];
     const relValue = attributeValue(tag, "rel");
-    if (relValue?.toLowerCase().split(/\s+/).includes(rel.toLowerCase()) == true) {
+    if (
+      relValue?.toLowerCase().split(/\s+/).includes(rel.toLowerCase()) == true
+    ) {
       return attributeValue(tag, "href");
     }
   }
@@ -521,7 +1296,9 @@ function metaName(html: string, name: string): string | null {
 function metaProperty(html: string, property: string): string | null {
   for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
     const tag = match[0];
-    if (attributeValue(tag, "property")?.toLowerCase() === property.toLowerCase()) {
+    if (
+      attributeValue(tag, "property")?.toLowerCase() === property.toLowerCase()
+    ) {
       return attributeValue(tag, "content");
     }
   }
@@ -538,22 +1315,34 @@ function cleanText(value: string | null): string {
 
 function decodeHtml(value: string): string {
   return value
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
-    .replace(/&#([0-9]+);/g, (_, decimal: string) => String.fromCodePoint(Number.parseInt(decimal, 10)))
+    .replace(
+      /&#x([0-9a-f]+);/gi,
+      (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)),
+    )
+    .replace(
+      /&#([0-9]+);/g,
+      (_, decimal: string) =>
+        String.fromCodePoint(Number.parseInt(decimal, 10)),
+    )
     .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", "\"")
+    .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">");
 }
 
 function attributeValue(tag: string, attribute: string): string | null {
-  const pattern = new RegExp(`\\b${attribute}\\s*=\\s*(["'])(.*?)\\1`, "i");
+  const pattern = new RegExp(
+    `\\b${attribute}\\s*=\\s*(["'])([\\s\\S]*?)\\1`,
+    "i",
+  );
   return tag.match(pattern)?.[2] ?? null;
 }
 
 function stringValue(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : undefined;
 }
 
 function errorName(error: unknown): string {
@@ -655,9 +1444,6 @@ function redditThumbnailUrl(post: RedditPost): string | undefined {
   if (image) {
     return image;
   }
-  if (post.id) {
-    return `https://share.redd.it/preview/post/${post.id}`;
-  }
   return undefined;
 }
 
@@ -666,11 +1452,15 @@ function redditDescription(post: RedditPost): string | undefined {
     post.selftext,
     post.subreddit ? `r/${post.subreddit}` : undefined,
     typeof post.score === "number" ? `${post.score} upvotes` : undefined,
-    typeof post.numComments === "number" ? `${post.numComments} comments` : undefined,
+    typeof post.numComments === "number"
+      ? `${post.numComments} comments`
+      : undefined,
   ].filter(Boolean);
   return parts.join(" - ") || undefined;
 }
 
 function numberValue(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
 }

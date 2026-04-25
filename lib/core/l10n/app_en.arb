@@ -20,6 +20,7 @@
     "detailTitle":  "Item detail",
     "sourceLink":  "Source",
     "ingredients":  "Ingredients",
+    "materials":  "Materials",
     "steps":  "Steps",
     "cast":  "Cast",
     "whereToWatch":  "Where to watch",
@@ -33,6 +34,7 @@
     "placeType":  "Place",
     "productType":  "Product",
     "videoType":  "Video",
+    "manualType":  "Manual",
     "highlightType":  "Highlight",
     "needsClarificationType":  "Needs clarification",
     "socialLinkType":  "Social link",
@@ -45,6 +47,14 @@
                                                           }
                                           }
                      },
+    "stepsCount":  "{count} steps",
+    "@stepsCount":  {
+                         "placeholders":  {
+                                              "count":  {
+                                                            "type":  "int"
+                                                        }
+                                          }
+                    },
     "streamingLinksPlaceholder":  "Streaming links placeholder",
     "playableLinkPlaceholder":  "Playable deep link placeholder",
     "directedBy":  "Directed by {director}",
@@ -72,6 +82,11 @@
     "processingFailedType":  "Could not process",
     "retryProcessing":  "Retry",
     "editItem":  "Edit",
+    "editGeneratedContent":  "Edit generated content",
+    "generatedTitleLabel":  "Title",
+    "ingredientsEditHint":  "One ingredient per line.",
+    "materialsEditHint":  "One material, tool, or requirement per line.",
+    "stepsEditHint":  "One step per line.",
     "personalNote":  "Personal note",
     "personalNoteHint":  "Add your own context, reminder, or comment.",
     "personalNoteEmpty":  "No personal note yet.",
@@ -100,7 +115,7 @@
     "signOutSettingBody":  "End the current authenticated session.",
     "categoriesTab":  "Categories",
     "categoriesTitle":  "Categories",
-    "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.",
+    "categoriesBody":  "Browse saved memory by inferred type: recipes, films, places, articles, products, videos, manuals, notes, and unknown items.",
     "continueWithGoogle":  "Continue with Google",
     "continueWithApple":  "Continue with Apple",
     "orSignInWithEmail":  "or use email",
@@ -124,5 +139,12 @@
         }
     },
     "signOut":  "Sign out",
-    "unknownAccount":  "Signed-in account"
+    "unknownAccount":  "Signed-in account",
+    "deleteAccountSetting":  "Delete account",
+    "deleteAccountSettingBody":  "Permanently delete your account, saved items, and uploaded images.",
+    "deleteAccountTitle":  "Delete your account?",
+    "deleteAccountBody":  "This permanently deletes your account, saved items, extracted data, and uploaded images. This cannot be undone.",
+    "deleteAccountCancel":  "Cancel",
+    "deleteAccountConfirm":  "Delete account",
+    "deleteAccountFailed":  "Could not delete the account. Try again."
 }

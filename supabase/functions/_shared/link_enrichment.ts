@@ -17,23 +17,48 @@ export type LinkEnrichmentResult = {
 
 const htmlFetchHeaders = {
   "accept": "text/html,application/xhtml+xml",
-  "user-agent": "DualioBot/0.1 experimental link enrichment",
+  "user-agent":
+    "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
 };
 
-export async function enrichLinkUnofficial(resolved: LinkResolverResult): Promise<LinkEnrichmentResult> {
+const facebookHtmlFetchHeaders = {
+  "accept": "text/html,application/xhtml+xml",
+  "user-agent": "Mozilla/5.0 (compatible; Twitterbot/1.0)",
+};
+
+function htmlHeadersFor(platform: LinkPlatform): Record<string, string> {
+  return platform === "facebook" ? facebookHtmlFetchHeaders : htmlFetchHeaders;
+}
+
+export async function enrichLinkUnofficial(
+  resolved: LinkResolverResult,
+): Promise<LinkEnrichmentResult> {
   if (!isUnofficialEnrichmentEnabled()) {
-    return { enabled: false, attempted: false, status: "skipped", method: "disabled" };
+    return {
+      enabled: false,
+      attempted: false,
+      status: "skipped",
+      method: "disabled",
+    };
   }
 
   if (!shouldAttemptEnrichment(resolved)) {
-    return { enabled: true, attempted: false, status: "skipped", method: "public_html" };
+    return {
+      enabled: true,
+      attempted: false,
+      status: "skipped",
+      method: "public_html",
+    };
   }
 
   try {
-    const response = await fetchWithTimeout(new URL(resolved.canonicalUrl ?? resolved.url), {
-      redirect: "follow",
-      headers: htmlFetchHeaders,
-    });
+    const response = await fetchWithTimeout(
+      new URL(resolved.canonicalUrl ?? resolved.url),
+      {
+        redirect: "follow",
+        headers: htmlHeadersFor(resolved.platform),
+      },
+    );
 
     if (!response.ok) {
       return {
@@ -46,7 +71,10 @@ export async function enrichLinkUnofficial(resolved: LinkResolverResult): Promis
     }
 
     const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/html") && !contentType.includes("application/xhtml+xml")) {
+    if (
+      !contentType.includes("text/html") &&
+      !contentType.includes("application/xhtml+xml")
+    ) {
       return {
         enabled: true,
         attempted: true,
@@ -58,7 +86,11 @@ export async function enrichLinkUnofficial(resolved: LinkResolverResult): Promis
 
     const html = await response.text();
     const finalUrl = new URL(response.url);
-    const enrichment = extractPublicHtmlContext(html, finalUrl, resolved.platform);
+    const enrichment = extractPublicHtmlContext(
+      html,
+      finalUrl,
+      resolved.platform,
+    );
     const hasAnyValue = Boolean(
       enrichment.title ||
         enrichment.description ||
@@ -99,7 +131,8 @@ export function mergeResolvedLinkWithEnrichment(
     ...resolved,
     canonicalUrl: enrichment.canonicalUrl ?? resolved.canonicalUrl,
     title: resolved.title ?? enrichment.title,
-    description: resolved.description ?? enrichment.description ?? enrichment.extractedText,
+    description: resolved.description ?? enrichment.description ??
+      enrichment.extractedText,
     authorName: resolved.authorName ?? enrichment.authorName,
     authorUrl: resolved.authorUrl ?? enrichment.authorUrl,
     thumbnailUrl: resolved.thumbnailUrl ?? enrichment.thumbnailUrl,
@@ -110,9 +143,13 @@ function isUnofficialEnrichmentEnabled(): boolean {
   return Deno.env.get("ENABLE_UNOFFICIAL_LINK_ENRICHMENT") === "true";
 }
 
+function isSocialHtmlEnrichmentEnabled(): boolean {
+  return Deno.env.get("ENABLE_SOCIAL_HTML_ENRICHMENT") === "true";
+}
+
 function shouldAttemptEnrichment(resolved: LinkResolverResult): boolean {
   if (isSocialPlatform(resolved.platform)) {
-    return true;
+    return isSocialHtmlEnrichmentEnabled();
   }
 
   if (resolved.needsUserContext) {
@@ -127,10 +164,16 @@ function shouldAttemptEnrichment(resolved: LinkResolverResult): boolean {
 }
 
 function isSocialPlatform(platform: LinkPlatform): boolean {
-  return platform === "tiktok" || platform === "instagram" || platform === "facebook" || platform === "x" || platform === "youtube" || platform === "reddit";
+  return platform === "tiktok" || platform === "instagram" ||
+    platform === "facebook" || platform === "x" || platform === "youtube" ||
+    platform === "reddit";
 }
 
-function extractPublicHtmlContext(html: string, baseUrl: URL, platform: LinkPlatform): Omit<LinkEnrichmentResult, "enabled" | "attempted" | "status" | "method"> {
+function extractPublicHtmlContext(
+  html: string,
+  baseUrl: URL,
+  platform: LinkPlatform,
+): Omit<LinkEnrichmentResult, "enabled" | "attempted" | "status" | "method"> {
   const title = cleanText(
     metaProperty(html, "og:title") ??
       metaName(html, "twitter:title") ??
@@ -141,7 +184,8 @@ function extractPublicHtmlContext(html: string, baseUrl: URL, platform: LinkPlat
       metaName(html, "twitter:description") ??
       metaName(html, "description"),
   );
-  const image = metaProperty(html, "og:image") ?? metaName(html, "twitter:image");
+  const image = metaProperty(html, "og:image") ??
+    metaName(html, "twitter:image");
   const canonical = linkHref(html, "canonical");
   const authorUrl = linkHref(html, "author");
   const authorName = cleanText(
@@ -149,25 +193,82 @@ function extractPublicHtmlContext(html: string, baseUrl: URL, platform: LinkPlat
       metaProperty(html, "article:author") ??
       metaName(html, "twitter:creator"),
   );
-  const extractedText = extractJsonLdText(html) ?? extractPlatformTextHint(html, platform);
+  const extractedText = extractJsonLdText(html) ??
+    extractPlatformTextHint(html, platform);
+  let resolvedImage = image
+    ? new URL(decodeHtml(image), baseUrl).toString()
+    : undefined;
+
+  if (!resolvedImage) {
+    const fallbackImage = extractProductImageHint(html);
+    if (fallbackImage) {
+      try {
+        resolvedImage = new URL(decodeHtml(fallbackImage), baseUrl).toString();
+      } catch {
+        // Ignore malformed image URL
+      }
+    }
+  }
+
+  const thumbnailUrl =
+    platform === "reddit" && isGenericRedditSharePreview(resolvedImage)
+      ? undefined
+      : resolvedImage;
 
   return {
-    canonicalUrl: canonical ? new URL(decodeHtml(canonical), baseUrl).toString() : undefined,
+    canonicalUrl: canonical
+      ? new URL(decodeHtml(canonical), baseUrl).toString()
+      : undefined,
     title: title || undefined,
     description: description || undefined,
     authorName: authorName || undefined,
-    authorUrl: authorUrl ? new URL(decodeHtml(authorUrl), baseUrl).toString() : undefined,
-    thumbnailUrl: image ? new URL(decodeHtml(image), baseUrl).toString() : undefined,
+    authorUrl: authorUrl
+      ? new URL(decodeHtml(authorUrl), baseUrl).toString()
+      : undefined,
+    thumbnailUrl,
     extractedText: extractedText || undefined,
   };
 }
 
+function isGenericRedditSharePreview(url: string | undefined): boolean {
+  if (!url) {
+    return false;
+  }
+  return /^https?:\/\/share\.redd\.it\/preview\/post\/[A-Za-z0-9]+$/i.test(url);
+}
+
+function extractProductImageHint(html: string): string | undefined {
+  const oldHires = html.match(/\bdata-old-hires\s*=\s*["'](https?:\/\/[^"']+)/i)
+    ?.[1];
+  if (oldHires) {
+    return oldHires;
+  }
+  const hiRes = html.match(/"hiRes"\s*:\s*"(https?:\/\/[^"]+)"/i)?.[1];
+  if (hiRes) {
+    return hiRes;
+  }
+  const landing = html.match(
+    /<img[^>]+id\s*=\s*["']landingImage["'][^>]+src\s*=\s*["'](https?:\/\/[^"']+)/i,
+  )?.[1];
+  if (landing) {
+    return landing;
+  }
+  return undefined;
+}
+
 function extractJsonLdText(html: string): string | undefined {
-  const matches = html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  const matches = html.matchAll(
+    /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+  );
   for (const match of matches) {
     try {
       const parsed = JSON.parse(decodeHtml(match[1]));
-      const text = findFirstStringValue(parsed, ["articleBody", "description", "caption", "text"]);
+      const text = findFirstStringValue(parsed, [
+        "articleBody",
+        "description",
+        "caption",
+        "text",
+      ]);
       if (text) {
         return cleanText(text).slice(0, 2000);
       }
@@ -178,7 +279,10 @@ function extractJsonLdText(html: string): string | undefined {
   return undefined;
 }
 
-function extractPlatformTextHint(html: string, platform: LinkPlatform): string | undefined {
+function extractPlatformTextHint(
+  html: string,
+  platform: LinkPlatform,
+): string | undefined {
   if (platform === "generic") {
     return undefined;
   }
@@ -189,7 +293,10 @@ function extractPlatformTextHint(html: string, platform: LinkPlatform): string |
   return text.length > 80 ? text : undefined;
 }
 
-function findFirstStringValue(value: unknown, keys: string[]): string | undefined {
+function findFirstStringValue(
+  value: unknown,
+  keys: string[],
+): string | undefined {
   if (typeof value === "string") {
     return undefined;
   }
@@ -226,7 +333,10 @@ function findFirstStringValue(value: unknown, keys: string[]): string | undefine
   return undefined;
 }
 
-async function fetchWithTimeout(input: URL, init: RequestInit): Promise<Response> {
+async function fetchWithTimeout(
+  input: URL,
+  init: RequestInit,
+): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3000);
   try {
@@ -240,7 +350,9 @@ function linkHref(html: string, rel: string): string | null {
   for (const match of html.matchAll(/<link\b[^>]*>/gi)) {
     const tag = match[0];
     const relValue = attributeValue(tag, "rel");
-    if (relValue?.toLowerCase().split(/\s+/).includes(rel.toLowerCase()) == true) {
+    if (
+      relValue?.toLowerCase().split(/\s+/).includes(rel.toLowerCase()) == true
+    ) {
       return attributeValue(tag, "href");
     }
   }
@@ -260,7 +372,9 @@ function metaName(html: string, name: string): string | null {
 function metaProperty(html: string, property: string): string | null {
   for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
     const tag = match[0];
-    if (attributeValue(tag, "property")?.toLowerCase() === property.toLowerCase()) {
+    if (
+      attributeValue(tag, "property")?.toLowerCase() === property.toLowerCase()
+    ) {
       return attributeValue(tag, "content");
     }
   }
@@ -272,7 +386,10 @@ function firstMatch(value: string, pattern: RegExp): string | null {
 }
 
 function stripTags(value: string): string {
-  return value.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ");
+  return value.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(
+    /<style[\s\S]*?<\/style>/gi,
+    " ",
+  ).replace(/<[^>]+>/g, " ");
 }
 
 function cleanText(value: string | null | undefined): string {
@@ -281,10 +398,17 @@ function cleanText(value: string | null | undefined): string {
 
 function decodeHtml(value: string): string {
   return value
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
-    .replace(/&#([0-9]+);/g, (_, decimal: string) => String.fromCodePoint(Number.parseInt(decimal, 10)))
+    .replace(
+      /&#x([0-9a-f]+);/gi,
+      (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)),
+    )
+    .replace(
+      /&#([0-9]+);/g,
+      (_, decimal: string) =>
+        String.fromCodePoint(Number.parseInt(decimal, 10)),
+    )
     .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", "\"")
+    .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">");

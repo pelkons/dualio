@@ -1,0 +1,66 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer>
+  <div class="container row">
+    <div class="brand">
+      <img src="/icon.png" alt="" width="22" height="22" />
+      <span>Dualio</span>
+    </div>
+    <nav>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:hello@dualio.app">Contact</a>
+    </nav>
+    <span class="copy muted">© {year} Dualio</span>
+  </div>
+</footer>
+
+<style>
+  footer {
+    border-top: 1px solid var(--outline-variant);
+    padding: 36px 0;
+    background: var(--surface-container-low);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-serif);
+    font-weight: 600;
+  }
+
+  .brand img {
+    border-radius: var(--radius-sm);
+  }
+
+  nav {
+    display: inline-flex;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+
+  nav a {
+    text-decoration: none;
+    font-size: 14px;
+    color: var(--on-surface-variant);
+  }
+
+  nav a:hover {
+    color: var(--on-surface);
+  }
+
+  .copy {
+    font-size: 13px;
+  }
+</style>

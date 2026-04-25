@@ -73,6 +73,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get ingredients => 'Zutaten';
 
   @override
+  String get materials => 'Materialien';
+
+  @override
   String get steps => 'Schritte';
 
   @override
@@ -112,6 +115,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get videoType => 'Video';
 
   @override
+  String get manualType => 'Anleitung';
+
+  @override
   String get highlightType => 'Zitat';
 
   @override
@@ -127,6 +133,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String minutesRead(int minutes) {
     return '$minutes Min. Lesezeit';
+  }
+
+  @override
+  String stepsCount(int count) {
+    return '$count Schritte';
   }
 
   @override
@@ -192,6 +203,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get editItem => 'Edit';
+
+  @override
+  String get editGeneratedContent => 'Generated content bearbeiten';
+
+  @override
+  String get generatedTitleLabel => 'Titel';
+
+  @override
+  String get ingredientsEditHint => 'Eine Zutat pro Zeile.';
+
+  @override
+  String get materialsEditHint =>
+      'Ein Material, Werkzeug oder eine Voraussetzung pro Zeile.';
+
+  @override
+  String get stepsEditHint => 'Ein Schritt pro Zeile.';
 
   @override
   String get personalNote => 'Personal note';
@@ -280,7 +307,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get categoriesBody =>
-      'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
+      'Gespeicherte Erinnerungen nach Typ durchsuchen: Rezepte, Filme, Orte, Artikel, Produkte, Videos, Anleitungen, Notizen und unbekannte Elemente.';
 
   @override
   String get continueWithGoogle => 'Mit Google fortfahren';
@@ -337,4 +364,28 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get unknownAccount => 'Angemeldetes Konto';
+
+  @override
+  String get deleteAccountSetting => 'Konto loschen';
+
+  @override
+  String get deleteAccountSettingBody =>
+      'Konto, gespeicherte Elemente und hochgeladene Bilder dauerhaft loschen.';
+
+  @override
+  String get deleteAccountTitle => 'Konto loschen?';
+
+  @override
+  String get deleteAccountBody =>
+      'Dadurch werden dein Konto, gespeicherte Elemente, extrahierte Daten und hochgeladene Bilder dauerhaft geloscht. Dies kann nicht ruckgangig gemacht werden.';
+
+  @override
+  String get deleteAccountCancel => 'Abbrechen';
+
+  @override
+  String get deleteAccountConfirm => 'Konto loschen';
+
+  @override
+  String get deleteAccountFailed =>
+      'Konto konnte nicht geloscht werden. Versuche es erneut.';
 }

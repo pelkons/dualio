@@ -73,6 +73,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get ingredients => 'Ингредиенты';
 
   @override
+  String get materials => 'Материалы';
+
+  @override
   String get steps => 'Шаги';
 
   @override
@@ -112,6 +115,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get videoType => 'Видео';
 
   @override
+  String get manualType => 'Инструкция';
+
+  @override
   String get highlightType => 'Цитата';
 
   @override
@@ -127,6 +133,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String minutesRead(int minutes) {
     return '$minutes мин чтения';
+  }
+
+  @override
+  String stepsCount(int count) {
+    return '$count шагов';
   }
 
   @override
@@ -192,6 +203,22 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get editItem => 'Edit';
+
+  @override
+  String get editGeneratedContent => 'Редактировать сгенерированное';
+
+  @override
+  String get generatedTitleLabel => 'Название';
+
+  @override
+  String get ingredientsEditHint => 'Один ингредиент на строку.';
+
+  @override
+  String get materialsEditHint =>
+      'Один материал, инструмент или требование на строку.';
+
+  @override
+  String get stepsEditHint => 'Один шаг на строку.';
 
   @override
   String get personalNote => 'Personal note';
@@ -280,7 +307,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get categoriesBody =>
-      'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
+      'Просматривайте сохраненное по типам: рецепты, фильмы, места, статьи, товары, видео, инструкции, заметки и неизвестные элементы.';
 
   @override
   String get continueWithGoogle => 'Продолжить с Google';
@@ -337,4 +364,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get unknownAccount => 'Аккаунт в системе';
+
+  @override
+  String get deleteAccountSetting => 'Удалить аккаунт';
+
+  @override
+  String get deleteAccountSettingBody =>
+      'Навсегда удалить аккаунт, сохраненные элементы и загруженные изображения.';
+
+  @override
+  String get deleteAccountTitle => 'Удалить аккаунт?';
+
+  @override
+  String get deleteAccountBody =>
+      'Это навсегда удалит аккаунт, сохраненные элементы, извлеченные данные и загруженные изображения. Действие нельзя отменить.';
+
+  @override
+  String get deleteAccountCancel => 'Отмена';
+
+  @override
+  String get deleteAccountConfirm => 'Удалить аккаунт';
+
+  @override
+  String get deleteAccountFailed =>
+      'Не удалось удалить аккаунт. Попробуйте снова.';
 }

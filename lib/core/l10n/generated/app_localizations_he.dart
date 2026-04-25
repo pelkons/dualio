@@ -71,6 +71,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get ingredients => 'מרכיבים';
 
   @override
+  String get materials => 'חומרים';
+
+  @override
   String get steps => 'שלבים';
 
   @override
@@ -110,6 +113,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get videoType => 'וידאו';
 
   @override
+  String get manualType => 'מדריך';
+
+  @override
   String get highlightType => 'ציטוט';
 
   @override
@@ -125,6 +131,11 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String minutesRead(int minutes) {
     return '$minutes דקות קריאה';
+  }
+
+  @override
+  String stepsCount(int count) {
+    return '$count שלבים';
   }
 
   @override
@@ -190,6 +201,21 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get editItem => 'עריכה';
+
+  @override
+  String get editGeneratedContent => 'עריכת התוכן שנוצר';
+
+  @override
+  String get generatedTitleLabel => 'כותרת';
+
+  @override
+  String get ingredientsEditHint => 'מרכיב אחד בכל שורה.';
+
+  @override
+  String get materialsEditHint => 'חומר, כלי או דרישה אחת בכל שורה.';
+
+  @override
+  String get stepsEditHint => 'שלב אחד בכל שורה.';
 
   @override
   String get personalNote => 'הערה אישית';
@@ -278,7 +304,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get categoriesBody =>
-      'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
+      'עיון בפריטים לפי סוג: מתכונים, סרטים, מקומות, כתבות, מוצרים, וידאו, מדריכים, הערות ופריטים לא ידועים.';
 
   @override
   String get continueWithGoogle => 'המשך עם Google';
@@ -332,4 +358,27 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get unknownAccount => 'חשבון מחובר';
+
+  @override
+  String get deleteAccountSetting => 'מחיקת חשבון';
+
+  @override
+  String get deleteAccountSettingBody =>
+      'מחיקה לצמיתות של החשבון, הפריטים השמורים והתמונות שהועלו.';
+
+  @override
+  String get deleteAccountTitle => 'למחוק את החשבון?';
+
+  @override
+  String get deleteAccountBody =>
+      'הפעולה תמחק לצמיתות את החשבון, הפריטים השמורים, הנתונים שחולצו והתמונות שהועלו. אי אפשר לבטל אותה.';
+
+  @override
+  String get deleteAccountCancel => 'ביטול';
+
+  @override
+  String get deleteAccountConfirm => 'מחיקת חשבון';
+
+  @override
+  String get deleteAccountFailed => 'לא ניתן למחוק את החשבון. נסו שוב.';
 }

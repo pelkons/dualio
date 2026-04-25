@@ -1,0 +1,81 @@
+---
+import PhoneMockup from "./PhoneMockup.astro";
+---
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">For Android · iOS coming soon</span>
+      <h1>Save anything.<br />Find it by meaning.</h1>
+      <p class="lede muted">
+        Dualio is the AI-first memory inbox for the things you save and forget.
+        Links, screenshots, photos, raw notes — drop them in once,
+        recall them in any language by what you meant, not what you typed.
+      </p>
+      <div class="hero-actions">
+        <a href="#waitlist" class="btn btn-primary">Get early access</a>
+        <a href="#how-it-works" class="btn btn-ghost">How it works</a>
+      </div>
+      <p class="meta muted">No paywall during beta. Free tier is generous.</p>
+    </div>
+
+    <div class="hero-art">
+      <PhoneMockup />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 56px 0 72px;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .hero-copy h1 {
+    margin-bottom: 0.4em;
+  }
+
+  .lede {
+    font-size: 18px;
+    line-height: 1.6;
+    max-width: 32ch;
+    margin-bottom: 24px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .meta {
+    font-size: 13px;
+  }
+
+  .hero-art {
+    display: flex;
+    justify-content: center;
+  }
+
+  @media (max-width: 880px) {
+    .hero {
+      padding: 40px 0 56px;
+    }
+
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .hero-art {
+      order: -1;
+    }
+  }
+</style>

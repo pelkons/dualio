@@ -73,6 +73,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ingredients => 'Ingredientes';
 
   @override
+  String get materials => 'Materiales';
+
+  @override
   String get steps => 'Pasos';
 
   @override
@@ -112,6 +115,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get videoType => 'Video';
 
   @override
+  String get manualType => 'Manual';
+
+  @override
   String get highlightType => 'Cita';
 
   @override
@@ -127,6 +133,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String minutesRead(int minutes) {
     return '$minutes min de lectura';
+  }
+
+  @override
+  String stepsCount(int count) {
+    return '$count pasos';
   }
 
   @override
@@ -192,6 +203,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editItem => 'Edit';
+
+  @override
+  String get editGeneratedContent => 'Editar contenido generado';
+
+  @override
+  String get generatedTitleLabel => 'Título';
+
+  @override
+  String get ingredientsEditHint => 'Un ingrediente por línea.';
+
+  @override
+  String get materialsEditHint =>
+      'Un material, herramienta o requisito por línea.';
+
+  @override
+  String get stepsEditHint => 'Un paso por línea.';
 
   @override
   String get personalNote => 'Personal note';
@@ -280,7 +307,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get categoriesBody =>
-      'Browse saved memory by inferred type: recipes, films, places, articles, products, videos, notes, and unknown items.';
+      'Explora la memoria guardada por tipo: recetas, películas, lugares, artículos, productos, videos, manuales, notas y elementos desconocidos.';
 
   @override
   String get continueWithGoogle => 'Continuar con Google';
@@ -338,4 +365,28 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get unknownAccount => 'Cuenta conectada';
+
+  @override
+  String get deleteAccountSetting => 'Eliminar cuenta';
+
+  @override
+  String get deleteAccountSettingBody =>
+      'Eliminar permanentemente tu cuenta, elementos guardados e imagenes subidas.';
+
+  @override
+  String get deleteAccountTitle => 'Eliminar tu cuenta?';
+
+  @override
+  String get deleteAccountBody =>
+      'Esto eliminara permanentemente tu cuenta, elementos guardados, datos extraidos e imagenes subidas. No se puede deshacer.';
+
+  @override
+  String get deleteAccountCancel => 'Cancelar';
+
+  @override
+  String get deleteAccountConfirm => 'Eliminar cuenta';
+
+  @override
+  String get deleteAccountFailed =>
+      'No se pudo eliminar la cuenta. Intentalo de nuevo.';
 }

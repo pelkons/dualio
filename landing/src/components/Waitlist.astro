@@ -1,0 +1,123 @@
+---
+---
+
+<section class="waitlist section" id="waitlist">
+  <div class="container">
+    <div class="waitlist-card">
+      <span class="eyebrow">Early access</span>
+      <h2>Be first on Android.</h2>
+      <p class="muted">
+        Drop your email — we'll send you a Play Store invite when the beta is
+        ready. No spam, no marketing list resale, no «verify your account»
+        emails.
+      </p>
+
+      <form class="form" id="waitlist-form" novalidate>
+        <label class="visually-hidden" for="email">Email address</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          inputmode="email"
+          placeholder="you@example.com"
+          required
+        />
+        <button type="submit" class="btn btn-primary">Join waitlist</button>
+      </form>
+
+      <p class="status muted" id="waitlist-status" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .waitlist-card {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .waitlist-card p {
+    max-width: 50ch;
+    margin: 0 auto 28px;
+  }
+
+  .form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .form input {
+    flex: 1 1 240px;
+    padding: 14px 18px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--outline-variant);
+    background: var(--surface-container-lowest);
+    font: inherit;
+    color: var(--on-surface);
+    min-width: 0;
+  }
+
+  .form input:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .form .btn {
+    flex: 0 0 auto;
+  }
+
+  .status {
+    min-height: 1.5em;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+
+  .status.error {
+    color: #ba1a1a;
+  }
+
+  .status.success {
+    color: #0d6b3b;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+
+<script>
+  const form = document.getElementById("waitlist-form") as HTMLFormElement | null;
+  const status = document.getElementById("waitlist-status");
+  if (form && status) {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const email = String(formData.get("email") ?? "").trim();
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      status.classList.remove("error", "success");
+      if (!valid) {
+        status.textContent = "Please enter a valid email address.";
+        status.classList.add("error");
+        return;
+      }
+      status.textContent = "Thanks — we'll be in touch.";
+      status.classList.add("success");
+      form.reset();
+      // TODO: wire to Supabase `waitlist` table once it exists.
+    });
+  }
+</script>

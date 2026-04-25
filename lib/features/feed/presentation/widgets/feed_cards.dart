@@ -36,6 +36,7 @@ class SemanticItemFeedCard extends StatelessWidget {
       ItemType.place => PlaceFeedCard(item: item, onTap: onTap),
       ItemType.product => ProductFeedCard(item: item, onTap: onTap),
       ItemType.video => VideoFeedCard(item: item, onTap: onTap),
+      ItemType.manual => ManualFeedCard(item: item, onTap: onTap),
       ItemType.note => NoteFeedCard(item: item, onTap: onTap),
       ItemType.unknown => UnknownFeedCard(
         item: item,
@@ -528,6 +529,52 @@ class VideoFeedCard extends StatelessWidget {
   }
 }
 
+class ManualFeedCard extends StatelessWidget {
+  const ManualFeedCard({required this.item, required this.onTap, super.key});
+  final SemanticItem item;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final steps = _stringList(item.parsedContent['steps']);
+    final source = item.parsedContent['siteName'] as String?;
+    final facts = <String>[
+      if (steps.isNotEmpty) strings.stepsCount(steps.length),
+      if (source != null) source,
+    ];
+
+    return FeedCardFrame(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          CardMeta(icon: Icons.checklist_rounded, label: strings.manualType),
+          const SizedBox(height: 14),
+          Text(item.title, style: Theme.of(context).textTheme.headlineMedium),
+          if (item.searchableSummary.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              item.searchableSummary,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).extension<DualioPalette>()!.muted,
+                fontSize: 14,
+              ),
+            ),
+          ],
+          if (facts.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            _InlineFacts(facts: facts),
+          ],
+          _Footer(label: item.createdLabel),
+        ],
+      ),
+    );
+  }
+}
+
 class NoteFeedCard extends StatelessWidget {
   const NoteFeedCard({required this.item, required this.onTap, super.key});
   final SemanticItem item;
@@ -575,6 +622,17 @@ class NoteFeedCard extends StatelessWidget {
       ),
     );
   }
+}
+
+List<String> _stringList(Object? value) {
+  if (value is! List<Object?>) {
+    return const <String>[];
+  }
+  return value
+      .whereType<Object>()
+      .map((item) => item.toString().trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
 }
 
 class UnknownFeedCard extends StatelessWidget {

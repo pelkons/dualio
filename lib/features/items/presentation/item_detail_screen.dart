@@ -12,11 +12,32 @@ import 'package:url_launcher/url_launcher.dart';
 
 final _personalNoteDraftProvider =
     StateProvider.family<_PersonalNoteDraft?, String>((ref, itemId) => null);
+final _generatedContentDraftProvider =
+    StateProvider.family<_GeneratedContentDraft?, String>(
+      (ref, itemId) => null,
+    );
+final _checkedStepsProvider = StateProvider.family<Set<int>, String>(
+  (ref, itemId) => const <int>{},
+);
 
 class _PersonalNoteDraft {
   const _PersonalNoteDraft({required this.text, required this.isEditing});
 
   final String text;
+  final bool isEditing;
+}
+
+class _GeneratedContentDraft {
+  const _GeneratedContentDraft({
+    required this.title,
+    required this.ingredientsText,
+    required this.stepsText,
+    required this.isEditing,
+  });
+
+  final String title;
+  final String ingredientsText;
+  final String stepsText;
   final bool isEditing;
 }
 
@@ -47,6 +68,8 @@ class ItemDetailScreen extends ConsumerWidget {
             ImageAnalysisDetail(item: item)
           else if (item.usesGenericLinkPresentation)
             LinkPreviewDetail(item: item)
+          else if (item.usesActionStepsPresentation)
+            RecipeDetail(item: item)
           else
             switch (item.type) {
               ItemType.recipe => RecipeDetail(item: item),
@@ -55,6 +78,7 @@ class ItemDetailScreen extends ConsumerWidget {
               ItemType.article => ArticleDetail(item: item),
               ItemType.product => ProductDetail(item: item),
               ItemType.video => VideoDetail(item: item),
+              ItemType.manual => RecipeDetail(item: item),
               ItemType.note => NoteDetail(item: item),
               ItemType.unknown => UnknownDetail(item: item),
             },
@@ -291,42 +315,398 @@ class LinkPreviewDetail extends StatelessWidget {
   }
 }
 
-class RecipeDetail extends StatelessWidget {
+class RecipeDetail extends ConsumerStatefulWidget {
   const RecipeDetail({required this.item, super.key});
   final SemanticItem item;
 
   @override
+  ConsumerState<RecipeDetail> createState() => _RecipeDetailState();
+}
+
+class _RecipeDetailState extends ConsumerState<RecipeDetail> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _ingredientsController;
+  late final TextEditingController _stepsController;
+  String? _optimisticTitle;
+  List<String>? _optimisticIngredients;
+  List<String>? _optimisticSteps;
+
+  @override
+  void initState() {
+    super.initState();
+    final draft = ref.read(_generatedContentDraftProvider(widget.item.id));
+    _titleController = TextEditingController(
+      text: draft?.title ?? _currentTitle,
+    );
+    _ingredientsController = TextEditingController(
+      text: draft?.ingredientsText ?? _linesText(_currentIngredients),
+    );
+    _stepsController = TextEditingController(
+      text: draft?.stepsText ?? _linesText(_currentSteps),
+    );
+    _titleController.addListener(_syncDraftText);
+    _ingredientsController.addListener(_syncDraftText);
+    _stepsController.addListener(_syncDraftText);
+  }
+
+  @override
+  void didUpdateWidget(RecipeDetail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final draft = ref.read(_generatedContentDraftProvider(widget.item.id));
+    final isEditing = draft?.isEditing ?? false;
+    if (!isEditing &&
+        (oldWidget.item.title != widget.item.title ||
+            oldWidget.item.parsedContent != widget.item.parsedContent)) {
+      _optimisticTitle = null;
+      _optimisticIngredients = null;
+      _optimisticSteps = null;
+      _resetControllers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.removeListener(_syncDraftText);
+    _ingredientsController.removeListener(_syncDraftText);
+    _stepsController.removeListener(_syncDraftText);
+    _titleController.dispose();
+    _ingredientsController.dispose();
+    _stepsController.dispose();
+    super.dispose();
+  }
+
+  String get _currentTitle => _optimisticTitle ?? widget.item.title;
+
+  List<String> get _currentIngredients =>
+      _optimisticIngredients ??
+      _stringList(
+        widget.item.type == ItemType.recipe
+            ? widget.item.parsedContent['ingredients']
+            : widget.item.parsedContent['materials'] ??
+                  widget.item.parsedContent['requirements'] ??
+                  widget.item.parsedContent['tools'] ??
+                  widget.item.parsedContent['ingredients'],
+      );
+
+  List<String> get _currentSteps =>
+      _optimisticSteps ?? _stringList(widget.item.parsedContent['steps']);
+
+  @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final isEditing =
+        ref.watch(_generatedContentDraftProvider(widget.item.id))?.isEditing ??
+        false;
+    final checkedSteps = ref.watch(_checkedStepsProvider(widget.item.id));
+    final ingredients = _currentIngredients;
+    final steps = _currentSteps;
+
     return _DetailCard(
       children: <Widget>[
-        _HeroImage(url: item.thumbnailUrl),
-        _Title(item.title),
-        _Section(
-          title: strings.ingredients,
-          children: (item.parsedContent['ingredients']! as List<String>)
-              .map(
-                (text) => CheckboxListTile(
-                  value: false,
-                  onChanged: (_) {},
-                  title: Text(text),
-                ),
-              )
-              .toList(),
+        if (widget.item.thumbnailUrl != null ||
+            widget.item.type == ItemType.recipe)
+          _HeroImage(url: widget.item.thumbnailUrl),
+        _EditableTitleHeader(
+          title: _currentTitle,
+          tooltip: strings.editGeneratedContent,
+          onEdit: _startEditing,
         ),
-        _Section(
-          title: strings.steps,
-          children: (item.parsedContent['steps']! as List<String>).indexed
-              .map(
-                (entry) => ListTile(
-                  leading: Text('${entry.$1 + 1}'),
-                  title: Text(entry.$2),
-                ),
-              )
-              .toList(),
-        ),
-        _SourceLink(label: strings.sourceLink, url: item.sourceUrl),
+        if (isEditing)
+          _GeneratedContentEditor(
+            titleController: _titleController,
+            ingredientsController: _ingredientsController,
+            stepsController: _stepsController,
+            supportingItemsLabel: _supportingItemsLabel(strings),
+            supportingItemsHint: _supportingItemsHint(strings),
+            onCancel: _cancelEditing,
+            onSave: _saveGeneratedContent,
+          )
+        else ...<Widget>[
+          if (ingredients.isNotEmpty)
+            _Section(
+              title: _supportingItemsLabel(strings),
+              children: ingredients
+                  .map((text) => _IngredientRow(text: text))
+                  .toList(),
+            ),
+          if (steps.isNotEmpty)
+            _Section(
+              title: strings.steps,
+              children: steps.indexed
+                  .map(
+                    (entry) => _StepCheckboxTile(
+                      number: entry.$1 + 1,
+                      text: entry.$2,
+                      checked: checkedSteps.contains(entry.$1),
+                      onChanged: (value) =>
+                          _setStepChecked(entry.$1, value ?? false),
+                    ),
+                  )
+                  .toList(),
+            ),
+          _SourceLink(label: strings.sourceLink, url: widget.item.sourceUrl),
+        ],
       ],
+    );
+  }
+
+  Future<void> _saveGeneratedContent() async {
+    final title = _titleController.text.trim();
+    final normalizedTitle = title.isEmpty ? widget.item.title : title;
+    final ingredients = _linesFromText(_ingredientsController.text);
+    final steps = _linesFromText(_stepsController.text);
+    final summary = _generatedContentSummary(
+      normalizedTitle,
+      ingredients,
+      steps,
+    );
+
+    if (mounted) {
+      setState(() {
+        _optimisticTitle = normalizedTitle;
+        _optimisticIngredients = ingredients;
+        _optimisticSteps = steps;
+      });
+      ref.read(_generatedContentDraftProvider(widget.item.id).notifier).state =
+          null;
+      final checked = ref.read(_checkedStepsProvider(widget.item.id));
+      ref.read(_checkedStepsProvider(widget.item.id).notifier).state = checked
+          .where((index) => index < steps.length)
+          .toSet();
+    }
+
+    await ref
+        .read(semanticItemsProvider.notifier)
+        .updateGeneratedContent(
+          widget.item,
+          title: normalizedTitle,
+          parsedContentPatch: <String, Object?>{
+            _supportingItemsPatchKey: ingredients,
+            'steps': steps,
+          },
+          searchableSummary: summary,
+        );
+  }
+
+  void _startEditing() {
+    ref
+        .read(_generatedContentDraftProvider(widget.item.id).notifier)
+        .state = _GeneratedContentDraft(
+      title: _titleController.text,
+      ingredientsText: _ingredientsController.text,
+      stepsText: _stepsController.text,
+      isEditing: true,
+    );
+  }
+
+  void _cancelEditing() {
+    _resetControllers();
+    ref.read(_generatedContentDraftProvider(widget.item.id).notifier).state =
+        null;
+  }
+
+  void _setStepChecked(int index, bool checked) {
+    final current = ref.read(_checkedStepsProvider(widget.item.id));
+    ref.read(_checkedStepsProvider(widget.item.id).notifier).state = checked
+        ? <int>{...current, index}
+        : current.where((value) => value != index).toSet();
+  }
+
+  void _resetControllers() {
+    _titleController.text = _currentTitle;
+    _ingredientsController.text = _linesText(_currentIngredients);
+    _stepsController.text = _linesText(_currentSteps);
+  }
+
+  void _syncDraftText() {
+    final draft = ref.read(_generatedContentDraftProvider(widget.item.id));
+    if (draft == null) {
+      return;
+    }
+    ref
+        .read(_generatedContentDraftProvider(widget.item.id).notifier)
+        .state = _GeneratedContentDraft(
+      title: _titleController.text,
+      ingredientsText: _ingredientsController.text,
+      stepsText: _stepsController.text,
+      isEditing: draft.isEditing,
+    );
+  }
+
+  String get _supportingItemsPatchKey =>
+      widget.item.type == ItemType.recipe ? 'ingredients' : 'materials';
+
+  String _supportingItemsLabel(AppLocalizations strings) =>
+      widget.item.type == ItemType.recipe
+      ? strings.ingredients
+      : strings.materials;
+
+  String _supportingItemsHint(AppLocalizations strings) =>
+      widget.item.type == ItemType.recipe
+      ? strings.ingredientsEditHint
+      : strings.materialsEditHint;
+}
+
+class _EditableTitleHeader extends StatelessWidget {
+  const _EditableTitleHeader({
+    required this.title,
+    required this.tooltip,
+    required this.onEdit,
+  });
+
+  final String title;
+  final String tooltip;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 18, bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+          ),
+          IconButton(
+            tooltip: tooltip,
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GeneratedContentEditor extends StatelessWidget {
+  const _GeneratedContentEditor({
+    required this.titleController,
+    required this.ingredientsController,
+    required this.stepsController,
+    required this.supportingItemsLabel,
+    required this.supportingItemsHint,
+    required this.onCancel,
+    required this.onSave,
+  });
+
+  final TextEditingController titleController;
+  final TextEditingController ingredientsController;
+  final TextEditingController stepsController;
+  final String supportingItemsLabel;
+  final String supportingItemsHint;
+  final VoidCallback onCancel;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final palette = Theme.of(context).extension<DualioPalette>()!;
+    final borderRadius = BorderRadius.circular(DualioTheme.innerRadius);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        TextField(
+          controller: titleController,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(
+            labelText: strings.generatedTitleLabel,
+            filled: true,
+            fillColor: palette.pill,
+            border: OutlineInputBorder(borderRadius: borderRadius),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: ingredientsController,
+          minLines: 4,
+          maxLines: 10,
+          decoration: InputDecoration(
+            labelText: supportingItemsLabel,
+            hintText: supportingItemsHint,
+            filled: true,
+            fillColor: palette.pill,
+            border: OutlineInputBorder(borderRadius: borderRadius),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: stepsController,
+          minLines: 5,
+          maxLines: 14,
+          decoration: InputDecoration(
+            labelText: strings.steps,
+            hintText: strings.stepsEditHint,
+            filled: true,
+            fillColor: palette.pill,
+            border: OutlineInputBorder(borderRadius: borderRadius),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            TextButton(
+              onPressed: onCancel,
+              child: Text(strings.deleteItemCancel),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(onPressed: onSave, child: Text(strings.saveChanges)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _IngredientRow extends StatelessWidget {
+  const _IngredientRow({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<DualioPalette>()!;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      minLeadingWidth: 28,
+      leading: Icon(Icons.local_dining_rounded, color: palette.muted, size: 20),
+      title: Text(text),
+    );
+  }
+}
+
+class _StepCheckboxTile extends StatelessWidget {
+  const _StepCheckboxTile({
+    required this.number,
+    required this.text,
+    required this.checked,
+    required this.onChanged,
+  });
+
+  final int number;
+  final String text;
+  final bool checked;
+  final ValueChanged<bool?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<DualioPalette>()!;
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.zero,
+      controlAffinity: ListTileControlAffinity.leading,
+      value: checked,
+      onChanged: onChanged,
+      title: Text(
+        '$number. $text',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: checked ? palette.muted : null,
+          decoration: checked ? TextDecoration.lineThrough : null,
+        ),
+      ),
     );
   }
 }
@@ -348,9 +728,9 @@ class FilmDetail extends StatelessWidget {
         _Muted(item.parsedContent['synopsis']! as String),
         _Section(
           title: strings.cast,
-          children: (item.parsedContent['cast']! as List<String>)
-              .map((name) => ListTile(title: Text(name)))
-              .toList(),
+          children: _stringList(
+            item.parsedContent['cast'],
+          ).map((name) => ListTile(title: Text(name))).toList(),
         ),
         _Section(
           title: strings.whereToWatch,
@@ -437,9 +817,9 @@ class ProductDetail extends StatelessWidget {
         ),
         _Section(
           title: strings.keySpecs,
-          children: (item.parsedContent['specs']! as List<String>)
-              .map((spec) => ListTile(title: Text(spec)))
-              .toList(),
+          children: _stringList(
+            item.parsedContent['specs'],
+          ).map((spec) => ListTile(title: Text(spec))).toList(),
         ),
         _SourceLink(label: strings.sourceLink, url: item.sourceUrl),
       ],
@@ -729,6 +1109,42 @@ class _Section extends StatelessWidget {
       ),
     );
   }
+}
+
+List<String> _stringList(Object? value) {
+  if (value is! List<Object?>) {
+    return const <String>[];
+  }
+  return value
+      .whereType<Object>()
+      .map((item) => item.toString().trim())
+      .where((item) => item.isNotEmpty)
+      .toList();
+}
+
+String _linesText(List<String> values) {
+  return values.join('\n');
+}
+
+List<String> _linesFromText(String value) {
+  return value
+      .split(RegExp(r'\r?\n'))
+      .map((line) => line.replaceFirst(RegExp(r'^\s*(?:[-*]|\d+[.)])\s*'), ''))
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .toList(growable: false);
+}
+
+String _generatedContentSummary(
+  String title,
+  List<String> ingredients,
+  List<String> steps,
+) {
+  return <String>[
+    title,
+    ...ingredients,
+    ...steps,
+  ].where((part) => part.trim().isNotEmpty).join('\n');
 }
 
 class _SourceLink extends StatelessWidget {

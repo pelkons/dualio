@@ -51,10 +51,13 @@ class ShareIntakeController {
         continue;
       }
 
-      return ShareDraft(
-        content: content,
-        sourceType: _sourceTypeFor(file, content),
-      );
+      final sourceType = _sourceTypeFor(file, content);
+      if (sourceType == SourceType.link) {
+        final url = _firstUrlIn(content) ?? content;
+        return ShareDraft(content: url, sourceType: SourceType.link);
+      }
+
+      return ShareDraft(content: content, sourceType: sourceType);
     }
     return null;
   }
@@ -63,15 +66,25 @@ class ShareIntakeController {
     return switch (file.type) {
       SharedMediaType.url => SourceType.link,
       SharedMediaType.text =>
-        _looksLikeUrl(content) ? SourceType.link : SourceType.text,
+        _firstUrlIn(content) != null ? SourceType.link : SourceType.text,
       SharedMediaType.image => SourceType.screenshot,
       SharedMediaType.video => SourceType.link,
       SharedMediaType.file => SourceType.photo,
     };
   }
 
-  bool _looksLikeUrl(String value) {
-    final lower = value.toLowerCase();
-    return lower.startsWith('http://') || lower.startsWith('https://');
+  static final _urlPattern = RegExp(
+    r'https?://\S+',
+    caseSensitive: false,
+  );
+
+  static final _trailingPunctuation = RegExp(r'[.,;:)\]}>]+$');
+
+  String? _firstUrlIn(String value) {
+    final match = _urlPattern.firstMatch(value);
+    if (match == null) {
+      return null;
+    }
+    return match.group(0)!.replaceAll(_trailingPunctuation, '');
   }
 }

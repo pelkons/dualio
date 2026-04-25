@@ -14,47 +14,133 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final strings = AppLocalizations.of(context);
     final settings = ref.watch(appSettingsProvider);
+    final authState = ref.watch(authControllerProvider);
     final session = ref.watch(authSessionProvider).valueOrNull;
     final palette = Theme.of(context).extension<DualioPalette>()!;
 
     return FeedShell(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(DualioTheme.mobileMargin, 24, DualioTheme.mobileMargin, 128),
+        padding: const EdgeInsets.fromLTRB(
+          DualioTheme.mobileMargin,
+          24,
+          DualioTheme.mobileMargin,
+          128,
+        ),
         children: <Widget>[
-          Text(strings.settingsTitle, style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            strings.settingsTitle,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: 8),
-          Text(strings.settingsBody, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: palette.muted, fontSize: 14)),
+          Text(
+            strings.settingsBody,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: palette.muted,
+              fontSize: 14,
+            ),
+          ),
           const SizedBox(height: 22),
           _SettingsSection(
             title: strings.themeSetting,
             child: SegmentedButton<ThemeMode>(
               segments: <ButtonSegment<ThemeMode>>[
-                ButtonSegment<ThemeMode>(value: ThemeMode.system, icon: const Icon(Icons.brightness_auto_rounded), label: Text(strings.themeSystem)),
-                ButtonSegment<ThemeMode>(value: ThemeMode.light, icon: const Icon(Icons.light_mode_rounded), label: Text(strings.themeLight)),
-                ButtonSegment<ThemeMode>(value: ThemeMode.dark, icon: const Icon(Icons.dark_mode_rounded), label: Text(strings.themeDark)),
+                ButtonSegment<ThemeMode>(
+                  value: ThemeMode.system,
+                  icon: const Icon(Icons.brightness_auto_rounded),
+                  label: Text(strings.themeSystem),
+                ),
+                ButtonSegment<ThemeMode>(
+                  value: ThemeMode.light,
+                  icon: const Icon(Icons.light_mode_rounded),
+                  label: Text(strings.themeLight),
+                ),
+                ButtonSegment<ThemeMode>(
+                  value: ThemeMode.dark,
+                  icon: const Icon(Icons.dark_mode_rounded),
+                  label: Text(strings.themeDark),
+                ),
               ],
               selected: <ThemeMode>{settings.themeMode},
-              onSelectionChanged: (selection) => ref.read(appSettingsProvider.notifier).setThemeMode(selection.first),
+              onSelectionChanged: (selection) => ref
+                  .read(appSettingsProvider.notifier)
+                  .setThemeMode(selection.first),
             ),
           ),
           _SettingsTile(
             icon: Icons.person_rounded,
             title: strings.accountSetting,
-            subtitle: session?.user.email == null ? strings.accountSettingBody : strings.signedInAs(session!.user.email!),
+            subtitle: session?.user.email == null
+                ? strings.accountSettingBody
+                : strings.signedInAs(session!.user.email!),
             onTap: () => context.push('/sign-in'),
           ),
-          _SettingsTile(icon: Icons.workspace_premium_rounded, title: strings.subscriptionSetting, subtitle: strings.subscriptionSettingBody),
+          if (session != null)
+            _SettingsTile(
+              icon: Icons.delete_forever_rounded,
+              title: strings.deleteAccountSetting,
+              subtitle: strings.deleteAccountSettingBody,
+              iconColor: Theme.of(context).colorScheme.error,
+              titleColor: Theme.of(context).colorScheme.error,
+              onTap: authState.isLoading
+                  ? null
+                  : () => _confirmDeleteAccount(context, ref),
+            ),
+          _SettingsTile(
+            icon: Icons.workspace_premium_rounded,
+            title: strings.subscriptionSetting,
+            subtitle: strings.subscriptionSettingBody,
+          ),
         ],
       ),
     );
   }
+
+  Future<void> _confirmDeleteAccount(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final strings = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(strings.deleteAccountTitle),
+          content: Text(strings.deleteAccountBody),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(strings.deleteAccountCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(strings.deleteAccountConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    try {
+      await ref.read(authControllerProvider.notifier).deleteAccount();
+      if (context.mounted) {
+        context.go('/');
+      }
+    } on Object {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.deleteAccountFailed)));
+    }
+  }
 }
 
 class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({
-    required this.title,
-    required this.child,
-  });
+  const _SettingsSection({required this.title, required this.child});
 
   final String title;
   final Widget child;
@@ -80,12 +166,16 @@ class _SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.iconColor,
+    this.titleColor,
     this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
+  final Color? iconColor;
+  final Color? titleColor;
   final VoidCallback? onTap;
 
   @override
@@ -101,8 +191,11 @@ class _SettingsTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        leading: Icon(icon),
-        title: Text(title),
+        leading: Icon(icon, color: iconColor),
+        title: Text(
+          title,
+          style: titleColor == null ? null : TextStyle(color: titleColor),
+        ),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right_rounded),
       ),

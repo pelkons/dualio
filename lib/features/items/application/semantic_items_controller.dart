@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:dualio/core/supabase/supabase_bootstrap.dart';
+import 'package:dualio/features/auth/application/auth_controller.dart';
 import 'package:dualio/features/items/data/items_repository.dart';
 import 'package:dualio/features/items/domain/semantic_item.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 final semanticItemsProvider =
     NotifierProvider<SemanticItemsController, List<SemanticItem>>(
@@ -17,6 +20,8 @@ final removedItemIdsProvider =
 final visibleSemanticItemsProvider = FutureProvider<List<SemanticItem>>((
   ref,
 ) async {
+  // Recompute whenever the signed-in user changes.
+  ref.watch(authSessionProvider);
   final localItems = ref.watch(semanticItemsProvider);
   final removedIds = ref.watch(removedItemIdsProvider);
   final repository = ref.watch(itemsRepositoryProvider);
@@ -56,9 +61,16 @@ class RemovedItemIdsController extends Notifier<Set<String>> {
   void add(String itemId) {
     state = <String>{...state, itemId};
   }
+
+  void clear() {
+    state = <String>{};
+  }
 }
 
 class SemanticItemsController extends Notifier<List<SemanticItem>> {
+  RealtimeChannel? _itemsChannel;
+  String? _subscribedUserId;
+
   @override
   List<SemanticItem> build() {
     final timer = Timer.periodic(const Duration(seconds: 4), (_) {
@@ -67,8 +79,69 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
         ref.invalidate(visibleSemanticItemsProvider);
       }
     });
-    ref.onDispose(timer.cancel);
+    ref.onDispose(() {
+      timer.cancel();
+      _teardownRealtime();
+    });
+
+    ref.listen<AsyncValue<Session?>>(authSessionProvider, (previous, next) {
+      final previousUserId = previous?.value?.user.id;
+      final nextUserId = next.value?.user.id;
+      if (previousUserId != nextUserId) {
+        state = <SemanticItem>[];
+        ref.read(removedItemIdsProvider.notifier).clear();
+      }
+      _syncRealtime(nextUserId);
+    });
+
+    // Initial subscription if a session is already restored on app launch.
+    final initialUserId = ref.read(authSessionProvider).value?.user.id;
+    if (initialUserId != null) {
+      _syncRealtime(initialUserId);
+    }
+
     return <SemanticItem>[];
+  }
+
+  void _syncRealtime(String? userId) {
+    if (userId == _subscribedUserId) {
+      return;
+    }
+    _teardownRealtime();
+    if (userId == null) {
+      return;
+    }
+    final client = SupabaseBootstrap.client;
+    if (client == null) {
+      return;
+    }
+    final channel = client
+        .channel('items:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'items',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (_) {
+            ref.invalidate(visibleSemanticItemsProvider);
+          },
+        )
+        .subscribe();
+    _itemsChannel = channel;
+    _subscribedUserId = userId;
+  }
+
+  void _teardownRealtime() {
+    final channel = _itemsChannel;
+    if (channel != null) {
+      SupabaseBootstrap.client?.removeChannel(channel);
+    }
+    _itemsChannel = null;
+    _subscribedUserId = null;
   }
 
   void addPendingText({
@@ -164,6 +237,55 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
 
     try {
       final updated = await repository.updateUserNote(item, note);
+      if (updated != null) {
+        state = state
+            .map((candidate) => candidate.id == item.id ? updated : candidate)
+            .toList(growable: false);
+      }
+      ref.invalidate(visibleSemanticItemsProvider);
+    } on Object {
+      ref.invalidate(visibleSemanticItemsProvider);
+    }
+  }
+
+  Future<void> updateGeneratedContent(
+    SemanticItem item, {
+    required String title,
+    required Map<String, Object?> parsedContentPatch,
+    required String searchableSummary,
+  }) async {
+    final normalizedTitle = title.trim().isEmpty ? item.title : title.trim();
+    final normalizedSummary = searchableSummary.trim().isEmpty
+        ? item.searchableSummary
+        : searchableSummary.trim();
+    final parsedContent = <String, Object?>{
+      ...item.parsedContent,
+      ...parsedContentPatch,
+    };
+    final optimisticItem = item.copyWith(
+      title: normalizedTitle,
+      parsedContent: parsedContent,
+      searchableSummary: normalizedSummary,
+    );
+    state = state
+        .map(
+          (candidate) => candidate.id == item.id ? optimisticItem : candidate,
+        )
+        .toList(growable: false);
+
+    final repository = ref.read(itemsRepositoryProvider);
+    if (repository == null || !repository.hasSignedInUser) {
+      ref.invalidate(visibleSemanticItemsProvider);
+      return;
+    }
+
+    try {
+      final updated = await repository.updateGeneratedContent(
+        item,
+        title: normalizedTitle,
+        parsedContentPatch: parsedContentPatch,
+        searchableSummary: normalizedSummary,
+      );
       if (updated != null) {
         state = state
             .map((candidate) => candidate.id == item.id ? updated : candidate)
@@ -289,8 +411,20 @@ bool _isLikelySameCapture(SemanticItem localItem, SemanticItem remoteItem) {
     return true;
   }
   if (localItem.sourceType == SourceType.link) {
-    return _sameNormalized(localItem.sourceUrl, remoteItem.sourceUrl) ||
-        _sameNormalized(localItem.searchableSummary, remoteItem.sourceUrl);
+    if (_sameNormalized(localItem.sourceUrl, remoteItem.sourceUrl) ||
+        _sameNormalized(localItem.searchableSummary, remoteItem.sourceUrl)) {
+      return true;
+    }
+    final localKey =
+        _urlMatchKey(localItem.sourceUrl) ??
+        _urlMatchKey(localItem.searchableSummary);
+    final remoteKey =
+        _urlMatchKey(remoteItem.sourceUrl) ??
+        _urlMatchKey(_remoteParsedUrl(remoteItem));
+    if (localKey != null && remoteKey != null && localKey == remoteKey) {
+      return true;
+    }
+    return false;
   }
   if (localItem.sourceType == SourceType.photo ||
       localItem.sourceType == SourceType.screenshot) {
@@ -336,6 +470,47 @@ bool _containsNormalized(String? value, String fragment) {
   final normalizedFragment = _normalizeMatchText(fragment);
   return normalizedFragment.isNotEmpty &&
       normalizedValue.contains(normalizedFragment);
+}
+
+String? _remoteParsedUrl(SemanticItem item) {
+  final raw = item.parsedContent['url'];
+  return raw is String ? raw : null;
+}
+
+String? _urlMatchKey(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return null;
+  }
+  Uri uri;
+  try {
+    uri = Uri.parse(value.trim());
+  } on FormatException {
+    return null;
+  }
+  if (!uri.hasScheme || (uri.scheme != 'http' && uri.scheme != 'https')) {
+    return null;
+  }
+  var host = uri.host.toLowerCase();
+  if (host.isEmpty) {
+    return null;
+  }
+  // Strip common mobile/www prefixes so canonicalisations match the original.
+  for (final prefix in const ['www.', 'm.', 'mobile.', 'amp.']) {
+    if (host.startsWith(prefix)) {
+      host = host.substring(prefix.length);
+      break;
+    }
+  }
+  var path = uri.path;
+  // Strip trailing extension and slash so /foo, /foo/, /foo.html all match.
+  path = path.replaceAll(
+    RegExp(r'\.(html?|php|aspx?)$', caseSensitive: false),
+    '',
+  );
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.substring(0, path.length - 1);
+  }
+  return '$host$path';
 }
 
 String _normalizeMatchText(String? value) {

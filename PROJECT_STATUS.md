@@ -15,9 +15,9 @@ Last updated: 2026-04-25
 
 ## Current Stage
 
-Dualio is in processing-pipeline MVP stage.
+Dualio is in backend hardening and production-safety stage after first-pass embedding-backed search integration.
 
-The project has a Flutter-first mobile app, authenticated Supabase feed, Android share intake, R2 image uploads, first-pass social/link resolving, RAG-first Supabase schema, project-level Codex skills, and Claude agent instructions. Flutter and Android tooling are installed and the Android debug APK builds successfully.
+The project has a Flutter-first mobile app, authenticated Supabase feed, Android share intake, on-device image optimization before R2 upload, R2 cleanup lifecycle functions, social/link resolving, link/text/image semantic extraction, best-effort item/chunk embedding generation, first-pass backend hybrid search, RAG-first Supabase schema, project-level Codex skills, and Claude agent instructions. Flutter and Android tooling are installed and the Android debug APK builds successfully.
 
 ## Completed
 
@@ -27,8 +27,8 @@ The project has a Flutter-first mobile app, authenticated Supabase feed, Android
 - Added Flutter dependencies in `pubspec.yaml`.
 - Added localization setup for English, Hebrew, Russian, Italian, French, Spanish, and German.
 - Built design tokens, light/dark theme, typography, top header, search pill, bottom navigation, and floating add button.
-- Added mock semantic items for all 8 item types.
-- Added compact feed cards for article, recipe, film, place, product, video, note, and unknown.
+- Added mock semantic items for the original item types.
+- Added compact feed cards for article, recipe, film, place, product, video, manual, note, and unknown.
 - Added placeholder screens for sign-in, add/capture, search, settings, and item details.
 - Added type-specific detail layouts.
 - Added Riverpod local semantic item state.
@@ -95,6 +95,13 @@ The project has a Flutter-first mobile app, authenticated Supabase feed, Android
 - Added `create-asset-upload` Edge Function for signed R2 PUT/GET URL creation.
 - Connected photo/screenshot share intake to upload images to R2 before processing.
 - Fixed R2 upload `411 Length Required` by sending explicit `Content-Length` from Flutter.
+- Added on-device photo/screenshot optimization before R2 upload and a declared byte-size limit in `create-asset-upload`.
+- Added `asset_cleanup_jobs` and Edge Functions for R2 cleanup on item deletion, account deletion, and scheduled abandoned-upload cleanup.
+- Applied remote migrations through `202604240005_schedule_asset_cleanup.sql`.
+- Deployed `create-asset-upload`, `delete-item`, `delete-account`, `cleanup-assets`, `process-item`, and `search` to Supabase.
+- Added `CLEANUP_ASSETS_SECRET` locally and in Supabase secrets, stored the schedule copy in Supabase Vault, and enabled hourly `dualio-cleanup-assets-hourly`.
+- Added Settings account deletion flow for signed-in users.
+- Built and installed the updated Android debug APK with Supabase dart-defines on the connected Samsung device.
 - Verified a shared WhatsApp image uploads to R2, creates an `item_assets` row, and replaces the local Android cache path with a signed R2 URL.
 - Extended `process-item` to process photo/screenshot items from R2 asset metadata.
 - Added image vision analysis contract using the OpenAI Responses API when `OPENAI_API_KEY` is configured, with a safe fallback when vision credentials are absent.
@@ -107,6 +114,21 @@ The project has a Flutter-first mobile app, authenticated Supabase feed, Android
 - Added Reddit JSON extraction for title, self text, author, subreddit, score, comment count, permalink, and usable preview metadata.
 - Added Reddit oEmbed fallback so Reddit links do not degrade to empty `Reddit link` cards if JSON is unavailable.
 - Added Reddit preview thumbnail fallback for self posts using `share.redd.it/preview/post/<post_id>`.
+- Added schema.org Recipe JSON-LD extraction for recipe sites so link processing can read ingredients, steps, times, yield, image, author, and rating instead of relying only on OpenGraph title/description.
+- Split experimental public HTML enrichment into the general `ENABLE_UNOFFICIAL_LINK_ENRICHMENT` flag and a separate `ENABLE_SOCIAL_HTML_ENRICHMENT` flag so social HTML enrichment stays disabled by default.
+- Added Deno tests for social HTML enrichment opt-in behavior.
+- Added an OpenRouter structured-output adapter for saved links, raw text, and image analysis with `provider.require_parameters=true`, plus a temporary direct OpenAI fallback while the migration is in progress.
+- Extended `process-item` to write typed `parsed_content`, summaries, aliases, entities, and chunks for saved links and raw text.
+- Added OpenRouter embedding generation for item-level and chunk-level search documents, using `openai/text-embedding-3-small` by default to preserve the current `vector(1536)` schema and writing pgvector-compatible values.
+- Made embedding generation best-effort so missing or failed embedding calls do not fail item processing.
+- Added Deno tests for embedding fallback and pgvector serialization.
+- Implemented the `search` Edge Function with query embeddings, `match_semantic_items` RPC calls, lexical fallback, inferred item type hints, result score/match reason output, and `search_events` logging.
+- Fixed multilingual search intent inference by replacing damaged Russian/Hebrew regex text with a tested shared `search_intent` module.
+- Connected the Flutter search screen to backend search for signed-in users while preserving the local search fallback.
+- Changed raw text capture to invoke `process-item` so text notes can become semantic memory items with summaries, chunks, entities, aliases, and embeddings.
+- Hardened item detail JSON list handling so AI-produced `ingredients`, `steps`, `cast`, and `specs` do not crash when decoded as generic JSON arrays.
+- Added `manual` as a real item type in Supabase, Flutter, link/text extraction, image analysis classification, feed cards, localization, and search intent inference.
+- Manual/how-to items use the interactive steps detail layout with editable generated content, and Russian/Hebrew/English manual queries are covered by Deno tests.
 
 ## Verified
 
@@ -116,12 +138,22 @@ The project has a Flutter-first mobile app, authenticated Supabase feed, Android
 - Shared images upload to Cloudflare R2 and persist asset metadata in Supabase.
 - `process-item` Edge Function with image-processing path has been deployed to Supabase.
 - Reddit resolver behavior has been manually verified against concrete Reddit short links that expand to `An open letter to Anthropic`.
+- `flutter analyze` passes after link/text extraction changes.
+- `flutter test` passes after link/text extraction changes.
+- Deno resolver/enrichment tests pass through `npx deno-bin`.
+- Deno resolver tests cover schema.org Recipe JSON-LD extraction.
+- Deno embedding tests pass through `npx deno-bin`.
+- Deno OpenRouter adapter tests pass through `npx deno-bin`.
+- Deno search-intent tests pass for Russian, Hebrew, and English item-type hints, including manual/how-to intent.
+- `deno check` passes for `process-item`, `search`, `semantic_extraction`, embeddings, and link enrichment modules through `npx deno-bin`.
 
 ## Not Yet Verified
 
 - The newest launcher icon change has been installed on the physical phone, but visual confirmation on the launcher has not yet been reported.
 - End-to-end signed-in state and remote item insert still need to be verified after the successful callback.
 - End-to-end social-link processing still needs repeated Android smoke tests after each resolver change: share link -> confirm -> pending item -> Edge Function metadata -> ready card.
+- End-to-end backend search needs smoke tests with real processed rows and OpenRouter-generated embeddings.
+- Cross-lingual semantic search needs real examples validated after embeddings are generated in Supabase.
 - Google sign-in has not yet been tested with real Supabase credentials.
 - Apple sign-in has not yet been tested with real Supabase credentials and Apple Developer configuration.
 - Add/feed remote item flow has been built but not yet verified with a signed-in Supabase user.
@@ -129,7 +161,8 @@ The project has a Flutter-first mobile app, authenticated Supabase feed, Android
 - Supabase anon key is present locally in `.env.local`; it must not be committed.
 - Google sign-in requires Supabase anon key via `--dart-define`, Google provider configuration in Supabase, and `dualio://auth/callback` in the Supabase redirect allow-list.
 - Apple sign-in requires Apple provider configuration in Supabase, Apple Developer capability/signing setup, and `dualio://auth/callback` in the Supabase redirect allow-list.
-- Full AI vision extraction requires adding `OPENAI_API_KEY` as a Supabase Function secret. Until then image items use the built-in fallback summary.
+- iOS follow-up work is tracked in `roadmap.md`: camera/photo permissions, Share Extension, HEIC optimization, temporary share-file access, Apple Sign-In verification, and App Store privacy labels.
+- `OPENROUTER_API_KEY` is present in Supabase Function secrets. Link/text/image AI extraction and embeddings now use OpenRouter first; direct OpenAI remains only as a temporary fallback if `OPENAI_API_KEY` is also configured.
 
 ## Current Blockers
 
@@ -138,11 +171,11 @@ The project has a Flutter-first mobile app, authenticated Supabase feed, Android
 
 ## Immediate Next Tasks
 
-1. Add `OPENAI_API_KEY` to Supabase Function secrets.
-2. Implement OpenAI extraction for link/text/image content: item type, summary, entities, aliases, language, and clarification question.
-3. Add embedding generation for item-level and chunk-level search.
-4. Wire the `search` Edge Function to hybrid search over embeddings, full text, aliases, entities, and recency.
-5. Smoke-test Android flows after AI processing is enabled: Reddit link, Facebook/TikTok link, WhatsApp image, raw text.
+1. Smoke-test R2 lifecycle flows on Android: upload image, delete item, verify R2 object cleanup, delete account, verify user data cleanup.
+2. Smoke-test content flows: Reddit link, Facebook/TikTok link, WhatsApp image, raw text, Russian query for English content, Hebrew RTL query.
+3. Add search-quality fixtures for cross-lingual examples and debug match reasons.
+4. Add reranking once the first hybrid search path has real test data.
+5. Add account-level free-tier hard limits as final pre-public-launch hardening.
 
 ## Future Backlog Notes
 

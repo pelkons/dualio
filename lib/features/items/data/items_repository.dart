@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:dualio/core/supabase/supabase_bootstrap.dart';
 import 'package:dualio/features/items/domain/semantic_item.dart';
+import 'package:dualio/features/items/data/local_image_optimizer.dart';
+import 'package:dualio/features/search/presentation/search_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -56,10 +58,11 @@ class ItemsRepository {
     final summary = normalized;
     final note = personalNote.trim();
 
-    final processingStatus =
-        sourceType == SourceType.link || _isImageSource(sourceType)
-        ? 'pending'
-        : 'ready';
+    final shouldProcess =
+        sourceType == SourceType.link ||
+        sourceType == SourceType.text ||
+        _isImageSource(sourceType);
+    final processingStatus = shouldProcess ? 'pending' : 'ready';
     var row = await _client
         .from('items')
         .insert(<String, Object?>{
@@ -86,7 +89,7 @@ class ItemsRepository {
         .select()
         .single();
 
-    if (sourceType == SourceType.link) {
+    if (sourceType == SourceType.link || sourceType == SourceType.text) {
       final processed = await _invokeProcessItem(row['id']! as String);
       if (!processed) {
         row = await _markProcessingFailed(row['id']! as String);
@@ -108,6 +111,52 @@ class ItemsRepository {
     }
 
     return _itemFromRow(row);
+  }
+
+  Future<List<SemanticSearchResult>> searchItems({
+    required String query,
+    required String locale,
+    int limit = 20,
+  }) async {
+    final user = _client.auth.currentUser;
+    final normalized = query.trim();
+    if (user == null || normalized.isEmpty) {
+      return <SemanticSearchResult>[];
+    }
+
+    final response = await _client.functions.invoke(
+      'search',
+      body: <String, Object?>{
+        'query': normalized,
+        'locale': locale,
+        'limit': limit,
+        'debug': true,
+      },
+    );
+    final payload = response.data;
+    if (payload is! Map) {
+      return <SemanticSearchResult>[];
+    }
+    final results = payload['results'];
+    if (results is! List) {
+      return <SemanticSearchResult>[];
+    }
+
+    return results
+        .whereType<Map<Object?, Object?>>()
+        .map((entry) {
+          final itemRow = entry['item'];
+          if (itemRow is! Map) {
+            return null;
+          }
+          return SemanticSearchResult(
+            item: _itemFromRow(Map<String, Object?>.from(itemRow)),
+            score: (entry['score'] as num?)?.toDouble() ?? 0,
+            matchReason: (entry['match_reason'] as String?) ?? '',
+          );
+        })
+        .nonNulls
+        .toList(growable: false);
   }
 
   Future<Map<String, Object?>?> _fetchItemRow(String itemId) async {
@@ -141,14 +190,28 @@ class ItemsRepository {
     }
 
     try {
-      final filename = localImagePath.split(RegExp(r'[/\\]')).last;
-      final contentType = _contentTypeForPath(localImagePath);
+      final optimizedImage = await const LocalImageOptimizer()
+          .optimizeForUpload(path: localImagePath, sourceType: sourceType);
+      if (optimizedImage == null) {
+        return row;
+      }
+      if (optimizedImage.byteSize > LocalImageOptimizer.defaultMaxUploadBytes) {
+        return _markAssetUploadFailed(
+          row,
+          itemId,
+          'image_too_large_after_optimization',
+        );
+      }
+
+      final filename = optimizedImage.uploadFilename;
+      final contentType = optimizedImage.contentType;
       final response = await _client.functions.invoke(
         'create-asset-upload',
         body: <String, Object?>{
           'item_id': itemId,
           'filename': filename,
           'content_type': contentType,
+          'byte_size': optimizedImage.byteSize,
         },
       );
       final payload = Map<String, Object?>.from(response.data as Map);
@@ -163,7 +226,7 @@ class ItemsRepository {
         return _markAssetUploadFailed(row, itemId, 'missing_upload_payload');
       }
 
-      final bytes = await file.readAsBytes();
+      final bytes = await optimizedImage.file.readAsBytes();
       final uploadRequest = await HttpClient().putUrl(Uri.parse(uploadUrl));
       uploadRequest.headers.contentType = ContentType.parse(contentType);
       uploadRequest.contentLength = bytes.length;
@@ -184,7 +247,7 @@ class ItemsRepository {
         'storage_provider': 'cloudflare_r2',
         'storage_bucket': bucket,
         'storage_key': key,
-        'original_filename': filename,
+        'original_filename': optimizedImage.originalFilename,
         'content_type': contentType,
         'byte_size': bytes.length,
       });
@@ -198,6 +261,11 @@ class ItemsRepository {
           'key': key,
           'contentType': contentType,
           'byteSize': bytes.length,
+          'originalFilename': optimizedImage.originalFilename,
+          'originalByteSize': optimizedImage.originalByteSize,
+          'optimized': optimizedImage.wasOptimized,
+          if (optimizedImage.width != null) 'width': optimizedImage.width,
+          if (optimizedImage.height != null) 'height': optimizedImage.height,
         },
       };
       return await _client
@@ -295,6 +363,48 @@ class ItemsRepository {
     return _itemFromRow(row);
   }
 
+  Future<SemanticItem?> updateGeneratedContent(
+    SemanticItem item, {
+    required String title,
+    required Map<String, Object?> parsedContentPatch,
+    required String searchableSummary,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null || item.id.startsWith('local-')) {
+      return null;
+    }
+
+    final normalizedTitle = title.trim().isEmpty ? item.title : title.trim();
+    final normalizedSummary = searchableSummary.trim().isEmpty
+        ? item.searchableSummary
+        : searchableSummary.trim();
+    final parsedContent = <String, Object?>{
+      ...item.parsedContent,
+      ...parsedContentPatch,
+      'userEditedGeneratedContent': true,
+      'generatedContentEditedAt': DateTime.now().toUtc().toIso8601String(),
+    };
+    final aliases = <String>{
+      ...item.searchableAliases,
+      ..._aliasesFromContent('$normalizedTitle $normalizedSummary'),
+    }.take(32).toList(growable: false);
+
+    final row = await _client
+        .from('items')
+        .update(<String, Object?>{
+          'title': normalizedTitle,
+          'parsed_content': parsedContent,
+          'searchable_summary': normalizedSummary,
+          'searchable_aliases': aliases,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', item.id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+    return _itemFromRow(row);
+  }
+
   Future<bool> _invokeProcessItem(String itemId, {bool retry = false}) async {
     try {
       await _client.functions.invoke(
@@ -312,7 +422,7 @@ class ItemsRepository {
         .from('items')
         .update(<String, Object?>{
           'processing_status': 'failed',
-          'clarification_question': 'Could not process this link.',
+          'clarification_question': 'Could not process this item.',
         })
         .eq('id', itemId)
         .select()
@@ -325,11 +435,10 @@ class ItemsRepository {
       return;
     }
 
-    await _client
-        .from('items')
-        .delete()
-        .eq('id', itemId)
-        .eq('user_id', user.id);
+    await _client.functions.invoke(
+      'delete-item',
+      body: <String, Object?>{'item_id': itemId},
+    );
   }
 
   SemanticItem _itemFromRow(Map<String, Object?> row) {
@@ -438,6 +547,7 @@ class ItemsRepository {
       'article' => ItemType.article,
       'product' => ItemType.product,
       'video' => ItemType.video,
+      'manual' => ItemType.manual,
       'note' => ItemType.note,
       _ => ItemType.unknown,
     };
@@ -451,6 +561,7 @@ class ItemsRepository {
       ItemType.article => 'article',
       ItemType.product => 'product',
       ItemType.video => 'video',
+      ItemType.manual => 'manual',
       ItemType.note => 'note',
       ItemType.unknown => 'unknown',
     };
@@ -486,20 +597,6 @@ class ItemsRepository {
         lower.endsWith('.png') ||
         lower.endsWith('.webp') ||
         lower.endsWith('.heic');
-  }
-
-  String _contentTypeForPath(String path) {
-    final lower = path.toLowerCase();
-    if (lower.endsWith('.png')) {
-      return 'image/png';
-    }
-    if (lower.endsWith('.webp')) {
-      return 'image/webp';
-    }
-    if (lower.endsWith('.heic')) {
-      return 'image/heic';
-    }
-    return 'image/jpeg';
   }
 
   ProcessingStatus _processingStatusFromDb(String? value) {

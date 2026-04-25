@@ -1,0 +1,83 @@
+---
+---
+
+<header class="nav">
+  <div class="container nav-row">
+    <a href="/" class="brand" aria-label="Dualio home">
+      <img src="/icon.png" alt="" width="28" height="28" />
+      <span>Dualio</span>
+    </a>
+    <nav>
+      <a href="#how-it-works">How it works</a>
+      <a href="#waitlist" class="cta">Get early access</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    background: rgba(253, 248, 248, 0.85);
+    backdrop-filter: saturate(140%) blur(8px);
+    border-bottom: 1px solid var(--outline-variant);
+    z-index: 50;
+  }
+
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px var(--gutter);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 20px;
+    text-decoration: none;
+    color: var(--on-surface);
+  }
+
+  .brand img {
+    border-radius: var(--radius-sm);
+  }
+
+  nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 22px;
+  }
+
+  nav a {
+    text-decoration: none;
+    color: var(--on-surface-variant);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  nav a:hover {
+    color: var(--on-surface);
+  }
+
+  nav .cta {
+    background: var(--primary);
+    color: var(--on-primary);
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+  }
+
+  nav .cta:hover {
+    color: var(--on-primary);
+    opacity: 0.9;
+  }
+
+  @media (max-width: 540px) {
+    nav a:not(.cta) {
+      display: none;
+    }
+  }
+</style>

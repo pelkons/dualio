@@ -41,17 +41,26 @@ Required accounting fields:
 - Flutter project scaffold exists and builds for Android.
 - Design tokens, light/dark themes, typography, feed shell, search bar, bottom navigation, and floating add button exist.
 - The app is connected to Supabase for authenticated item persistence and newest-first feed reads.
-- Compact feed cards exist for article, recipe, film, place, product, video, note, and unknown.
+- Compact feed cards exist for article, recipe, film, place, product, video, manual, note, and unknown.
 - Type-specific detail placeholders exist.
 - Localization files exist for all target languages.
 - Supabase migration exists for the RAG-first schema.
-- Edge Function contracts exist for `process-item` and `search`; `process-item` is implemented for first-pass metadata/image processing.
+- Edge Function contracts exist for `process-item` and `search`; `process-item` is implemented for link/text/image semantic extraction with safe fallback behavior.
 - Android share intake opens a confirmation screen before saving and supports links, text, photos, and screenshots.
 - Cloudflare R2 stores user-uploaded image assets through signed URLs.
-- Link processing resolves public metadata through platform-specific paths and OpenGraph/oEmbed fallback.
+- Mobile photo/screenshot uploads are optimized on-device before R2 upload, and signed upload URL creation enforces declared image byte-size limits.
+- R2 cleanup is modeled with `asset_cleanup_jobs`; item deletion, account deletion, and scheduled abandoned-upload cleanup have dedicated Edge Functions deployed to Supabase.
+- The scheduled `dualio-cleanup-assets-hourly` Postgres cron job invokes `cleanup-assets` every hour with `CLEANUP_ASSETS_SECRET`.
+- Settings includes a signed-in account deletion flow that calls backend cleanup before removing the auth user.
+- Link processing resolves public metadata through platform-specific paths and OpenGraph/oEmbed fallback, then runs typed semantic extraction for supported link/text inputs, including manual/how-to instructions.
 - Reddit short-share links now expand to canonical posts and can extract title, self text, author, subreddit, score, comments, and preview metadata.
-- Image/photo/screenshot processing has an OpenAI vision contract and safe fallback when `OPENAI_API_KEY` is not configured.
-- Search is still not backed by real embeddings/reranking.
+- Recipe links with schema.org Recipe JSON-LD can extract ingredients, steps, timing, yield, image, author, and rating before AI semantic extraction runs.
+- Image/photo/screenshot processing now routes vision analysis through OpenRouter when `OPENROUTER_API_KEY` is configured, with a temporary direct OpenAI fallback.
+- Public HTML enrichment is split into general unofficial enrichment and a separate social HTML opt-in flag so social platforms remain disabled by default unless explicitly enabled.
+- Processing now generates item-level and chunk-level embeddings through OpenRouter when `OPENROUTER_API_KEY` is configured, using `openai/text-embedding-3-small` by default to preserve the current `vector(1536)` schema.
+- The `search` Edge Function now performs first-pass hybrid search with query embeddings, the existing `match_semantic_items` RPC, and lexical fallback when embeddings/RPC are unavailable.
+- Search intent inference for Russian and Hebrew queries is covered by Deno tests.
+- The Flutter search screen calls backend search for signed-in users and preserves local search fallback.
 
 ## Phase 1: Mobile Foundation
 
@@ -125,7 +134,7 @@ Goal: process saved inputs into typed semantic memory items.
 - Resolve social links through official oEmbed/API or OpenGraph first; public HTML enrichment for social platforms must stay opt-in and disabled by default.
 - Extract HTML metadata.
 - OCR screenshots/photos.
-- Detect item type with OpenAI.
+- Detect item type with the configured AI router.
 - Extract type-specific structured fields.
 - Generate user-visible summary.
 - Extract entities.
@@ -148,10 +157,12 @@ Definition of done:
 Current implementation note:
 
 - Link processing resolves public metadata and optional enrichment. Reddit currently has the strongest resolver path: short-link expansion, JSON extraction, oEmbed fallback, and preview thumbnail fallback.
-- Image/photo/screenshot processing reads Cloudflare R2 asset metadata, signs a temporary GET URL, calls OpenAI vision when `OPENAI_API_KEY` is configured, stores parsed image summary/visible text, writes chunks/entities, and falls back safely when vision credentials are missing.
-- OpenAI extraction for saved links/text is still pending.
-- Item and chunk embeddings are still pending.
-- Hybrid semantic search UI/backend integration is still pending.
+- Generic recipe sites are checked for schema.org Recipe JSON-LD and pass structured recipe data into AI extraction.
+- Public HTML enrichment for social platforms requires `ENABLE_SOCIAL_HTML_ENRICHMENT=true` in addition to the general `ENABLE_UNOFFICIAL_LINK_ENRICHMENT=true` flag.
+- Link/text processing calls an OpenRouter structured-output adapter first, with `provider.require_parameters=true` so providers cannot ignore JSON schema output. It stores typed `parsed_content`, user-facing summary, aliases, entities, and chunks, and falls back safely when AI credentials are absent or unavailable.
+- Image/photo/screenshot processing reads Cloudflare R2 asset metadata, signs a temporary GET URL, calls OpenRouter vision analysis first, stores parsed image summary/visible text, writes chunks/entities, and falls back safely when vision credentials are missing.
+- Item and chunk embeddings are generated best-effort with `openai/text-embedding-3-small` through OpenRouter by default. Missing or failed embedding generation does not fail item processing.
+- Hybrid semantic search backend and Flutter integration exist as a first pass. Reranking and deeper search-quality evaluation are still pending.
 
 ### Future Source Resolver Backlog
 
@@ -274,6 +285,21 @@ Definition of done:
 - Core capture, processing, and search flows work end to end.
 - Privacy and account lifecycle requirements are covered.
 
+## iOS Follow-Up Backlog
+
+Goal: keep iOS-specific work explicit while Android remains the first production target.
+
+- Configure iOS `Info.plist` usage descriptions for camera and photo library access.
+- Configure iOS URL scheme/deep link handling for `dualio://auth/callback`.
+- Configure and test Sign in with Apple entitlement and Supabase Apple provider.
+- Build a native iOS Share Extension for sharing links, text, photos, and screenshots into Dualio.
+- Verify `receive_sharing_intent` behavior with Safari, Photos, Instagram, TikTok, Facebook, and Notes.
+- Verify temporary file access from iOS share/capture flows before upload starts.
+- Add native HEIC-to-JPEG conversion if Dart image decoding cannot optimize iPhone HEIC files.
+- Smoke-test on a real iPad and at least one iPhone simulator/device before iOS beta.
+- Review iOS background/upload behavior so shared files are uploaded or safely retained before the app is suspended.
+- Confirm App Store privacy labels and permission prompts match actual data collection.
+
 ## Not In Scope Yet
 
 - Paywall implementation.
@@ -285,10 +311,8 @@ Definition of done:
 
 ## Immediate Next Tasks
 
-1. Install Flutter latest stable locally.
-2. Run `flutter create --platforms=android,ios --project-name dualio .`.
-3. Run `flutter pub get`.
-4. Run `flutter gen-l10n`.
-5. Run `dart run build_runner build --delete-conflicting-outputs`.
-6. Run `flutter analyze` and fix generated-code integration issues.
-7. Run the Android app and tune feed visuals against `design/screen.png`.
+1. Smoke-test R2 lifecycle flows on Android: upload image, delete item, verify R2 object cleanup, delete account, verify user data cleanup.
+2. Smoke-test Android content flows after AI processing/search is enabled: Reddit link, Facebook/TikTok link, WhatsApp image, raw text, Russian query for English content, and Hebrew RTL query.
+3. Add search-quality fixtures for cross-lingual examples and debug match reasons.
+4. Add reranking once the first hybrid search path has real test data.
+5. Add account-level free-tier hard limits as final pre-public-launch hardening.
