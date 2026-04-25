@@ -34,6 +34,16 @@ const htmlFetchHeaders = {
   "user-agent": "DualioBot/0.1 link metadata fetcher",
 };
 
+const redditFetchHeaders = {
+  "accept": "application/json",
+  "user-agent": "Mozilla/5.0 (compatible; Dualio/0.1; +https://github.com/pelkons/dualio)",
+};
+
+const redditRedirectHeaders = {
+  "accept": "text/html,application/xhtml+xml",
+  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+};
+
 export async function resolveLink(url: string): Promise<LinkResolverResult> {
   const normalizedUrl = normalizeLinkUrl(url);
   if (!normalizedUrl) {
@@ -232,16 +242,11 @@ async function resolveYouTubeOEmbed(url: URL): Promise<LinkResolverResult> {
 async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
   try {
     const canonicalPostUrl = await expandRedditShareUrl(url);
-    const endpoint = new URL(canonicalPostUrl.toString());
-    endpoint.pathname = endpoint.pathname.replace(/\/$/, "") + ".json";
-    endpoint.search = "";
+    const endpoint = redditJsonEndpoint(canonicalPostUrl);
 
     const response = await fetchWithTimeout(endpoint, {
       redirect: "follow",
-      headers: {
-        "accept": "application/json",
-        "user-agent": "DualioBot/0.1 reddit metadata fetcher",
-      },
+      headers: redditFetchHeaders,
     });
     if (!response.ok) {
       return minimalFallback(canonicalPostUrl, "reddit", `reddit_json_${response.status}`);
@@ -260,7 +265,7 @@ async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
       resolver: "reddit_json",
       extractionStatus: "complete",
       title: post.title,
-      description: post.selftext || post.subreddit,
+      description: redditDescription(post),
       authorName: post.author,
       authorUrl: post.author ? `https://www.reddit.com/user/${post.author}` : undefined,
       thumbnailUrl: usableRedditImage(post.previewImage ?? post.thumbnail),
@@ -279,10 +284,7 @@ async function expandRedditShareUrl(url: URL): Promise<URL> {
 
   const response = await fetchWithTimeout(url, {
     redirect: "manual",
-    headers: {
-      "accept": "text/html,application/xhtml+xml",
-      "user-agent": "DualioBot/0.1 reddit metadata fetcher",
-    },
+    headers: redditRedirectHeaders,
   });
   const location = response.headers.get("location");
   if (!location) {
@@ -292,6 +294,15 @@ async function expandRedditShareUrl(url: URL): Promise<URL> {
   const expanded = new URL(location, url);
   expanded.hash = "";
   return expanded;
+}
+
+export function redditJsonEndpoint(url: URL): URL {
+  const endpoint = new URL(url.toString());
+  endpoint.search = "";
+  endpoint.hash = "";
+  endpoint.pathname = endpoint.pathname.replace(/\/$/, "") + "/.json";
+  endpoint.searchParams.set("raw_json", "1");
+  return endpoint;
 }
 
 async function resolveMetaOEmbed(url: URL, platform: "instagram" | "facebook"): Promise<LinkResolverResult> {
@@ -544,6 +555,8 @@ type RedditPost = {
   permalink?: string;
   thumbnail?: string;
   previewImage?: string;
+  score?: number;
+  numComments?: number;
 };
 
 function extractRedditPost(payload: unknown): RedditPost | null {
@@ -576,6 +589,8 @@ function extractRedditPost(payload: unknown): RedditPost | null {
     permalink: stringValue(post.permalink),
     thumbnail: stringValue(post.thumbnail),
     previewImage: extractRedditPreviewImage(post.preview),
+    score: numberValue(post.score ?? post.ups),
+    numComments: numberValue(post.num_comments),
   };
 }
 
@@ -599,4 +614,18 @@ function usableRedditImage(value: string | undefined): string | undefined {
     return undefined;
   }
   return decodeHtml(value);
+}
+
+function redditDescription(post: RedditPost): string | undefined {
+  const parts = [
+    post.selftext,
+    post.subreddit ? `r/${post.subreddit}` : undefined,
+    typeof post.score === "number" ? `${post.score} upvotes` : undefined,
+    typeof post.numComments === "number" ? `${post.numComments} comments` : undefined,
+  ].filter(Boolean);
+  return parts.join(" - ") || undefined;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }

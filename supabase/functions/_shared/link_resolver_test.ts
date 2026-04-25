@@ -1,4 +1,4 @@
-import { detectPlatform, isSocialLoginRedirect, normalizeLinkUrl } from "./link_resolver.ts";
+import { detectPlatform, isSocialLoginRedirect, normalizeLinkUrl, redditJsonEndpoint } from "./link_resolver.ts";
 
 function assertEquals<T>(actual: T, expected: T) {
   if (actual !== expected) {
@@ -51,6 +51,13 @@ Deno.test("detectPlatform detects YouTube URLs", () => {
 Deno.test("detectPlatform detects Reddit URLs", () => {
   assertEquals(detectPlatform(new URL("https://www.reddit.com/r/ChatGPTCoding/comments/abc/post/")), "reddit");
   assertEquals(detectPlatform(new URL("https://old.reddit.com/r/flutterdev/comments/abc/post/")), "reddit");
+});
+
+Deno.test("redditJsonEndpoint builds canonical JSON endpoint", () => {
+  assertEquals(
+    redditJsonEndpoint(new URL("https://www.reddit.com/r/vibecoding/comments/1suu522/the_doubters_were_so_right/?share_id=abc")).toString(),
+    "https://www.reddit.com/r/vibecoding/comments/1suu522/the_doubters_were_so_right/.json?raw_json=1",
+  );
 });
 
 Deno.test("detectPlatform returns generic for other URLs", () => {
