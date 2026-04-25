@@ -115,6 +115,11 @@ flutter test
 
 If Flutter or Dart is unavailable, state that clearly and validate with static inspection.
 
+## Edge Function Deployment
+
+- Deploy Supabase Edge Functions with `--use-api` to avoid the Docker dependency on Windows. Example: `npx supabase functions deploy <name> --project-ref uogaveubabnsskfwftui --use-api`.
+- Prefer `scripts/deploy_edge_function.ps1 <name>` for manual deployments. The script reads `SUPABASE_ACCESS_TOKEN` from `.env.local` when it is not already present in the shell environment.
+
 ## Project Skills
 
 Project-level Codex skills are stored in `.codex/skills/`. Prefer them when the task matches their scope.
