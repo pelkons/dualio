@@ -48,7 +48,8 @@ extension SemanticItemClassification on SemanticItem {
 
   bool get usesImageAnalysisPresentation =>
       parsedContent['kind'] == 'image_analysis' &&
-      (sourceType == SourceType.photo || sourceType == SourceType.screenshot);
+      (sourceType == SourceType.photo || sourceType == SourceType.screenshot) &&
+      (type == ItemType.unknown || type == ItemType.note);
 
   bool get usesActionStepsPresentation {
     final steps = parsedContent['steps'];

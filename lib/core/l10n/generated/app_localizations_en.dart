@@ -158,6 +158,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get captureSourceLink => 'Link';
 
   @override
+  String get pasteFromClipboard => 'Paste';
+
+  @override
   String get captureInputLabel => 'What do you want to save?';
 
   @override
@@ -166,6 +169,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emptyCaptureError => 'Add something before saving.';
+
+  @override
+  String get emptyClipboardError => 'Clipboard is empty.';
+
+  @override
+  String get unsupportedClipboardError =>
+      'This clipboard content cannot be saved yet.';
+
+  @override
+  String get clipboardPasteFailed => 'Could not read the clipboard.';
+
+  @override
+  String get clipboardImageReady => 'Clipboard image is ready to save.';
+
+  @override
+  String get clipboardImageLabel => 'Clipboard image';
+
+  @override
+  String get clearClipboardImage => 'Remove clipboard image';
+
+  @override
+  String get clipboardImagePreviewUnavailable =>
+      'Image preview is unavailable.';
 
   @override
   String get saveToInbox => 'Save to inbox';

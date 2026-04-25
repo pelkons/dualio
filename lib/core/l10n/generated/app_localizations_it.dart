@@ -152,29 +152,56 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get captureSourceText => 'Text';
+  String get captureSourceText => 'Testo';
 
   @override
   String get captureSourceLink => 'Link';
 
   @override
-  String get captureInputLabel => 'What do you want to save?';
+  String get pasteFromClipboard => 'Incolla';
+
+  @override
+  String get captureInputLabel => 'Cosa vuoi salvare?';
 
   @override
   String get captureInputHint =>
-      'Paste a link, note, quote, or anything you want to find later.';
+      'Incolla un link, una nota, una citazione o qualsiasi cosa tu voglia ritrovare piu tardi.';
 
   @override
-  String get emptyCaptureError => 'Add something before saving.';
+  String get emptyCaptureError => 'Aggiungi qualcosa prima di salvare.';
 
   @override
-  String get saveToInbox => 'Save to inbox';
+  String get emptyClipboardError => 'Gli appunti sono vuoti.';
 
   @override
-  String get addFromLibrary => 'Photo library';
+  String get unsupportedClipboardError =>
+      'Questo contenuto dagli appunti non puo ancora essere salvato.';
 
   @override
-  String get addFromCamera => 'Camera';
+  String get clipboardPasteFailed => 'Impossibile leggere gli appunti.';
+
+  @override
+  String get clipboardImageReady =>
+      'L\'immagine dagli appunti e pronta per essere salvata.';
+
+  @override
+  String get clipboardImageLabel => 'Immagine dagli appunti';
+
+  @override
+  String get clearClipboardImage => 'Rimuovi immagine dagli appunti';
+
+  @override
+  String get clipboardImagePreviewUnavailable =>
+      'Anteprima immagine non disponibile.';
+
+  @override
+  String get saveToInbox => 'Salva nella inbox';
+
+  @override
+  String get addFromLibrary => 'Libreria foto';
+
+  @override
+  String get addFromCamera => 'Fotocamera';
 
   @override
   String get searchInputLabel => 'Search memory';

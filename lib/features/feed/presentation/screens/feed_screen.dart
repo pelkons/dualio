@@ -21,7 +21,7 @@ class FeedScreen extends ConsumerWidget {
         .where((item) => item.id.startsWith('local-'))
         .where((item) => !removedIds.contains(item.id))
         .toList(growable: false);
-    final previousItems = _withOptimisticItems(
+    final previousItems = mergeOptimisticFeedItems(
       itemsState.valueOrNull ?? const <SemanticItem>[],
       optimisticItems,
       removedIds,
@@ -38,9 +38,8 @@ class FeedScreen extends ConsumerWidget {
         child: const Icon(Icons.add_rounded, size: 30),
       ),
       child: itemsState.when(
-        data: (items) => _FeedList(
-          items: _withOptimisticItems(items, optimisticItems, removedIds),
-        ),
+        data: (items) =>
+            _FeedList(items: enforceSingleProcessingPlaceholder(items)),
         loading: () => _FeedList(items: previousItems),
         error: (_, _) => _FeedList(items: previousItems),
       ),
@@ -48,7 +47,7 @@ class FeedScreen extends ConsumerWidget {
   }
 }
 
-List<SemanticItem> _withOptimisticItems(
+List<SemanticItem> mergeOptimisticFeedItems(
   List<SemanticItem> items,
   List<SemanticItem> optimisticItems,
   Set<String> removedIds,
@@ -57,10 +56,43 @@ List<SemanticItem> _withOptimisticItems(
       .where((item) => !removedIds.contains(item.id))
       .toList(growable: false);
   final visibleIds = visibleItems.map((item) => item.id).toSet();
-  final missingOptimisticItems = optimisticItems.where(
-    (item) => !visibleIds.contains(item.id),
-  );
-  return <SemanticItem>[...missingOptimisticItems, ...visibleItems];
+  final missingOptimisticItems = optimisticItems.where((item) {
+    if (visibleIds.contains(item.id)) {
+      return false;
+    }
+    return !visibleItems.any(
+      (visibleItem) => isLikelySameSemanticCapture(item, visibleItem),
+    );
+  });
+  return enforceSingleProcessingPlaceholder(<SemanticItem>[
+    ...missingOptimisticItems,
+    ...visibleItems,
+  ]);
+}
+
+List<SemanticItem> enforceSingleProcessingPlaceholder(
+  List<SemanticItem> items,
+) {
+  var hasProcessingPlaceholder = false;
+  final visibleItems = <SemanticItem>[];
+
+  for (final item in items) {
+    if (_rendersProcessingPlaceholder(item)) {
+      if (hasProcessingPlaceholder) {
+        continue;
+      }
+      hasProcessingPlaceholder = true;
+    }
+    visibleItems.add(item);
+  }
+
+  return visibleItems;
+}
+
+bool _rendersProcessingPlaceholder(SemanticItem item) {
+  return item.type == ItemType.unknown &&
+      (item.processingStatus == ProcessingStatus.pending ||
+          item.processingStatus == ProcessingStatus.processing);
 }
 
 class _FeedList extends ConsumerWidget {

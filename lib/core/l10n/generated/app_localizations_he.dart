@@ -150,48 +150,72 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
-  String get captureSourceText => 'Text';
+  String get captureSourceText => 'טקסט';
 
   @override
-  String get captureSourceLink => 'Link';
+  String get captureSourceLink => 'קישור';
 
   @override
-  String get captureInputLabel => 'What do you want to save?';
+  String get pasteFromClipboard => 'הדבקה';
+
+  @override
+  String get captureInputLabel => 'מה לשמור?';
 
   @override
   String get captureInputHint =>
-      'Paste a link, note, quote, or anything you want to find later.';
+      'הדביקו קישור, הערה, ציטוט או כל דבר שתרצו למצוא אחר כך.';
 
   @override
-  String get emptyCaptureError => 'Add something before saving.';
+  String get emptyCaptureError => 'צריך להוסיף משהו לפני השמירה.';
 
   @override
-  String get saveToInbox => 'Save to inbox';
+  String get emptyClipboardError => 'הלוח ריק.';
 
   @override
-  String get addFromLibrary => 'Photo library';
+  String get unsupportedClipboardError => 'עדיין אי אפשר לשמור תוכן כזה מהלוח.';
 
   @override
-  String get addFromCamera => 'Camera';
+  String get clipboardPasteFailed => 'לא ניתן לקרוא מהלוח.';
 
   @override
-  String get searchInputLabel => 'Search memory';
+  String get clipboardImageReady => 'התמונה מהלוח מוכנה לשמירה.';
 
   @override
-  String get searchResults => 'Results';
+  String get clipboardImageLabel => 'תמונה מהלוח';
+
+  @override
+  String get clearClipboardImage => 'הסר תמונה מהלוח';
+
+  @override
+  String get clipboardImagePreviewUnavailable => 'תצוגת התמונה אינה זמינה.';
+
+  @override
+  String get saveToInbox => 'שמירה לתיבה';
+
+  @override
+  String get addFromLibrary => 'ספריית תמונות';
+
+  @override
+  String get addFromCamera => 'מצלמה';
+
+  @override
+  String get searchInputLabel => 'חיפוש בזיכרון';
+
+  @override
+  String get searchResults => 'תוצאות';
 
   @override
   String get searchTryExample =>
-      'Try: slow architecture, Copenhagen cafe, sourdough, or romantic drama.';
+      'נסו: slow architecture, Copenhagen cafe, sourdough או romantic drama.';
 
   @override
-  String get searchNoResults => 'No saved items matched this search.';
+  String get searchNoResults => 'לא נמצאו פריטים שמורים לחיפוש הזה.';
 
   @override
-  String get semanticDebugReason => 'Matched by local semantic fields';
+  String get semanticDebugReason => 'נמצא לפי שדות סמנטיים מקומיים';
 
   @override
-  String get processingType => 'Processing';
+  String get processingType => 'מעבד';
 
   @override
   String get processingFailedType => 'לא ניתן לעבד';

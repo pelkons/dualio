@@ -57,6 +57,14 @@ class ItemsRepository {
     final title = _titleFromContent(normalized);
     final summary = normalized;
     final note = personalNote.trim();
+    final clientCaptureKey = await _clientCaptureKeyFor(normalized, sourceType);
+    final duplicateRow = await _findRecentDuplicateInput(
+      sourceType: sourceType,
+      clientCaptureKey: clientCaptureKey,
+    );
+    if (duplicateRow != null) {
+      return _itemFromRow(duplicateRow);
+    }
 
     final shouldProcess =
         sourceType == SourceType.link ||
@@ -74,6 +82,7 @@ class ItemsRepository {
           'raw_content': <String, Object?>{
             'input': normalized,
             'sourceType': _sourceTypeToDb(sourceType),
+            'clientCaptureKey': clientCaptureKey,
             if (localImagePath != null) 'localImagePath': localImagePath,
           },
           'parsed_content': <String, Object?>{
@@ -157,6 +166,54 @@ class ItemsRepository {
         })
         .nonNulls
         .toList(growable: false);
+  }
+
+  Future<String> _clientCaptureKeyFor(
+    String content,
+    SourceType sourceType,
+  ) async {
+    final source = _sourceTypeToDb(sourceType);
+    if (_isImageSource(sourceType)) {
+      final file = File(content);
+      if (await file.exists()) {
+        final fileLength = await file.length();
+        final hash = await _fnv1a32File(file);
+        return '$source:image:$fileLength:$hash';
+      }
+    }
+    if (sourceType == SourceType.link) {
+      return '$source:${_dedupeUrlKey(content)}';
+    }
+    return '$source:${_dedupeTextKey(content)}';
+  }
+
+  Future<Map<String, Object?>?> _findRecentDuplicateInput({
+    required SourceType sourceType,
+    required String clientCaptureKey,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null || clientCaptureKey.isEmpty) {
+      return null;
+    }
+
+    final createdAfter = DateTime.now()
+        .toUtc()
+        .subtract(const Duration(minutes: 5))
+        .toIso8601String();
+    try {
+      return await _client
+          .from('items')
+          .select()
+          .eq('user_id', user.id)
+          .eq('source_type', _sourceTypeToDb(sourceType))
+          .filter('raw_content->>clientCaptureKey', 'eq', clientCaptureKey)
+          .gte('created_at', createdAfter)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+    } on Object {
+      return null;
+    }
   }
 
   Future<Map<String, Object?>?> _fetchItemRow(String itemId) async {
@@ -515,6 +572,43 @@ class ItemsRepository {
         .take(8)
         .map((word) => word.toLowerCase())
         .toList(growable: false);
+  }
+
+  Future<String> _fnv1a32File(File file) async {
+    var hash = 0x811c9dc5;
+    await for (final chunk in file.openRead()) {
+      for (final byte in chunk) {
+        hash ^= byte;
+        hash = (hash * 0x01000193) & 0xffffffff;
+      }
+    }
+    return hash.toRadixString(16).padLeft(8, '0');
+  }
+
+  String _dedupeUrlKey(String content) {
+    final uri = Uri.tryParse(content.trim());
+    if (uri == null || uri.host.isEmpty) {
+      return _dedupeTextKey(content);
+    }
+
+    var host = uri.host.toLowerCase();
+    for (final prefix in const <String>['www.', 'm.', 'mobile.', 'amp.']) {
+      if (host.startsWith(prefix)) {
+        host = host.substring(prefix.length);
+        break;
+      }
+    }
+
+    var path = uri.path;
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    final query = uri.query.isEmpty ? '' : '?${uri.query}';
+    return '$host$path$query'.toLowerCase();
+  }
+
+  String _dedupeTextKey(String content) {
+    return content.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
   }
 
   String _createdLabel(String? value) {

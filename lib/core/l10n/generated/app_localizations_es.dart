@@ -152,29 +152,56 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get captureSourceText => 'Text';
+  String get captureSourceText => 'Texto';
 
   @override
-  String get captureSourceLink => 'Link';
+  String get captureSourceLink => 'Enlace';
 
   @override
-  String get captureInputLabel => 'What do you want to save?';
+  String get pasteFromClipboard => 'Pegar';
+
+  @override
+  String get captureInputLabel => 'Que quieres guardar?';
 
   @override
   String get captureInputHint =>
-      'Paste a link, note, quote, or anything you want to find later.';
+      'Pega un enlace, una nota, una cita o cualquier cosa que quieras encontrar luego.';
 
   @override
-  String get emptyCaptureError => 'Add something before saving.';
+  String get emptyCaptureError => 'Agrega algo antes de guardar.';
 
   @override
-  String get saveToInbox => 'Save to inbox';
+  String get emptyClipboardError => 'El portapapeles esta vacio.';
 
   @override
-  String get addFromLibrary => 'Photo library';
+  String get unsupportedClipboardError =>
+      'Este contenido del portapapeles aun no se puede guardar.';
 
   @override
-  String get addFromCamera => 'Camera';
+  String get clipboardPasteFailed => 'No se pudo leer el portapapeles.';
+
+  @override
+  String get clipboardImageReady =>
+      'La imagen del portapapeles esta lista para guardar.';
+
+  @override
+  String get clipboardImageLabel => 'Imagen del portapapeles';
+
+  @override
+  String get clearClipboardImage => 'Quitar imagen del portapapeles';
+
+  @override
+  String get clipboardImagePreviewUnavailable =>
+      'La vista previa de la imagen no esta disponible.';
+
+  @override
+  String get saveToInbox => 'Guardar en bandeja';
+
+  @override
+  String get addFromLibrary => 'Fototeca';
+
+  @override
+  String get addFromCamera => 'Camara';
 
   @override
   String get searchInputLabel => 'Search memory';

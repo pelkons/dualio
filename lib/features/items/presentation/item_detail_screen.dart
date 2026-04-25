@@ -423,14 +423,14 @@ class _RecipeDetailState extends ConsumerState<RecipeDetail> {
           )
         else ...<Widget>[
           if (ingredients.isNotEmpty)
-            _Section(
+            _CompactSection(
               title: _supportingItemsLabel(strings),
               children: ingredients
                   .map((text) => _IngredientRow(text: text))
                   .toList(),
             ),
           if (steps.isNotEmpty)
-            _Section(
+            _CompactSection(
               title: strings.steps,
               children: steps.indexed
                   .map(
@@ -670,11 +670,31 @@ class _IngredientRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<DualioPalette>()!;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      minLeadingWidth: 28,
-      leading: Icon(Icons.local_dining_rounded, color: palette.muted, size: 20),
-      title: Text(text),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsetsDirectional.only(top: 9, end: 12),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: palette.muted,
+                shape: BoxShape.circle,
+              ),
+              child: const SizedBox.square(dimension: 5),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontSize: 15, height: 1.35),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -695,17 +715,33 @@ class _StepCheckboxTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<DualioPalette>()!;
-    return CheckboxListTile(
-      contentPadding: EdgeInsets.zero,
-      controlAffinity: ListTileControlAffinity.leading,
-      value: checked,
-      onChanged: onChanged,
-      title: Text(
-        '$number. $text',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: checked ? palette.muted : null,
-          decoration: checked ? TextDecoration.lineThrough : null,
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox.square(
+            dimension: 32,
+            child: Checkbox(
+              value: checked,
+              onChanged: onChanged,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '$number. $text',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 15,
+                height: 1.35,
+                color: checked ? palette.muted : null,
+                decoration: checked ? TextDecoration.lineThrough : null,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1104,6 +1140,29 @@ class _Section extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(title, style: Theme.of(context).textTheme.titleLarge),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactSection extends StatelessWidget {
+  const _CompactSection({required this.title, required this.children});
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 7),
+            child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+          ),
           ...children,
         ],
       ),

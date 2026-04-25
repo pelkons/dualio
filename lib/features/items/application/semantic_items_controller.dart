@@ -43,7 +43,7 @@ final visibleSemanticItemsProvider = FutureProvider<List<SemanticItem>>((
 
   final optimisticItems = localOnlyItems.where((item) {
     return item.id.startsWith('local-') &&
-        !remoteItems.any((remote) => _isLikelySameCapture(item, remote));
+        !remoteItems.any((remote) => isLikelySameSemanticCapture(item, remote));
   });
 
   return <SemanticItem>[
@@ -394,10 +394,13 @@ bool _isLikelySamePendingInput(
   if (_sameNormalized(candidate.searchableSummary, normalized)) {
     return true;
   }
-  return _isLikelySameCapture(candidate, remoteItem);
+  return isLikelySameSemanticCapture(candidate, remoteItem);
 }
 
-bool _isLikelySameCapture(SemanticItem localItem, SemanticItem remoteItem) {
+bool isLikelySameSemanticCapture(
+  SemanticItem localItem,
+  SemanticItem remoteItem,
+) {
   if (!localItem.id.startsWith('local-')) {
     return false;
   }

@@ -158,23 +158,51 @@ class AppLocalizationsDe extends AppLocalizations {
   String get captureSourceLink => 'Link';
 
   @override
-  String get captureInputLabel => 'What do you want to save?';
+  String get pasteFromClipboard => 'Einfügen';
+
+  @override
+  String get captureInputLabel => 'Was möchtest du speichern?';
 
   @override
   String get captureInputHint =>
-      'Paste a link, note, quote, or anything you want to find later.';
+      'Füge einen Link, eine Notiz, ein Zitat oder etwas ein, das du später finden willst.';
 
   @override
-  String get emptyCaptureError => 'Add something before saving.';
+  String get emptyCaptureError => 'Füge vor dem Speichern etwas hinzu.';
 
   @override
-  String get saveToInbox => 'Save to inbox';
+  String get emptyClipboardError => 'Die Zwischenablage ist leer.';
 
   @override
-  String get addFromLibrary => 'Photo library';
+  String get unsupportedClipboardError =>
+      'Dieser Inhalt aus der Zwischenablage kann noch nicht gespeichert werden.';
 
   @override
-  String get addFromCamera => 'Camera';
+  String get clipboardPasteFailed =>
+      'Die Zwischenablage konnte nicht gelesen werden.';
+
+  @override
+  String get clipboardImageReady =>
+      'Das Bild aus der Zwischenablage ist bereit zum Speichern.';
+
+  @override
+  String get clipboardImageLabel => 'Bild aus der Zwischenablage';
+
+  @override
+  String get clearClipboardImage => 'Bild aus der Zwischenablage entfernen';
+
+  @override
+  String get clipboardImagePreviewUnavailable =>
+      'Bildvorschau ist nicht verfügbar.';
+
+  @override
+  String get saveToInbox => 'In Inbox speichern';
+
+  @override
+  String get addFromLibrary => 'Fotomediathek';
+
+  @override
+  String get addFromCamera => 'Kamera';
 
   @override
   String get searchInputLabel => 'Search memory';

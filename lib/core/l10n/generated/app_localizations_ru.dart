@@ -152,29 +152,56 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get captureSourceText => 'Text';
+  String get captureSourceText => 'Текст';
 
   @override
-  String get captureSourceLink => 'Link';
+  String get captureSourceLink => 'Ссылка';
 
   @override
-  String get captureInputLabel => 'What do you want to save?';
+  String get pasteFromClipboard => 'Вставить';
+
+  @override
+  String get captureInputLabel => 'Что сохранить?';
 
   @override
   String get captureInputHint =>
-      'Paste a link, note, quote, or anything you want to find later.';
+      'Вставьте ссылку, заметку, цитату или всё, что хотите найти позже.';
 
   @override
-  String get emptyCaptureError => 'Add something before saving.';
+  String get emptyCaptureError => 'Добавьте что-нибудь перед сохранением.';
 
   @override
-  String get saveToInbox => 'Save to inbox';
+  String get emptyClipboardError => 'Буфер обмена пуст.';
 
   @override
-  String get addFromLibrary => 'Photo library';
+  String get unsupportedClipboardError =>
+      'Этот тип содержимого из буфера пока нельзя сохранить.';
 
   @override
-  String get addFromCamera => 'Camera';
+  String get clipboardPasteFailed => 'Не удалось прочитать буфер обмена.';
+
+  @override
+  String get clipboardImageReady =>
+      'Изображение из буфера готово к сохранению.';
+
+  @override
+  String get clipboardImageLabel => 'Изображение из буфера';
+
+  @override
+  String get clearClipboardImage => 'Убрать изображение из буфера';
+
+  @override
+  String get clipboardImagePreviewUnavailable =>
+      'Предпросмотр изображения недоступен.';
+
+  @override
+  String get saveToInbox => 'Сохранить';
+
+  @override
+  String get addFromLibrary => 'Фотогалерея';
+
+  @override
+  String get addFromCamera => 'Камера';
 
   @override
   String get searchInputLabel => 'Search memory';

@@ -336,6 +336,13 @@ class RecipeFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final facts = <String>[
+      item.parsedContent['prepTime'] as String? ?? '',
+      item.parsedContent['cookTime'] as String? ?? '',
+      item.parsedContent['difficulty'] as String? ?? '',
+      item.parsedContent['servings'] as String? ?? '',
+    ].where((value) => value.trim().isNotEmpty).toList(growable: false);
+
     return FeedCardFrame(
       onTap: onTap,
       padding: EdgeInsets.zero,
@@ -360,13 +367,23 @@ class RecipeFeedCard extends StatelessWidget {
                   item.title,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                const SizedBox(height: 8),
-                _InlineFacts(
-                  facts: <String>[
-                    item.parsedContent['prepTime']! as String,
-                    item.parsedContent['difficulty']! as String,
-                  ],
-                ),
+                if (facts.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 8),
+                  _InlineFacts(facts: facts),
+                ] else if (item.searchableSummary.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 10),
+                  Text(
+                    item.searchableSummary,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).extension<DualioPalette>()!.muted,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
                 _Footer(label: item.createdLabel, withDivider: true),
               ],
             ),
@@ -902,11 +919,12 @@ class _ImageHero extends StatelessWidget {
   });
   final String? url;
   final double height;
-  final Widget meta;
+  final CardMeta meta;
 
   @override
   Widget build(BuildContext context) {
     final palette = Theme.of(context).extension<DualioPalette>()!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: height,
       width: double.infinity,
@@ -922,12 +940,23 @@ class _ImageHero extends StatelessWidget {
             left: 10,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.66)
+                    : Colors.white.withValues(alpha: 0.9),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.16)
+                      : Colors.black.withValues(alpha: 0.05),
+                ),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                child: meta,
+                child: CardMeta(
+                  icon: meta.icon,
+                  label: meta.label,
+                  inverse: isDark || meta.inverse,
+                ),
               ),
             ),
           ),

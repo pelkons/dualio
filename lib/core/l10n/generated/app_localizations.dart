@@ -384,6 +384,12 @@ abstract class AppLocalizations {
   /// **'Link'**
   String get captureSourceLink;
 
+  /// No description provided for @pasteFromClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get pasteFromClipboard;
+
   /// No description provided for @captureInputLabel.
   ///
   /// In en, this message translates to:
@@ -401,6 +407,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add something before saving.'**
   String get emptyCaptureError;
+
+  /// No description provided for @emptyClipboardError.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard is empty.'**
+  String get emptyClipboardError;
+
+  /// No description provided for @unsupportedClipboardError.
+  ///
+  /// In en, this message translates to:
+  /// **'This clipboard content cannot be saved yet.'**
+  String get unsupportedClipboardError;
+
+  /// No description provided for @clipboardPasteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the clipboard.'**
+  String get clipboardPasteFailed;
+
+  /// No description provided for @clipboardImageReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard image is ready to save.'**
+  String get clipboardImageReady;
+
+  /// No description provided for @clipboardImageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard image'**
+  String get clipboardImageLabel;
+
+  /// No description provided for @clearClipboardImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove clipboard image'**
+  String get clearClipboardImage;
+
+  /// No description provided for @clipboardImagePreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Image preview is unavailable.'**
+  String get clipboardImagePreviewUnavailable;
 
   /// No description provided for @saveToInbox.
   ///

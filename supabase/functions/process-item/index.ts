@@ -80,6 +80,13 @@ type ImageAnalysis = {
     | "unknown";
   language: string;
   visibleText: string;
+  ingredients: string[];
+  materials: string[];
+  steps: string[];
+  prepTime: string;
+  cookTime: string;
+  servings: string;
+  difficulty: string;
   aliases: string[];
   entities: Array<{
     entity: string;
@@ -501,8 +508,20 @@ async function processImageItem(
       sourceType: item.source_type,
       title,
       summary,
+      language: analysis.language,
       visibleText: analysis.visibleText,
       contentType: analysis.contentType,
+      ...(analysis.ingredients.length > 0
+        ? { ingredients: analysis.ingredients }
+        : {}),
+      ...(analysis.materials.length > 0
+        ? { materials: analysis.materials }
+        : {}),
+      ...(analysis.steps.length > 0 ? { steps: analysis.steps } : {}),
+      ...(analysis.prepTime ? { prepTime: analysis.prepTime } : {}),
+      ...(analysis.cookTime ? { cookTime: analysis.cookTime } : {}),
+      ...(analysis.servings ? { servings: analysis.servings } : {}),
+      ...(analysis.difficulty ? { difficulty: analysis.difficulty } : {}),
       analysisStatus: analysis.analysisStatus,
       asset: {
         provider: "cloudflare_r2",
@@ -536,6 +555,7 @@ async function processImageItem(
       parsed_content: parsedContent,
       searchable_summary: summary,
       searchable_aliases: aliases,
+      language: analysis.language,
       processing_status: analysis.needsClarification
         ? "needs_clarification"
         : "ready",
@@ -960,28 +980,45 @@ async function analyzeImageWithVision(input: {
   fallbackTitle: string;
 }): Promise<ImageAnalysis> {
   const prompt = buildImageAnalysisPrompt();
-  const openRouterResult = await callOpenRouterStructuredJson({
-    models: imageAnalysisModels(),
-    messages: [{
-      role: "user",
-      content: [
-        { type: "text", text: prompt },
-        {
-          type: "image_url",
-          image_url: { url: input.imageUrl, detail: "high" },
-        },
-      ],
-    }],
-    schemaName: "image_semantic_analysis",
-    schema: imageAnalysisSchema,
-  });
+  const openRouterResult = await callOpenRouterImageAnalysis(
+    input,
+    prompt,
+    imageAnalysisModels(),
+  );
   if (openRouterResult.status === "complete" && openRouterResult.json) {
-    return normalizeImageAnalysis(
+    const analysis = normalizeImageAnalysis(
       openRouterResult.json,
       input.fallbackTitle,
       input.sourceType,
       openRouterResult.model,
     );
+    if (isHebrewImageAnalysis(analysis) && !isGeminiModel(analysis.model)) {
+      const hebrewResult = await callOpenRouterImageAnalysis(
+        input,
+        prompt,
+        hebrewImageAnalysisModels(),
+      );
+      if (hebrewResult.status === "complete" && hebrewResult.json) {
+        return normalizeImageAnalysis(
+          hebrewResult.json,
+          input.fallbackTitle,
+          input.sourceType,
+          hebrewResult.model,
+        );
+      }
+      return {
+        ...fallbackImageAnalysis(
+          input.fallbackTitle,
+          input.sourceType,
+          "failed",
+          hebrewResult.model ?? hebrewImageAnalysisModels()[0],
+        ),
+        language: "he",
+        needsClarification: true,
+        clarificationQuestion: "לא הצלחתי לקרוא את הטקסט בעברית. נסה שוב.",
+      };
+    }
+    return analysis;
   }
 
   const apiKey = Deno.env.get("OPENAI_API_KEY");
@@ -1040,6 +1077,32 @@ async function analyzeImageWithVision(input: {
   );
 }
 
+function callOpenRouterImageAnalysis(
+  input: {
+    imageUrl: string;
+    sourceType: "screenshot" | "photo";
+    fallbackTitle: string;
+  },
+  prompt: string,
+  models: string[],
+) {
+  return callOpenRouterStructuredJson({
+    models,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
+        {
+          type: "image_url",
+          image_url: { url: input.imageUrl, detail: "high" },
+        },
+      ],
+    }],
+    schemaName: "image_semantic_analysis",
+    schema: imageAnalysisSchema,
+  });
+}
+
 const imageAnalysisSchema = {
   type: "object",
   additionalProperties: false,
@@ -1049,6 +1112,13 @@ const imageAnalysisSchema = {
     "contentType",
     "language",
     "visibleText",
+    "ingredients",
+    "materials",
+    "steps",
+    "prepTime",
+    "cookTime",
+    "servings",
+    "difficulty",
     "aliases",
     "entities",
     "chunks",
@@ -1074,6 +1144,13 @@ const imageAnalysisSchema = {
     },
     language: { type: "string" },
     visibleText: { type: "string" },
+    ingredients: { type: "array", items: { type: "string" } },
+    materials: { type: "array", items: { type: "string" } },
+    steps: { type: "array", items: { type: "string" } },
+    prepTime: { type: "string" },
+    cookTime: { type: "string" },
+    servings: { type: "string" },
+    difficulty: { type: "string" },
     aliases: { type: "array", items: { type: "string" } },
     entities: {
       type: "array",
@@ -1112,10 +1189,15 @@ function buildImageAnalysisPrompt(): string {
     "Analyze this saved image for a personal semantic memory app.",
     "Extract visible text, identify what kind of saved item this should become, and return JSON only.",
     "Use contentType: recipe, film, place, article, product, video, manual, note, or unknown.",
+    "Hard language rule: title, summary, ingredients, materials, steps, chunks, and clarificationQuestion must use the same primary language and writing system as the visible/source text. If visible text is Russian/Cyrillic, write Russian/Cyrillic. If visible text is Hebrew, write Hebrew. Do not translate these fields into English.",
+    "Never transliterate titles or dish names into Latin script unless the visible/source text itself uses Latin script. For example, do not output a Russian dish name as Latin transliteration.",
+    "If the image is a recipe, set contentType=recipe and extract ingredients and cooking steps. Use visible text first, then only infer obvious missing steps from the image/context. Do not label a recipe image as photo, screenshot, note, or unknown.",
+    "When inferring obvious recipe/manual steps from an image, write the inferred steps in the source language, not English.",
     "Use manual for how-to screenshots, setup instructions, repair guides, checklists, tutorials, workflows, and other step-by-step instructions that are not recipes.",
+    "If the image is a non-recipe step-by-step guide, set contentType=manual and extract materials plus steps.",
     "Keep title user-facing and short. Summary should explain what the user likely wanted to remember.",
     "If the image is ambiguous, ask exactly one short clarification question.",
-    'Schema: {"title":"","summary":"","contentType":"unknown","language":"en","visibleText":"","aliases":[],"entities":[{"entity":"","entityType":"","normalizedValue":"","metadata":{}}],"chunks":[{"chunkType":"visual|ocr|summary","content":"","metadata":{}}],"needsClarification":false,"clarificationQuestion":""}',
+    'Schema: {"title":"","summary":"","contentType":"unknown","language":"en","visibleText":"","ingredients":[],"materials":[],"steps":[],"prepTime":"","cookTime":"","servings":"","difficulty":"","aliases":[],"entities":[{"entity":"","entityType":"","normalizedValue":"","metadata":{}}],"chunks":[{"chunkType":"visual|ocr|summary|ingredients|steps","content":"","metadata":{}}],"needsClarification":false,"clarificationQuestion":""}',
   ].join(" ");
 }
 
@@ -1125,6 +1207,13 @@ function imageAnalysisModels(): string[] {
     Deno.env.get("AI_VISION_EXTRACT_FALLBACK") ||
     "google/gemini-3.1-flash-lite-preview",
     Deno.env.get("AI_TEXT_EXTRACT_FALLBACK") || "openai/gpt-5.4-nano",
+  ];
+}
+
+function hebrewImageAnalysisModels(): string[] {
+  return [
+    Deno.env.get("AI_VISION_HEBREW_MODEL") ||
+    "google/gemini-3.1-flash-lite-preview",
   ];
 }
 
@@ -1145,6 +1234,13 @@ function fallbackImageAnalysis(
     contentType: "unknown",
     language: "en",
     visibleText: "",
+    ingredients: [],
+    materials: [],
+    steps: [],
+    prepTime: "",
+    cookTime: "",
+    servings: "",
+    difficulty: "",
     aliases: buildAliases(title, undefined, undefined, summary),
     entities: [],
     chunks: [{ chunkType: "summary", content: summary }],
@@ -1208,10 +1304,29 @@ function normalizeImageAnalysis(
   model?: string,
 ): ImageAnalysis {
   const contentType = normalizeItemType(value.contentType);
-  const title = cleanText(value.title) || titleFromFilename(fallbackTitle) ||
-    (sourceType === "photo" ? "Saved photo" : "Saved screenshot");
   const visibleText = cleanText(value.visibleText);
-  const summary = cleanText(value.summary) || visibleText || "Saved image";
+  const rawIngredients = toStringArray(value.ingredients);
+  const rawMaterials = toStringArray(value.materials);
+  const sourceScript = dominantNonLatinScript(
+    [visibleText, ...rawIngredients, ...rawMaterials].join(" "),
+  );
+  const title = sameSourceScriptOrFallback(
+    cleanText(value.title),
+    sourceScript,
+    firstVisibleLine(visibleText) || titleFromFilename(fallbackTitle) ||
+      (sourceType === "photo" ? "Saved photo" : "Saved screenshot"),
+  );
+  const ingredients = filterSameSourceScript(rawIngredients, sourceScript);
+  const materials = filterSameSourceScript(rawMaterials, sourceScript);
+  const steps = filterSameSourceScript(
+    toStringArray(value.steps),
+    sourceScript,
+  );
+  const summary = sameSourceScriptOrFallback(
+    cleanText(value.summary),
+    sourceScript,
+    visibleText || "Saved image",
+  );
   const aliases = toStringArray(value.aliases).concat(
     buildAliases(title, undefined, undefined, summary),
   );
@@ -1219,13 +1334,31 @@ function normalizeImageAnalysis(
   if (visibleText) {
     chunks.push({ chunkType: "ocr", content: visibleText });
   }
+  if (ingredients.length > 0) {
+    chunks.push({ chunkType: "ingredients", content: ingredients.join("\n") });
+  }
+  if (materials.length > 0) {
+    chunks.push({ chunkType: "materials", content: materials.join("\n") });
+  }
+  if (steps.length > 0) {
+    chunks.push({ chunkType: "steps", content: steps.join("\n") });
+  }
   chunks.push({ chunkType: "summary", content: summary });
   return {
     title,
     summary,
     contentType,
-    language: cleanText(value.language) || "en",
+    language: cleanText(value.language) ||
+      languageCodeForScript(sourceScript) ||
+      "en",
     visibleText,
+    ingredients,
+    materials,
+    steps,
+    prepTime: cleanText(value.prepTime),
+    cookTime: cleanText(value.cookTime),
+    servings: cleanText(value.servings),
+    difficulty: cleanText(value.difficulty),
     aliases: [
       ...new Set(aliases.map((alias) => alias.toLowerCase()).filter(Boolean)),
     ].slice(0, 24),
@@ -1258,6 +1391,101 @@ function normalizeItemType(value: unknown): ImageAnalysis["contentType"] {
     return value as ImageAnalysis["contentType"];
   }
   return "unknown";
+}
+
+type NonLatinScript = "cyrillic" | "hebrew" | "unknown";
+
+function dominantNonLatinScript(value: string): NonLatinScript {
+  const cyrillic = (value.match(/[\u0400-\u04FF]/g) ?? []).length;
+  const hebrew = (value.match(/[\u0590-\u05FF]/g) ?? []).length;
+  if (cyrillic >= 3 && cyrillic >= hebrew) {
+    return "cyrillic";
+  }
+  if (hebrew >= 3 && hebrew > cyrillic) {
+    return "hebrew";
+  }
+  return "unknown";
+}
+
+function languageCodeForScript(script: NonLatinScript): string {
+  switch (script) {
+    case "cyrillic":
+      return "ru";
+    case "hebrew":
+      return "he";
+    case "unknown":
+      return "";
+  }
+}
+
+function isHebrewImageAnalysis(analysis: ImageAnalysis): boolean {
+  if (analysis.language.toLowerCase().startsWith("he")) {
+    return true;
+  }
+  return dominantNonLatinScript([
+    analysis.visibleText,
+    analysis.title,
+    analysis.summary,
+    ...analysis.ingredients,
+    ...analysis.materials,
+    ...analysis.steps,
+  ].join(" ")) === "hebrew";
+}
+
+function isGeminiModel(model: string | undefined): boolean {
+  return (model ?? "").toLowerCase().includes("gemini");
+}
+
+function sameSourceScriptOrFallback(
+  value: string,
+  sourceScript: NonLatinScript,
+  fallback: string,
+): string {
+  if (!violatesSourceScript(value, sourceScript)) {
+    return value || fallback;
+  }
+  if (!violatesSourceScript(fallback, sourceScript)) {
+    return fallback;
+  }
+  return value || fallback;
+}
+
+function filterSameSourceScript(
+  values: string[],
+  sourceScript: NonLatinScript,
+): string[] {
+  if (sourceScript === "unknown") {
+    return values;
+  }
+  return values.filter((value) => !violatesSourceScript(value, sourceScript));
+}
+
+function violatesSourceScript(
+  value: string,
+  sourceScript: NonLatinScript,
+): boolean {
+  if (!value || sourceScript === "unknown") {
+    return false;
+  }
+  const cyrillic = (value.match(/[\u0400-\u04FF]/g) ?? []).length;
+  const hebrew = (value.match(/[\u0590-\u05FF]/g) ?? []).length;
+  const latin = (value.match(/[A-Za-z]/g) ?? []).length;
+  if (latin === 0) {
+    return false;
+  }
+  if (sourceScript === "cyrillic") {
+    return cyrillic === 0;
+  }
+  if (sourceScript === "hebrew") {
+    return hebrew === 0;
+  }
+  return false;
+}
+
+function firstVisibleLine(value: string): string {
+  return value.split(/\r?\n|[.;!?]/)
+    .map((line) => cleanText(line))
+    .find((line) => line.length >= 4) ?? "";
 }
 
 function toStringArray(value: unknown): string[] {

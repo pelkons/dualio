@@ -47,6 +47,7 @@ Required accounting fields:
 - Supabase migration exists for the RAG-first schema.
 - Edge Function contracts exist for `process-item` and `search`; `process-item` is implemented for link/text/image semantic extraction with safe fallback behavior.
 - Android share intake opens a confirmation screen before saving and supports links, text, photos, and screenshots.
+- Capture screen uses a unified Paste action for clipboard text/URLs and Android clipboard images, with image paste routed through the existing optimized photo upload path.
 - Cloudflare R2 stores user-uploaded image assets through signed URLs.
 - Mobile photo/screenshot uploads are optimized on-device before R2 upload, and signed upload URL creation enforces declared image byte-size limits.
 - R2 cleanup is modeled with `asset_cleanup_jobs`; item deletion, account deletion, and scheduled abandoned-upload cleanup have dedicated Edge Functions deployed to Supabase.
@@ -56,9 +57,10 @@ Required accounting fields:
 - Reddit short-share links now expand to canonical posts and can extract title, self text, author, subreddit, score, comments, and preview metadata.
 - Recipe links with schema.org Recipe JSON-LD can extract ingredients, steps, timing, yield, image, author, and rating before AI semantic extraction runs.
 - Image/photo/screenshot processing now routes vision analysis through OpenRouter when `OPENROUTER_API_KEY` is configured, with a temporary direct OpenAI fallback.
+- Image/photo/screenshot processing can classify semantic item type from the visual context and extract recipe/manual structured fields such as ingredients/materials and steps instead of treating every saved image as a generic photo.
 - Public HTML enrichment is split into general unofficial enrichment and a separate social HTML opt-in flag so social platforms remain disabled by default unless explicitly enabled.
 - Processing now generates item-level and chunk-level embeddings through OpenRouter when `OPENROUTER_API_KEY` is configured, using `openai/text-embedding-3-small` by default to preserve the current `vector(1536)` schema.
-- The `search` Edge Function now performs first-pass hybrid search with query embeddings, the existing `match_semantic_items` RPC, and lexical fallback when embeddings/RPC are unavailable.
+- The `search` Edge Function now performs first-pass hybrid search with query embeddings, the existing `match_semantic_items` RPC, trigram similarity for morphology/typos, type-filter relaxation for recall, and lexical fallback when embeddings/RPC are unavailable.
 - Search intent inference for Russian and Hebrew queries is covered by Deno tests.
 - The Flutter search screen calls backend search for signed-in users and preserves local search fallback.
 
@@ -161,8 +163,9 @@ Current implementation note:
 - Public HTML enrichment for social platforms requires `ENABLE_SOCIAL_HTML_ENRICHMENT=true` in addition to the general `ENABLE_UNOFFICIAL_LINK_ENRICHMENT=true` flag.
 - Link/text processing calls an OpenRouter structured-output adapter first, with `provider.require_parameters=true` so providers cannot ignore JSON schema output. It stores typed `parsed_content`, user-facing summary, aliases, entities, and chunks, and falls back safely when AI credentials are absent or unavailable.
 - Image/photo/screenshot processing reads Cloudflare R2 asset metadata, signs a temporary GET URL, calls OpenRouter vision analysis first, stores parsed image summary/visible text, writes chunks/entities, and falls back safely when vision credentials are missing.
+- Vision analysis for recipe/manual images returns editable generated structure (`ingredients`/`materials`, `steps`, timing/facts when present), so image-derived recipes and instructions can use the same interactive detail UI as link/text-derived items.
 - Item and chunk embeddings are generated best-effort with `openai/text-embedding-3-small` through OpenRouter by default. Missing or failed embedding generation does not fail item processing.
-- Hybrid semantic search backend and Flutter integration exist as a first pass. Reranking and deeper search-quality evaluation are still pending.
+- Hybrid semantic search backend and Flutter integration exist as a first pass. Trigram similarity is layered in for Cyrillic/Hebrew morphology, short queries, and typos. Reranking and deeper search-quality evaluation are still pending.
 
 ### Future Source Resolver Backlog
 
@@ -285,20 +288,112 @@ Definition of done:
 - Core capture, processing, and search flows work end to end.
 - Privacy and account lifecycle requirements are covered.
 
-## iOS Follow-Up Backlog
+## iOS
 
-Goal: keep iOS-specific work explicit while Android remains the first production target.
+iOS-specific tasks, decisions, and working notes live in [`ios/IOS.md`](ios/IOS.md). Read that file before starting any iOS work, and append to it as new iOS-specific items come up — do not record iOS items in this roadmap.
 
-- Configure iOS `Info.plist` usage descriptions for camera and photo library access.
-- Configure iOS URL scheme/deep link handling for `dualio://auth/callback`.
-- Configure and test Sign in with Apple entitlement and Supabase Apple provider.
-- Build a native iOS Share Extension for sharing links, text, photos, and screenshots into Dualio.
-- Verify `receive_sharing_intent` behavior with Safari, Photos, Instagram, TikTok, Facebook, and Notes.
-- Verify temporary file access from iOS share/capture flows before upload starts.
-- Add native HEIC-to-JPEG conversion if Dart image decoding cannot optimize iPhone HEIC files.
-- Smoke-test on a real iPad and at least one iPhone simulator/device before iOS beta.
-- Review iOS background/upload behavior so shared files are uploaded or safely retained before the app is suspended.
-- Confirm App Store privacy labels and permission prompts match actual data collection.
+## Open Questions
+
+Items in this section are **not decided** yet. They are recorded so the model
+for cost containment and free/paid tier shape gets discussed before code is
+written. Each open question lists the options and the trade-offs as understood
+right now.
+
+### Pricing model and cost containment per item
+
+The current free-tier guardrails in this roadmap (10 items, 3 images, 20
+processing attempts) treat one card as the unit. That works for small text
+notes but breaks down for large inputs: a 200-page book and a one-line
+clipping are both "1 item" but the AI cost of processing them differs by 100x
+or more. The paid tier shape needs to address this without making the product
+feel like a metered service.
+
+Options that have been raised:
+
+- **A. Hidden per-item caps with simple paid plan ("$5 = unlimited items,
+  bounded per-item cost").**
+  Per-item hard limits enforced server-side: max input bytes, max AI input
+  tokens, max output tokens, single AI call per item, single vision OCR per
+  item. Storage is the only user-visible quota on the paid plan
+  ("X GB used / Y GB"). Books and PDFs get a digest, not a full multi-call
+  pass, so a single user cannot walk into hundreds of dollars of OpenAI cost.
+  Pros: simple consumer messaging, no "credits remaining" UI anxiety, matches
+  how Notion/Mem.ai/Reflect actually charge. Cons: power users who expect
+  full-document processing will be surprised by the digest behaviour and need
+  a clear "Pro+" upsell story.
+
+- **B. Multi-dimensional plan with explicit AI processings or tokens.**
+  The paid plan publishes an AI budget ("500 AI processings / month" or
+  "1M tokens / month"), shown in the UI. Pros: predictable unit economics,
+  easy to scale by selling higher tiers. Cons: anti-pattern in consumer apps
+  ("how many do I have left?"), requires a usage screen, and most pricing
+  research suggests it depresses upgrades vs. a flat plan.
+
+- **C. Tiered flat plans without credits.**
+  Several flat tiers ($5 basic, $15 pro, $50 power), each with progressively
+  larger storage caps and per-item caps. No credit counter; tier matches user
+  archetype. Pros: honest cost recovery, scales with heavier users. Cons:
+  three SKUs to maintain at launch, more decisions for the user.
+
+What the decision needs to consider:
+
+- Real cost ceiling we are willing to absorb per paid user per month before
+  it becomes a loss.
+- Whether full-document processing (long PDFs, books, video transcripts) is
+  ever a Dualio core feature or always a "Pro+" add-on.
+- Whether the on-device summary/digest of a long document is acceptable UX
+  or feels broken.
+- Whether storage is a hard wall or a soft "you may need to upgrade" prompt.
+- Cost log structure (`ai_call_log`, per-user monthly aggregates) is
+  required for any of the three options and should be built first regardless.
+
+This question must be resolved before implementing the free-tier guardrails
+listed in **Free Tier And Retention Guardrails** above.
+
+### Search quality on raw user content
+
+Initial usage shows that vector + English-stemmed full-text search misses on
+inflected Russian and on short partial queries (`магази` matches but `магазин`
+does not because the English lexer does not normalise Cyrillic).
+
+Options:
+
+- **Trigram (`pg_trgm`) similarity layered on top of vector + FTS via
+  Reciprocal Rank Fusion.** Language-agnostic, covers Cyrillic, Hebrew, and
+  typos. Cheapest to add now. Does not understand semantics on its own
+  (relies on embeddings for that).
+- **Per-item language detection plus language-specific FTS configs (`russian`,
+  `german`, etc.).** Correct linguistically but no built-in Postgres config
+  for Hebrew, and it requires accurate language detection on every save.
+- **External multilingual embedding model (Cohere `embed-multilingual-v3`,
+  multilingual-e5).** Improves semantic recall across languages but does not
+  fix the inflection / partial-query class of bug — that is what trigram
+  solves cheaply.
+
+Trigram + FTS + vector via RRF is the leading candidate. Decision needed
+before the first paid tier ships.
+
+### Account linking across providers
+
+Auto-linking already happens when a user signs in with a second provider that
+returns the same email as the existing account. The unresolved case is when
+the same person signs in via Google with a different email than their original
+magic-link address: Supabase creates a second user, the new feed is empty, and
+the original 30+ items remain on the original account.
+
+Options:
+
+- Add a **"Link Google" button in Settings** that calls
+  `supabase.auth.linkIdentity({ provider: google })` while logged in to the
+  original account. This is the standard pattern in Notion/Linear/Slack.
+- Offer **"Move my data here"** when the second account has zero items and a
+  matching display name, transferring items from the original `user_id` to
+  the new one (one-shot, irreversible).
+- Continue treating them as fully separate accounts and document this clearly
+  during sign-up.
+
+The first option is the only one with no data-loss risk. Decision deferred
+until we have real users hitting this case more than once.
 
 ## Not In Scope Yet
 

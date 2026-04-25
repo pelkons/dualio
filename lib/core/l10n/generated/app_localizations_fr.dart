@@ -153,29 +153,56 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get captureSourceText => 'Text';
+  String get captureSourceText => 'Texte';
 
   @override
-  String get captureSourceLink => 'Link';
+  String get captureSourceLink => 'Lien';
 
   @override
-  String get captureInputLabel => 'What do you want to save?';
+  String get pasteFromClipboard => 'Coller';
+
+  @override
+  String get captureInputLabel => 'Que voulez-vous sauvegarder ?';
 
   @override
   String get captureInputHint =>
-      'Paste a link, note, quote, or anything you want to find later.';
+      'Collez un lien, une note, une citation ou tout ce que vous voulez retrouver plus tard.';
 
   @override
-  String get emptyCaptureError => 'Add something before saving.';
+  String get emptyCaptureError => 'Ajoutez quelque chose avant de sauvegarder.';
 
   @override
-  String get saveToInbox => 'Save to inbox';
+  String get emptyClipboardError => 'Le presse-papiers est vide.';
 
   @override
-  String get addFromLibrary => 'Photo library';
+  String get unsupportedClipboardError =>
+      'Ce contenu du presse-papiers ne peut pas encore être sauvegardé.';
 
   @override
-  String get addFromCamera => 'Camera';
+  String get clipboardPasteFailed => 'Impossible de lire le presse-papiers.';
+
+  @override
+  String get clipboardImageReady =>
+      'L\'image du presse-papiers est prête à être sauvegardée.';
+
+  @override
+  String get clipboardImageLabel => 'Image du presse-papiers';
+
+  @override
+  String get clearClipboardImage => 'Retirer l\'image du presse-papiers';
+
+  @override
+  String get clipboardImagePreviewUnavailable =>
+      'L\'aperçu de l\'image n\'est pas disponible.';
+
+  @override
+  String get saveToInbox => 'Sauvegarder';
+
+  @override
+  String get addFromLibrary => 'Photothèque';
+
+  @override
+  String get addFromCamera => 'Appareil photo';
 
   @override
   String get searchInputLabel => 'Search memory';

@@ -231,8 +231,10 @@ function buildExtractionPrompt(input: SemanticExtractionInput): string {
     "Return JSON only. Do not wrap it in markdown.",
     "Use only the provided data. Do not invent missing facts.",
     "Detect contentType as exactly one of: recipe, film, place, article, product, video, manual, note, unknown.",
+    "Hard language rule: title, summary, structuredFields, chunks, and clarificationQuestion must use the same primary language and writing system as the saved source text. If the source is Russian/Cyrillic, write Russian/Cyrillic. If the source is Hebrew, write Hebrew. Do not translate these user-facing fields into English.",
+    "Never transliterate titles or proper names into Latin script unless the source itself uses Latin script. Preserve the original script for dish names, places, products, media titles, people, and organizations.",
     "Write a short user-facing summary in 1-2 sentences explaining what the user likely wanted to remember.",
-    "Generate searchable aliases/synonyms useful for cross-lingual retrieval in English, Hebrew, Russian, Italian, French, Spanish, and German when appropriate.",
+    "Generate searchable aliases/synonyms useful for cross-lingual retrieval in English, Hebrew, Russian, Italian, French, Spanish, and German when appropriate; aliases are the only field allowed to include extra languages.",
     "Extract entities such as people, places, brands, ingredients, media titles, organizations, products, and topics.",
     "Create semantic chunks that will later be embedded. Keep chunks concise and meaningful.",
     "For structuredFields, include only fields supported by the detected type and use empty arrays/strings when unavailable.",
@@ -288,12 +290,24 @@ function fallbackSemanticExtraction(
     : {
       body: input.text,
     };
+  const language = detectLanguageCode(
+    input.sourceType === "link"
+      ? [
+        title,
+        summary,
+        input.resolvedLink.title,
+        input.resolvedLink.description,
+        ...(recipe?.ingredients ?? []),
+        ...(recipe?.instructions ?? []),
+      ].join(" ")
+      : [title, summary, input.text].join(" "),
+  );
 
   return {
     title,
     summary,
     contentType: recipe ? "recipe" : input.fallbackContentType,
-    language: "en",
+    language,
     aliases: buildFallbackAliases(title, summary),
     entities: [],
     chunks: [
@@ -526,4 +540,16 @@ function cleanText(value: unknown): string {
     return "";
   }
   return value.replace(/\s+/g, " ").trim();
+}
+
+function detectLanguageCode(value: string): string {
+  const cyrillic = (value.match(/[\u0400-\u04FF]/g) ?? []).length;
+  const hebrew = (value.match(/[\u0590-\u05FF]/g) ?? []).length;
+  if (cyrillic >= 3 && cyrillic >= hebrew) {
+    return "ru";
+  }
+  if (hebrew >= 3 && hebrew > cyrillic) {
+    return "he";
+  }
+  return "en";
 }

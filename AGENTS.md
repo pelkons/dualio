@@ -67,6 +67,8 @@ Backend:
 
 - Keep the app mobile-first and native-oriented.
 - Do not build a web app.
+- After every completed implementation, explicitly check whether the behavior also works on iOS. If the change is Android-only or may need different iOS handling, either implement the iOS path in the same task or add a concrete follow-up item to `ios/IOS.md` before finishing.
+- All iOS-specific tasks, decisions, and working notes belong in `ios/IOS.md`. Read that file before starting any iOS work, and append to it (do not put iOS-specific items in `roadmap.md`).
 - Use feature-first Flutter structure.
 - Keep domain models strongly typed.
 - Use immutable generated models when data crosses boundaries.
