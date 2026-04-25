@@ -38,11 +38,7 @@ final visibleSemanticItemsProvider = FutureProvider<List<SemanticItem>>((
 
   final optimisticItems = localOnlyItems.where((item) {
     return item.id.startsWith('local-') &&
-        !remoteItems.any(
-          (remote) =>
-              remote.title == item.title &&
-              remote.searchableSummary == item.searchableSummary,
-        );
+        !remoteItems.any((remote) => _isLikelySameCapture(item, remote));
   });
 
   return <SemanticItem>[
@@ -198,7 +194,16 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
       );
       if (remoteItem != null) {
         state = state
-            .where((candidate) => candidate.id != localItemId)
+            .where(
+              (candidate) =>
+                  candidate.id != localItemId &&
+                  !_isLikelySamePendingInput(
+                    candidate,
+                    normalized,
+                    sourceType,
+                    remoteItem,
+                  ),
+            )
             .toList(growable: false);
       }
       ref.invalidate(visibleSemanticItemsProvider);
@@ -252,4 +257,91 @@ class SemanticItemsController extends Notifier<List<SemanticItem>> {
         lower.endsWith('.webp') ||
         lower.endsWith('.heic');
   }
+}
+
+bool _isLikelySamePendingInput(
+  SemanticItem candidate,
+  String normalized,
+  SourceType sourceType,
+  SemanticItem remoteItem,
+) {
+  if (!candidate.id.startsWith('local-') ||
+      candidate.sourceType != sourceType) {
+    return false;
+  }
+  if (_sameNormalized(candidate.searchableSummary, normalized)) {
+    return true;
+  }
+  return _isLikelySameCapture(candidate, remoteItem);
+}
+
+bool _isLikelySameCapture(SemanticItem localItem, SemanticItem remoteItem) {
+  if (!localItem.id.startsWith('local-')) {
+    return false;
+  }
+  if (localItem.sourceType != remoteItem.sourceType) {
+    return false;
+  }
+  if (_sameNormalized(
+    localItem.searchableSummary,
+    remoteItem.searchableSummary,
+  )) {
+    return true;
+  }
+  if (localItem.sourceType == SourceType.link) {
+    return _sameNormalized(localItem.sourceUrl, remoteItem.sourceUrl) ||
+        _sameNormalized(localItem.searchableSummary, remoteItem.sourceUrl);
+  }
+  if (localItem.sourceType == SourceType.photo ||
+      localItem.sourceType == SourceType.screenshot) {
+    final localFilename = _filename(localItem.searchableSummary);
+    final remoteOriginalFilename =
+        _assetString(remoteItem, 'originalFilename') ??
+        _filename(remoteItem.title);
+    return _sameNormalized(localFilename, remoteOriginalFilename) ||
+        _sameNormalized(_filename(localItem.title), remoteOriginalFilename) ||
+        _containsNormalized(remoteItem.searchableSummary, localFilename);
+  }
+  return false;
+}
+
+String? _assetString(SemanticItem item, String key) {
+  final asset = item.parsedContent['asset'];
+  if (asset is Map<String, dynamic>) {
+    final value = asset[key];
+    return value is String ? value : null;
+  }
+  if (asset is Map<String, Object?>) {
+    final value = asset[key];
+    return value is String ? value : null;
+  }
+  return null;
+}
+
+String _filename(String? value) {
+  if (value == null) {
+    return '';
+  }
+  return value.split(RegExp(r'[/\\]')).last;
+}
+
+bool _sameNormalized(String? left, String? right) {
+  final normalizedLeft = _normalizeMatchText(left);
+  final normalizedRight = _normalizeMatchText(right);
+  return normalizedLeft.isNotEmpty && normalizedLeft == normalizedRight;
+}
+
+bool _containsNormalized(String? value, String fragment) {
+  final normalizedValue = _normalizeMatchText(value);
+  final normalizedFragment = _normalizeMatchText(fragment);
+  return normalizedFragment.isNotEmpty &&
+      normalizedValue.contains(normalizedFragment);
+}
+
+String _normalizeMatchText(String? value) {
+  return (value ?? '')
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'\.[a-z0-9]+$'), '')
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '');
 }

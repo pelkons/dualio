@@ -90,6 +90,8 @@ class ItemsRepository {
       final processed = await _invokeProcessItem(row['id']! as String);
       if (!processed) {
         row = await _markProcessingFailed(row['id']! as String);
+      } else {
+        row = await _fetchItemRow(row['id']! as String) ?? row;
       }
     } else if (localImagePath != null) {
       row = await _uploadImageAsset(
@@ -100,10 +102,26 @@ class ItemsRepository {
       final processed = await _invokeProcessItem(row['id']! as String);
       if (!processed) {
         row = await _markProcessingFailed(row['id']! as String);
+      } else {
+        row = await _fetchItemRow(row['id']! as String) ?? row;
       }
     }
 
     return _itemFromRow(row);
+  }
+
+  Future<Map<String, Object?>?> _fetchItemRow(String itemId) async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      return null;
+    }
+
+    return await _client
+        .from('items')
+        .select()
+        .eq('id', itemId)
+        .eq('user_id', user.id)
+        .maybeSingle();
   }
 
   Future<Map<String, Object?>> _uploadImageAsset({
