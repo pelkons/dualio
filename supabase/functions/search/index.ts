@@ -334,7 +334,7 @@ async function fetchSemanticRows(
     return { rows: [], errorCode: error?.code ?? "semantic_rpc_failed" };
   }
 
-  return { rows: data as MatchRow[] };
+  return { rows: filterWeakSemanticRows(data as MatchRow[], query) };
 }
 
 async function fetchTrigramRows(
@@ -354,7 +354,7 @@ async function fetchTrigramRows(
     return { rows: [], errorCode: error?.code ?? "trigram_rpc_failed" };
   }
 
-  return { rows: data as MatchRow[] };
+  return { rows: filterWeakTrigramRows(data as MatchRow[], query) };
 }
 
 async function fetchRowsWithTypeRelaxation(
@@ -535,12 +535,63 @@ function weightsForQuery(query: string): {
 function trigramThresholdFor(query: string): number {
   const length = [...query.replace(/\s+/g, "")].length;
   if (length <= 4) {
-    return 0.08;
+    return 0.2;
   }
   if (length <= 8) {
-    return 0.12;
+    return 0.24;
   }
-  return 0.15;
+  return 0.3;
+}
+
+export function filterWeakSemanticRows(
+  rows: MatchRow[],
+  query: string,
+): MatchRow[] {
+  const threshold = semanticEmbeddingThresholdFor(query);
+  return rows.filter((row) => {
+    const reasons = splitReasons(row.match_reason);
+    if (
+      reasons.some((reason) =>
+        reason === "full_text_or_alias" ||
+        reason === "entity" ||
+        reason === "chunk_full_text"
+      )
+    ) {
+      return true;
+    }
+    return row.score >= threshold;
+  });
+}
+
+export function filterWeakTrigramRows(
+  rows: MatchRow[],
+  query: string,
+): MatchRow[] {
+  const threshold = trigramAcceptanceThresholdFor(query);
+  return rows.filter((row) => row.score >= threshold);
+}
+
+function semanticEmbeddingThresholdFor(query: string): number {
+  const length = [...query.replace(/\s+/g, "")].length;
+  if (length <= 4) {
+    return 0.38;
+  }
+  if (length <= 10) {
+    return 0.35;
+  }
+  return 0.32;
+}
+
+function trigramAcceptanceThresholdFor(query: string): number {
+  const compact = query.replace(/\s+/g, "");
+  const length = [...compact].length;
+  if (length <= 4) {
+    return 0.35;
+  }
+  if (/[\u0400-\u04FF\u0590-\u05FF]/.test(compact)) {
+    return 0.4;
+  }
+  return 0.5;
 }
 
 function strategyForSignals(
