@@ -269,7 +269,7 @@ async function resolveRedditJson(url: URL): Promise<LinkResolverResult> {
       description: redditDescription(post),
       authorName: post.author,
       authorUrl: post.author ? `https://www.reddit.com/user/${post.author}` : undefined,
-      thumbnailUrl: usableRedditImage(post.previewImage ?? post.thumbnail),
+      thumbnailUrl: redditThumbnailUrl(post),
       providerName: post.subreddit ? `r/${post.subreddit}` : "Reddit",
       needsUserContext: false,
     };
@@ -580,6 +580,7 @@ function platformLabel(platform: LinkPlatform): string {
 }
 
 type RedditPost = {
+  id?: string;
   title?: string;
   selftext?: string;
   author?: string;
@@ -614,6 +615,7 @@ function extractRedditPost(payload: unknown): RedditPost | null {
 
   const post = postData as Record<string, unknown>;
   return {
+    id: stringValue(post.id),
     title: stringValue(post.title),
     selftext: stringValue(post.selftext),
     author: stringValue(post.author),
@@ -646,6 +648,17 @@ function usableRedditImage(value: string | undefined): string | undefined {
     return undefined;
   }
   return decodeHtml(value);
+}
+
+function redditThumbnailUrl(post: RedditPost): string | undefined {
+  const image = usableRedditImage(post.previewImage ?? post.thumbnail);
+  if (image) {
+    return image;
+  }
+  if (post.id) {
+    return `https://share.redd.it/preview/post/${post.id}`;
+  }
+  return undefined;
 }
 
 function redditDescription(post: RedditPost): string | undefined {
