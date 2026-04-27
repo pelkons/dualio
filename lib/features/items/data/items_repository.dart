@@ -168,6 +168,39 @@ class ItemsRepository {
         .toList(growable: false);
   }
 
+  Future<SemanticSearchRanking> rankSearchResults({
+    required String query,
+    required String locale,
+    required List<String> candidateItemIds,
+  }) async {
+    final user = _client.auth.currentUser;
+    final normalized = query.trim();
+    if (user == null || normalized.isEmpty || candidateItemIds.isEmpty) {
+      return SemanticSearchRanking.disabled();
+    }
+
+    try {
+      final response = await _client.functions.invoke(
+        'search-rank',
+        body: <String, Object?>{
+          'query': normalized,
+          'locale': locale,
+          'candidate_item_ids': candidateItemIds.take(20).toList(),
+        },
+      );
+      if (response.status == 503) {
+        return SemanticSearchRanking.disabled();
+      }
+      final payload = response.data;
+      if (payload is! Map) {
+        return SemanticSearchRanking.failed();
+      }
+      return SemanticSearchRanking.fromWire(Map<String, Object?>.from(payload));
+    } on Object {
+      return SemanticSearchRanking.failed();
+    }
+  }
+
   Future<String> _clientCaptureKeyFor(
     String content,
     SourceType sourceType,

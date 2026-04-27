@@ -301,6 +301,43 @@ Definition of done:
 - Hebrew layout is usable in RTL.
 - No user-facing strings are hardcoded in widgets.
 
+## Code Quality And Safety Guards
+
+Goal: stop runtime crashes and silent regressions before they ship, especially the kinds an AI agent can introduce when several agents work on the same code in parallel.
+
+In priority order:
+
+1. **Add stricter analyzer rules to `analysis_options.yaml`.**
+   - `avoid_dynamic_calls: true`
+   - `cast_nullable_to_non_nullable: true` (treated as a warning that fails CI)
+   These two alone block the entire class of bugs where someone writes `parsedContent['x']! as String` and crashes when the key is absent.
+
+2. **Pre-commit hook (Husky or simple `.git/hooks/pre-commit`).**
+   Run `flutter analyze --fatal-warnings` and `flutter test` before every commit. Agents and humans alike cannot push code that does not analyze or test cleanly. Add a matching project script `scripts/precommit.ps1`.
+
+3. **Smoke render tests for every feed card type.**
+   One widget test per `ItemType` (`article`, `recipe`, `film`, `place`, `product`, `video`, `manual`, `note`, `unknown`, `image_analysis`) that renders the card with `parsedContent: {}` and asserts no exception is thrown. This is exactly the test that would have caught the `PlaceFeedCard`/`ProductFeedCard` `null!` crash.
+
+4. **Typed view models for `parsed_content`.**
+   Replace direct `Map<String, Object?>` access in widgets with strongly-typed view models per `kind` (e.g. `RecipeParsed`, `PlaceParsed`, `ProductParsed`, `LinkPreviewParsed`). Widgets only read the typed model. There is no `[]` operator and no place to write `!` on an unknown key. Generate models with Freezed.
+
+5. **`ErrorBoundary` around each feed card and detail screen.**
+   When a single item rejects to render, swap it for a soft fallback ("Something went wrong with this item") and log the failure to crash reporting (Sentry or Supabase log). Do not let one broken item turn the feed into a wall of red error widgets.
+
+6. **GitHub Actions CI.**
+   On every push: `flutter pub get`, `flutter gen-l10n`, `dart run build_runner build`, `flutter analyze`, `flutter test`, and Deno tests for `supabase/functions/**`. Pre-commit can be bypassed with `--no-verify`; CI cannot. Required to merge.
+
+7. **AGENTS.md rule against direct `parsed_content` access.**
+   Add a written rule: "Do not read `parsedContent[...]` from widgets. Use the typed view model for the item kind." This is what gates AI agents that have not yet learned the typed-model pattern.
+
+Definition of done:
+
+- A widget test that renders every feed card with empty `parsedContent` passes locally and in CI.
+- `flutter analyze` and `flutter test` are gates on both pre-commit and CI.
+- A failing item renders a soft fallback in the feed, not a red error widget.
+- The lint rules above are active and enforced.
+- New `ItemType`s require an accompanying typed view model and smoke render test before they can be merged.
+
 ## Phase 8: Production Readiness
 
 Goal: prepare Android beta.

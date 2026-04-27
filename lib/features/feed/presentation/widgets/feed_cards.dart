@@ -486,14 +486,15 @@ class PlaceFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final facts = <String>[
+      item.parsedContent['venueType'] as String? ?? '',
+      item.parsedContent['hours'] as String? ?? '',
+    ].where((value) => value.trim().isNotEmpty).toList(growable: false);
     return _ImageSummaryCard(
       item: item,
       icon: Icons.place_rounded,
       label: strings.placeType,
-      facts: <String>[
-        item.parsedContent['venueType']! as String,
-        item.parsedContent['hours']! as String,
-      ],
+      facts: facts,
       onTap: onTap,
     );
   }
@@ -507,14 +508,15 @@ class ProductFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final facts = <String>[
+      item.parsedContent['price'] as String? ?? '',
+      item.parsedContent['store'] as String? ?? '',
+    ].where((value) => value.trim().isNotEmpty).toList(growable: false);
     return _ImageSummaryCard(
       item: item,
       icon: Icons.shopping_bag_rounded,
       label: strings.productType,
-      facts: <String>[
-        item.parsedContent['price']! as String,
-        item.parsedContent['store']! as String,
-      ],
+      facts: facts,
       onTap: onTap,
     );
   }

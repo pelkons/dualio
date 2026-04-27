@@ -492,6 +492,24 @@ abstract class AppLocalizations {
   /// **'No saved items matched this search.'**
   String get searchNoResults;
 
+  /// No description provided for @searchLessConfident.
+  ///
+  /// In en, this message translates to:
+  /// **'Less confident matches'**
+  String get searchLessConfident;
+
+  /// No description provided for @noteType.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get noteType;
+
+  /// No description provided for @unknownType.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get unknownType;
+
   /// No description provided for @semanticDebugReason.
   ///
   /// In en, this message translates to:

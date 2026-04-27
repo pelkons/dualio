@@ -567,4 +567,814 @@ $SemanticItemCopyWith<$Res> get item {
 }
 }
 
+/// @nodoc
+mixin _$RankedSearchResult {
+
+ String get itemId; String get reason;
+/// Create a copy of RankedSearchResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RankedSearchResultCopyWith<RankedSearchResult> get copyWith => _$RankedSearchResultCopyWithImpl<RankedSearchResult>(this as RankedSearchResult, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RankedSearchResult&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.reason, reason) || other.reason == reason));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,itemId,reason);
+
+@override
+String toString() {
+  return 'RankedSearchResult(itemId: $itemId, reason: $reason)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RankedSearchResultCopyWith<$Res>  {
+  factory $RankedSearchResultCopyWith(RankedSearchResult value, $Res Function(RankedSearchResult) _then) = _$RankedSearchResultCopyWithImpl;
+@useResult
+$Res call({
+ String itemId, String reason
+});
+
+
+
+
+}
+/// @nodoc
+class _$RankedSearchResultCopyWithImpl<$Res>
+    implements $RankedSearchResultCopyWith<$Res> {
+  _$RankedSearchResultCopyWithImpl(this._self, this._then);
+
+  final RankedSearchResult _self;
+  final $Res Function(RankedSearchResult) _then;
+
+/// Create a copy of RankedSearchResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? itemId = null,Object? reason = null,}) {
+  return _then(_self.copyWith(
+itemId: null == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
+as String,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [RankedSearchResult].
+extension RankedSearchResultPatterns on RankedSearchResult {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RankedSearchResult value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _RankedSearchResult() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RankedSearchResult value)  $default,){
+final _that = this;
+switch (_that) {
+case _RankedSearchResult():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RankedSearchResult value)?  $default,){
+final _that = this;
+switch (_that) {
+case _RankedSearchResult() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String itemId,  String reason)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _RankedSearchResult() when $default != null:
+return $default(_that.itemId,_that.reason);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String itemId,  String reason)  $default,) {final _that = this;
+switch (_that) {
+case _RankedSearchResult():
+return $default(_that.itemId,_that.reason);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String itemId,  String reason)?  $default,) {final _that = this;
+switch (_that) {
+case _RankedSearchResult() when $default != null:
+return $default(_that.itemId,_that.reason);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _RankedSearchResult implements RankedSearchResult {
+  const _RankedSearchResult({required this.itemId, required this.reason});
+
+
+@override final  String itemId;
+@override final  String reason;
+
+/// Create a copy of RankedSearchResult
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RankedSearchResultCopyWith<_RankedSearchResult> get copyWith => __$RankedSearchResultCopyWithImpl<_RankedSearchResult>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RankedSearchResult&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.reason, reason) || other.reason == reason));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,itemId,reason);
+
+@override
+String toString() {
+  return 'RankedSearchResult(itemId: $itemId, reason: $reason)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RankedSearchResultCopyWith<$Res> implements $RankedSearchResultCopyWith<$Res> {
+  factory _$RankedSearchResultCopyWith(_RankedSearchResult value, $Res Function(_RankedSearchResult) _then) = __$RankedSearchResultCopyWithImpl;
+@override @useResult
+$Res call({
+ String itemId, String reason
+});
+
+
+
+
+}
+/// @nodoc
+class __$RankedSearchResultCopyWithImpl<$Res>
+    implements _$RankedSearchResultCopyWith<$Res> {
+  __$RankedSearchResultCopyWithImpl(this._self, this._then);
+
+  final _RankedSearchResult _self;
+  final $Res Function(_RankedSearchResult) _then;
+
+/// Create a copy of RankedSearchResult
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? itemId = null,Object? reason = null,}) {
+  return _then(_RankedSearchResult(
+itemId: null == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
+as String,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$RankerFilterChip {
+
+ ItemType get type; int get count;
+/// Create a copy of RankerFilterChip
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RankerFilterChipCopyWith<RankerFilterChip> get copyWith => _$RankerFilterChipCopyWithImpl<RankerFilterChip>(this as RankerFilterChip, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RankerFilterChip&&(identical(other.type, type) || other.type == type)&&(identical(other.count, count) || other.count == count));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,type,count);
+
+@override
+String toString() {
+  return 'RankerFilterChip(type: $type, count: $count)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RankerFilterChipCopyWith<$Res>  {
+  factory $RankerFilterChipCopyWith(RankerFilterChip value, $Res Function(RankerFilterChip) _then) = _$RankerFilterChipCopyWithImpl;
+@useResult
+$Res call({
+ ItemType type, int count
+});
+
+
+
+
+}
+/// @nodoc
+class _$RankerFilterChipCopyWithImpl<$Res>
+    implements $RankerFilterChipCopyWith<$Res> {
+  _$RankerFilterChipCopyWithImpl(this._self, this._then);
+
+  final RankerFilterChip _self;
+  final $Res Function(RankerFilterChip) _then;
+
+/// Create a copy of RankerFilterChip
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? count = null,}) {
+  return _then(_self.copyWith(
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as ItemType,count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [RankerFilterChip].
+extension RankerFilterChipPatterns on RankerFilterChip {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RankerFilterChip value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _RankerFilterChip() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RankerFilterChip value)  $default,){
+final _that = this;
+switch (_that) {
+case _RankerFilterChip():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RankerFilterChip value)?  $default,){
+final _that = this;
+switch (_that) {
+case _RankerFilterChip() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ItemType type,  int count)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _RankerFilterChip() when $default != null:
+return $default(_that.type,_that.count);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ItemType type,  int count)  $default,) {final _that = this;
+switch (_that) {
+case _RankerFilterChip():
+return $default(_that.type,_that.count);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ItemType type,  int count)?  $default,) {final _that = this;
+switch (_that) {
+case _RankerFilterChip() when $default != null:
+return $default(_that.type,_that.count);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _RankerFilterChip implements RankerFilterChip {
+  const _RankerFilterChip({required this.type, required this.count});
+
+
+@override final  ItemType type;
+@override final  int count;
+
+/// Create a copy of RankerFilterChip
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RankerFilterChipCopyWith<_RankerFilterChip> get copyWith => __$RankerFilterChipCopyWithImpl<_RankerFilterChip>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RankerFilterChip&&(identical(other.type, type) || other.type == type)&&(identical(other.count, count) || other.count == count));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,type,count);
+
+@override
+String toString() {
+  return 'RankerFilterChip(type: $type, count: $count)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RankerFilterChipCopyWith<$Res> implements $RankerFilterChipCopyWith<$Res> {
+  factory _$RankerFilterChipCopyWith(_RankerFilterChip value, $Res Function(_RankerFilterChip) _then) = __$RankerFilterChipCopyWithImpl;
+@override @useResult
+$Res call({
+ ItemType type, int count
+});
+
+
+
+
+}
+/// @nodoc
+class __$RankerFilterChipCopyWithImpl<$Res>
+    implements _$RankerFilterChipCopyWith<$Res> {
+  __$RankerFilterChipCopyWithImpl(this._self, this._then);
+
+  final _RankerFilterChip _self;
+  final $Res Function(_RankerFilterChip) _then;
+
+/// Create a copy of RankerFilterChip
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? count = null,}) {
+  return _then(_RankerFilterChip(
+type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as ItemType,count: null == count ? _self.count : count // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$SemanticSearchRanking {
+
+ RankerStatus get status; List<RankedSearchResult> get primary; List<RankedSearchResult> get secondary; List<RankerFilterChip> get filterChips; String? get suggestion; String? get queryLanguage;
+/// Create a copy of SemanticSearchRanking
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SemanticSearchRankingCopyWith<SemanticSearchRanking> get copyWith => _$SemanticSearchRankingCopyWithImpl<SemanticSearchRanking>(this as SemanticSearchRanking, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SemanticSearchRanking&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.primary, primary)&&const DeepCollectionEquality().equals(other.secondary, secondary)&&const DeepCollectionEquality().equals(other.filterChips, filterChips)&&(identical(other.suggestion, suggestion) || other.suggestion == suggestion)&&(identical(other.queryLanguage, queryLanguage) || other.queryLanguage == queryLanguage));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(primary),const DeepCollectionEquality().hash(secondary),const DeepCollectionEquality().hash(filterChips),suggestion,queryLanguage);
+
+@override
+String toString() {
+  return 'SemanticSearchRanking(status: $status, primary: $primary, secondary: $secondary, filterChips: $filterChips, suggestion: $suggestion, queryLanguage: $queryLanguage)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SemanticSearchRankingCopyWith<$Res>  {
+  factory $SemanticSearchRankingCopyWith(SemanticSearchRanking value, $Res Function(SemanticSearchRanking) _then) = _$SemanticSearchRankingCopyWithImpl;
+@useResult
+$Res call({
+ RankerStatus status, List<RankedSearchResult> primary, List<RankedSearchResult> secondary, List<RankerFilterChip> filterChips, String? suggestion, String? queryLanguage
+});
+
+
+
+
+}
+/// @nodoc
+class _$SemanticSearchRankingCopyWithImpl<$Res>
+    implements $SemanticSearchRankingCopyWith<$Res> {
+  _$SemanticSearchRankingCopyWithImpl(this._self, this._then);
+
+  final SemanticSearchRanking _self;
+  final $Res Function(SemanticSearchRanking) _then;
+
+/// Create a copy of SemanticSearchRanking
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? primary = null,Object? secondary = null,Object? filterChips = null,Object? suggestion = freezed,Object? queryLanguage = freezed,}) {
+  return _then(_self.copyWith(
+status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as RankerStatus,primary: null == primary ? _self.primary : primary // ignore: cast_nullable_to_non_nullable
+as List<RankedSearchResult>,secondary: null == secondary ? _self.secondary : secondary // ignore: cast_nullable_to_non_nullable
+as List<RankedSearchResult>,filterChips: null == filterChips ? _self.filterChips : filterChips // ignore: cast_nullable_to_non_nullable
+as List<RankerFilterChip>,suggestion: freezed == suggestion ? _self.suggestion : suggestion // ignore: cast_nullable_to_non_nullable
+as String?,queryLanguage: freezed == queryLanguage ? _self.queryLanguage : queryLanguage // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SemanticSearchRanking].
+extension SemanticSearchRankingPatterns on SemanticSearchRanking {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SemanticSearchRanking value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SemanticSearchRanking() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SemanticSearchRanking value)  $default,){
+final _that = this;
+switch (_that) {
+case _SemanticSearchRanking():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SemanticSearchRanking value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SemanticSearchRanking() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( RankerStatus status,  List<RankedSearchResult> primary,  List<RankedSearchResult> secondary,  List<RankerFilterChip> filterChips,  String? suggestion,  String? queryLanguage)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SemanticSearchRanking() when $default != null:
+return $default(_that.status,_that.primary,_that.secondary,_that.filterChips,_that.suggestion,_that.queryLanguage);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( RankerStatus status,  List<RankedSearchResult> primary,  List<RankedSearchResult> secondary,  List<RankerFilterChip> filterChips,  String? suggestion,  String? queryLanguage)  $default,) {final _that = this;
+switch (_that) {
+case _SemanticSearchRanking():
+return $default(_that.status,_that.primary,_that.secondary,_that.filterChips,_that.suggestion,_that.queryLanguage);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( RankerStatus status,  List<RankedSearchResult> primary,  List<RankedSearchResult> secondary,  List<RankerFilterChip> filterChips,  String? suggestion,  String? queryLanguage)?  $default,) {final _that = this;
+switch (_that) {
+case _SemanticSearchRanking() when $default != null:
+return $default(_that.status,_that.primary,_that.secondary,_that.filterChips,_that.suggestion,_that.queryLanguage);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _SemanticSearchRanking implements SemanticSearchRanking {
+  const _SemanticSearchRanking({required this.status, final  List<RankedSearchResult> primary = const <RankedSearchResult>[], final  List<RankedSearchResult> secondary = const <RankedSearchResult>[], final  List<RankerFilterChip> filterChips = const <RankerFilterChip>[], this.suggestion, this.queryLanguage}): _primary = primary,_secondary = secondary,_filterChips = filterChips;
+
+
+@override final  RankerStatus status;
+ final  List<RankedSearchResult> _primary;
+@override@JsonKey() List<RankedSearchResult> get primary {
+  if (_primary is EqualUnmodifiableListView) return _primary;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_primary);
+}
+
+ final  List<RankedSearchResult> _secondary;
+@override@JsonKey() List<RankedSearchResult> get secondary {
+  if (_secondary is EqualUnmodifiableListView) return _secondary;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_secondary);
+}
+
+ final  List<RankerFilterChip> _filterChips;
+@override@JsonKey() List<RankerFilterChip> get filterChips {
+  if (_filterChips is EqualUnmodifiableListView) return _filterChips;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_filterChips);
+}
+
+@override final  String? suggestion;
+@override final  String? queryLanguage;
+
+/// Create a copy of SemanticSearchRanking
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SemanticSearchRankingCopyWith<_SemanticSearchRanking> get copyWith => __$SemanticSearchRankingCopyWithImpl<_SemanticSearchRanking>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SemanticSearchRanking&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._primary, _primary)&&const DeepCollectionEquality().equals(other._secondary, _secondary)&&const DeepCollectionEquality().equals(other._filterChips, _filterChips)&&(identical(other.suggestion, suggestion) || other.suggestion == suggestion)&&(identical(other.queryLanguage, queryLanguage) || other.queryLanguage == queryLanguage));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(_primary),const DeepCollectionEquality().hash(_secondary),const DeepCollectionEquality().hash(_filterChips),suggestion,queryLanguage);
+
+@override
+String toString() {
+  return 'SemanticSearchRanking(status: $status, primary: $primary, secondary: $secondary, filterChips: $filterChips, suggestion: $suggestion, queryLanguage: $queryLanguage)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SemanticSearchRankingCopyWith<$Res> implements $SemanticSearchRankingCopyWith<$Res> {
+  factory _$SemanticSearchRankingCopyWith(_SemanticSearchRanking value, $Res Function(_SemanticSearchRanking) _then) = __$SemanticSearchRankingCopyWithImpl;
+@override @useResult
+$Res call({
+ RankerStatus status, List<RankedSearchResult> primary, List<RankedSearchResult> secondary, List<RankerFilterChip> filterChips, String? suggestion, String? queryLanguage
+});
+
+
+
+
+}
+/// @nodoc
+class __$SemanticSearchRankingCopyWithImpl<$Res>
+    implements _$SemanticSearchRankingCopyWith<$Res> {
+  __$SemanticSearchRankingCopyWithImpl(this._self, this._then);
+
+  final _SemanticSearchRanking _self;
+  final $Res Function(_SemanticSearchRanking) _then;
+
+/// Create a copy of SemanticSearchRanking
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? primary = null,Object? secondary = null,Object? filterChips = null,Object? suggestion = freezed,Object? queryLanguage = freezed,}) {
+  return _then(_SemanticSearchRanking(
+status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as RankerStatus,primary: null == primary ? _self._primary : primary // ignore: cast_nullable_to_non_nullable
+as List<RankedSearchResult>,secondary: null == secondary ? _self._secondary : secondary // ignore: cast_nullable_to_non_nullable
+as List<RankedSearchResult>,filterChips: null == filterChips ? _self._filterChips : filterChips // ignore: cast_nullable_to_non_nullable
+as List<RankerFilterChip>,suggestion: freezed == suggestion ? _self.suggestion : suggestion // ignore: cast_nullable_to_non_nullable
+as String?,queryLanguage: freezed == queryLanguage ? _self.queryLanguage : queryLanguage // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
 // dart format on

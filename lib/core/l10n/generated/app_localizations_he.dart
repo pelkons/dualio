@@ -212,6 +212,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get searchNoResults => 'לא נמצאו פריטים שמורים לחיפוש הזה.';
 
   @override
+  String get searchLessConfident => 'התאמות עם פחות ביטחון';
+
+  @override
+  String get noteType => 'הערה';
+
+  @override
+  String get unknownType => 'אחר';
+
+  @override
   String get semanticDebugReason => 'נמצא לפי שדות סמנטיים מקומיים';
 
   @override

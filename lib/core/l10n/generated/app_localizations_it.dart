@@ -217,6 +217,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get searchNoResults => 'No saved items matched this search.';
 
   @override
+  String get searchLessConfident => 'Corrispondenze meno sicure';
+
+  @override
+  String get noteType => 'Nota';
+
+  @override
+  String get unknownType => 'Altro';
+
+  @override
   String get semanticDebugReason => 'Matched by local semantic fields';
 
   @override

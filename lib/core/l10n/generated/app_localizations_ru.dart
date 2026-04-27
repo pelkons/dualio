@@ -217,6 +217,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchNoResults => 'No saved items matched this search.';
 
   @override
+  String get searchLessConfident => 'Менее уверенные совпадения';
+
+  @override
+  String get noteType => 'Заметка';
+
+  @override
+  String get unknownType => 'Другое';
+
+  @override
   String get semanticDebugReason => 'Matched by local semantic fields';
 
   @override
