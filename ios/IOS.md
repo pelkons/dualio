@@ -147,3 +147,9 @@ Before inviting a beta tester:
 Append-only section. Add dated entries when an iOS-specific decision is
 made or a non-obvious detail is discovered, so the next agent does not have
 to re-derive it.
+
+- 2026-04-27: Android share target was made more permissive by accepting
+  `text/*`, `application/*`, and `*/*` for `ACTION_SEND` / `ACTION_SEND_MULTIPLE`
+  in addition to `text/plain` and `image/*`. iOS still needs the native Share
+  Extension from the backlog above; there is no iOS equivalent to Android
+  manifest MIME filters.

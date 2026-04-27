@@ -1,14 +1,14 @@
-# AI Models for Dualio
+# AI-модели для Dualio
 
-Source for pricing and availability: OpenRouter `/api/v1/models`, pulled on 2026-04-27.
+Источник цен и доступности: каталог OpenRouter `/api/v1/models`, выгрузка от 2026-04-27.
 
-This file is written for product decisions, not for code review. The goal is to decide which model should handle each AI job in Dualio.
+Этот файл нужен не для ревью кода, а для принятия продуктового решения: какая модель должна выполнять каждую AI-задачу в Dualio.
 
-## Decision Summary
+## Краткое решение
 
-Use cheap structured models for repeatable JSON work. Use a stronger or more reliable model only where the result is directly visible to the user or where Hebrew OCR quality matters.
+Для повторяемых задач, где нужен структурированный JSON, используем дешёвые быстрые модели. Более дорогую или более надёжную модель используем только там, где результат напрямую видит пользователь, либо где критично качество OCR на иврите.
 
-Recommended setup:
+Рекомендуемая настройка:
 
 ```env
 AI_TEXT_EXTRACT_PRIMARY=qwen/qwen3.5-flash-02-23
@@ -27,296 +27,296 @@ AI_VISION_HEBREW_MODEL=google/gemini-3.1-flash-lite-preview
 AI_EMBEDDING_MODEL=openai/text-embedding-3-small
 ```
 
-## What To Change First
+## Что менять первым
 
-1. Change `AI_QUERY_PLAN_PRIMARY` to `qwen/qwen3.5-flash-02-23`.
+1. Поменять `AI_QUERY_PLAN_PRIMARY` на `qwen/qwen3.5-flash-02-23`.
 
-This is only a Supabase secret change. No code change. Easy rollback.
+Это только изменение Supabase secret. Код менять не нужно. Откат простой.
 
-2. Change search ranker order:
+2. Поменять порядок моделей для search ranker:
 
 ```env
 AI_SEARCH_RANKER_PRIMARY=deepseek/deepseek-v4-flash
 AI_SEARCH_RANKER_FALLBACK=openai/gpt-5.4-nano
 ```
 
-This makes AI search explanations cheaper, because ranker output is token-heavy.
+Так AI-объяснения в поиске будут дешевле, потому что ranker генерирует много output-токенов.
 
-3. Keep embeddings unchanged.
+3. Embeddings сейчас не менять.
 
-Do not change embeddings now. The database vectors are built around `text-embedding-3-small`; changing this means re-embedding all saved items and chunks.
+База и векторные индексы уже рассчитаны на `text-embedding-3-small`. Смена embedding-модели означает полную переиндексацию всех сохранённых items и chunks.
 
-## Model Prices
+## Цены моделей
 
-Prices below are per 1M input / output tokens.
+Цены указаны за 1 млн input / output токенов.
 
 - `qwen/qwen3.5-flash-02-23`: $0.065 / $0.26
 - `deepseek/deepseek-v4-flash`: $0.14 / $0.28
 - `openai/gpt-5.4-nano`: $0.20 / $1.25
 - `qwen/qwen3-vl-30b-a3b-instruct`: $0.13 / $0.52
 - `google/gemini-3.1-flash-lite-preview`: $0.25 / $1.50
-- `text-embedding-3-small`: keep current direct OpenAI setup
+- `text-embedding-3-small`: оставить текущую прямую настройку через OpenAI
 
-## Decisions By Role
+## Решения по ролям
 
-### 1. Extraction Primary
+### 1. Основная extraction-модель
 
-What it does:
+Что делает:
 
-Turns links, screenshots, photos, and raw text into structured JSON: title, summary, content type, entities, aliases, chunks, and memory profile.
+Превращает ссылки, скриншоты, фотографии и обычный текст в структурированный JSON: заголовок, summary, тип контента, entities, aliases, chunks и memory profile.
 
-Current model:
+Текущая модель:
 
 `qwen/qwen3.5-flash-02-23`
 
-Other agent recommendation:
+Что предложил другой агент:
 
-Keep it.
+Оставить эту модель.
 
-Codex position:
+Моя позиция:
 
-Agree.
+Согласен.
 
-Decision:
+Решение:
 
-Keep `qwen/qwen3.5-flash-02-23`.
+Оставить `qwen/qwen3.5-flash-02-23`.
 
-Why:
+Почему:
 
-This is the high-volume save-time model. It supports multimodal input, structured JSON, multilingual content, and 1M context. It is also cheap enough for routine item processing.
+Это модель для самого частого действия: сохранения нового item. Она поддерживает multimodal input, structured JSON, многоязычный контент и 1M context. При этом она достаточно дешёвая для постоянной обработки пользовательских сохранений.
 
-### 2. Extraction Text Fallback
+### 2. Text fallback для extraction
 
-What it does:
+Что делает:
 
-Runs when the primary extraction path fails and the input can be handled as plain text.
+Запускается, если основная extraction-модель не сработала, а входные данные можно обработать как обычный текст.
 
-Current model:
-
-`deepseek/deepseek-v4-flash`
-
-Other agent recommendation:
-
-Keep it.
-
-Codex position:
-
-Agree.
-
-Decision:
-
-Keep `deepseek/deepseek-v4-flash`.
-
-Why:
-
-It is cheap, structured-output capable, and gives vendor/model diversity instead of using another Qwen model as fallback.
-
-### 3. Extraction Last-Resort
-
-What it does:
-
-Runs only if the primary and text fallback fail.
-
-Current model:
-
-`openai/gpt-5.4-nano`
-
-Other agent recommendation:
-
-Keep it.
-
-Codex position:
-
-Agree.
-
-Decision:
-
-Keep `openai/gpt-5.4-nano`.
-
-Why:
-
-It is more expensive than DeepSeek/Qwen, but this path should be rare. The point is reliability from a different vendor.
-
-### 4. Query Planner
-
-What it does:
-
-Converts a user query like “find the breakfast recipe I saved a few months ago” into structured search intent: language, semantic query, likely domains, filters, and keywords.
-
-Current model:
-
-`openai/gpt-5.4-nano`
-
-Other agent recommendation:
-
-Use `qwen/qwen3.5-flash-02-23`.
-
-Codex position:
-
-Agree.
-
-Decision:
-
-Use `qwen/qwen3.5-flash-02-23`.
-
-Why:
-
-This is mostly classification and structured planning. It does not need an expensive model. Moving from GPT-5.4-nano to Qwen cuts cost sharply without changing the architecture.
-
-### 5. Search Ranker Primary
-
-What it does:
-
-Takes up to 20 search candidates and decides which results are primary, which are secondary, and why each result was returned.
-
-Current model:
-
-`openai/gpt-5.4-nano`
-
-Other agent recommendation:
-
-Use `deepseek/deepseek-v4-flash`.
-
-Codex position:
-
-Agree.
-
-Decision:
-
-Use `deepseek/deepseek-v4-flash`.
-
-Why:
-
-The ranker writes explanations. Output tokens are the expensive part. DeepSeek has much cheaper output tokens and is good enough for this reasoning/ranking layer.
-
-### 6. Search Ranker Fallback
-
-What it does:
-
-Runs if the primary ranker fails or times out.
-
-Current model:
+Текущая модель:
 
 `deepseek/deepseek-v4-flash`
 
-Other agent recommendation:
+Что предложил другой агент:
 
-Use `openai/gpt-5.4-nano`.
+Оставить эту модель.
 
-Codex position:
+Моя позиция:
 
-Agree.
+Согласен.
 
-Decision:
+Решение:
 
-Use `openai/gpt-5.4-nano`.
+Оставить `deepseek/deepseek-v4-flash`.
 
-Why:
+Почему:
 
-If DeepSeek fails, using another cheap model from the same quality tier is not very useful. The fallback should be a different vendor and a stable structured model.
+Она дешёвая, поддерживает structured outputs и даёт нам запасной вариант от другого вендора, а не ещё одну Qwen-модель в той же цепочке.
+
+### 3. Последний fallback для extraction
+
+Что делает:
+
+Запускается только если основная extraction-модель и text fallback не справились.
+
+Текущая модель:
+
+`openai/gpt-5.4-nano`
+
+Что предложил другой агент:
+
+Оставить эту модель.
+
+Моя позиция:
+
+Согласен.
+
+Решение:
+
+Оставить `openai/gpt-5.4-nano`.
+
+Почему:
+
+Она дороже, чем DeepSeek/Qwen, но этот путь должен использоваться редко. Смысл здесь не в экономии, а в надёжности через другого вендора.
+
+### 4. Query planner
+
+Что делает:
+
+Превращает пользовательский запрос вроде “найди рецепт завтрака, который я сохранял пару месяцев назад” в структурированный search intent: язык, semantic query, вероятные домены, фильтры и ключевые слова.
+
+Текущая модель:
+
+`openai/gpt-5.4-nano`
+
+Что предложил другой агент:
+
+Использовать `qwen/qwen3.5-flash-02-23`.
+
+Моя позиция:
+
+Согласен.
+
+Решение:
+
+Использовать `qwen/qwen3.5-flash-02-23`.
+
+Почему:
+
+Это в основном классификация и планирование в JSON. Здесь не нужна дорогая reasoning-модель. Переход с GPT-5.4-nano на Qwen сильно снижает стоимость без изменения архитектуры.
+
+### 5. Основная модель search ranker
+
+Что делает:
+
+Берёт до 20 кандидатов поиска и решает, какие результаты должны быть основными, какие вторичными, и почему каждый результат найден.
+
+Текущая модель:
+
+`openai/gpt-5.4-nano`
+
+Что предложил другой агент:
+
+Использовать `deepseek/deepseek-v4-flash`.
+
+Моя позиция:
+
+Согласен.
+
+Решение:
+
+Использовать `deepseek/deepseek-v4-flash`.
+
+Почему:
+
+Ranker пишет объяснения. Значит, основная стоимость находится в output-токенах. У DeepSeek output существенно дешевле, и для слоя ранжирования/объяснения он достаточно сильный.
+
+### 6. Fallback для search ranker
+
+Что делает:
+
+Запускается, если основная ranker-модель не ответила или превысила timeout.
+
+Текущая модель:
+
+`deepseek/deepseek-v4-flash`
+
+Что предложил другой агент:
+
+Использовать `openai/gpt-5.4-nano`.
+
+Моя позиция:
+
+Согласен.
+
+Решение:
+
+Использовать `openai/gpt-5.4-nano`.
+
+Почему:
+
+Если DeepSeek не сработал, нет большого смысла fallback-иться на ещё одну дешёвую модель того же класса. Fallback должен быть от другого вендора и с надёжной поддержкой structured JSON.
 
 ### 7. Vision OCR
 
-What it does:
+Что делает:
 
-Reads screenshots and photos, extracts visible text, understands the content, and turns it into a structured item.
+Читает скриншоты и фотографии, извлекает видимый текст, понимает содержание и превращает его в структурированную карточку.
 
-Current legacy direct-OpenAI path:
+Текущий legacy-путь напрямую через OpenAI:
 
 `gpt-4.1-mini`
 
-Other agent recommendation:
+Что предложил другой агент:
 
-Eventually move to `qwen/qwen3-vl-30b-a3b-instruct`.
+Позже перейти на `qwen/qwen3-vl-30b-a3b-instruct`.
 
-Codex position:
+Моя позиция:
 
-Partially agree.
+Частично согласен.
 
-Decision:
+Решение:
 
-Keep the current OpenRouter primary as `qwen/qwen3.5-flash-02-23` for now.
+Пока оставить текущую OpenRouter primary-модель `qwen/qwen3.5-flash-02-23`.
 
-Use `google/gemini-3.1-flash-lite-preview` as fallback and as the mandatory Hebrew vision model.
+Использовать `google/gemini-3.1-flash-lite-preview` как fallback и как обязательную модель для Hebrew vision.
 
-Why:
+Почему:
 
-Qwen-VL may be cheaper for OCR, but Hebrew quality is a hard requirement. Gemini should be the explicit Hebrew path. Before replacing the general vision primary with Qwen-VL, test real screenshots in Russian, Hebrew, English, and mixed-language tables.
+Qwen-VL может быть дешевле для OCR, но качество иврита для нас критично. Gemini должен быть отдельным явным путём для иврита. Перед заменой общей vision-модели на Qwen-VL нужно протестировать реальные скриншоты на русском, иврите, английском и смешанных таблицах.
 
-### 8. Hebrew Vision Override
+### 8. Отдельное правило для Hebrew vision
 
-What it does:
+Что делает:
 
-If image analysis detects Hebrew text, the OCR/understanding pass must use Gemini.
+Если image analysis понимает, что на изображении есть иврит, OCR/понимание изображения должно идти через Gemini.
 
-Current model:
+Текущая настройка:
 
 `AI_VISION_HEBREW_MODEL`
 
-Other agent recommendation:
+Что предложил другой агент:
 
-This was implied under OCR.
+Это было подразумеваемой частью OCR.
 
-Codex position:
+Моя позиция:
 
-Make it explicit.
+Сделать это отдельным явным правилом.
 
-Decision:
+Решение:
 
-Set `AI_VISION_HEBREW_MODEL=google/gemini-3.1-flash-lite-preview`.
+Поставить `AI_VISION_HEBREW_MODEL=google/gemini-3.1-flash-lite-preview`.
 
-Why:
+Почему:
 
-This is not just a model preference. It is a product rule: Hebrew OCR quality matters enough to route it separately.
+Это не просто предпочтение модели. Это продуктовое правило: качество OCR на иврите достаточно важно, чтобы маршрутизировать такие изображения отдельно.
 
 ### 9. Embeddings
 
-What it does:
+Что делает:
 
-Creates vectors for item-level and chunk-level semantic search.
+Создаёт vectors для item-level и chunk-level semantic search.
 
-Current model:
+Текущая модель:
 
 `text-embedding-3-small`
 
-Other agent recommendation:
+Что предложил другой агент:
 
-Keep it.
+Оставить эту модель.
 
-Codex position:
+Моя позиция:
 
-Agree.
+Согласен.
 
-Decision:
+Решение:
 
-Keep `text-embedding-3-small`.
+Оставить `text-embedding-3-small`.
 
-Why:
+Почему:
 
-The vector schema and indexes are already built around this embedding size. Changing embeddings later requires a planned full re-embed, not a casual env change.
+Схема векторов и индексы уже построены вокруг этой embedding-модели. Менять embeddings позже можно только как отдельный запланированный этап с полной переиндексацией.
 
-## Final Recommendation
+## Финальная рекомендация
 
-Do not change everything at once.
+Не менять всё одновременно.
 
-Step 1:
+Шаг 1:
 
-Change query planner and ranker env values only.
+Поменять только env-настройки для query planner и search ranker.
 
-Step 2:
+Шаг 2:
 
-Test search quality with real saved items:
+Проверить качество поиска на реальных сохранённых карточках:
 
-- Russian query against Hebrew recipe
-- Hebrew query against Russian screenshot
-- English query against non-English item
-- vague associative query like “what can I cook in the morning”
-- disambiguation query like “movie with food in the title”
+- русский запрос против рецепта на иврите
+- ивритский запрос против русского скриншота
+- английский запрос против неанглийской карточки
+- ассоциативный запрос вроде “что приготовить утром”
+- уточняющий запрос вроде “фильм с едой в названии”
 
-Step 3:
+Шаг 3:
 
-Only after that, test OCR model swaps on real screenshots/photos.
+Только после этого тестировать замену OCR-моделей на реальных скриншотах и фотографиях.
 
-## Codex Notes
+## Заметки Codex
 
-The role decomposition is mostly correct. The main structural correction is that Hebrew vision should be a first-class routing rule, not a footnote under general OCR. Query planner and extraction primary can share a cheap structured model because both are JSON tasks. Search ranker should stay separate because it directly shapes whether search feels intelligent to the user. Ranker fallback is worth keeping during beta, but we should measure fallback frequency; if it almost never runs, we can simplify later.
+Разделение ролей в целом правильное. Главная структурная поправка: Hebrew vision должен быть отдельным правилом маршрутизации, а не примечанием внутри общего OCR. Query planner и основная extraction-модель могут пока использовать одну дешёвую structured-модель, потому что обе задачи сводятся к JSON. Search ranker нужно держать отдельно, потому что он напрямую влияет на ощущение “умного поиска”. Fallback для ranker стоит оставить на время beta, но нужно измерять, как часто он реально срабатывает; если почти никогда, позже можно упростить.
